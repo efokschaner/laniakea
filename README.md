@@ -1,8 +1,8 @@
 Laniakea
 ========
-## A multiplayer game engine for browsers, harnessing latest technologies and concepts.
+### A multiplayer game engine for browsers.
 
-#### Status: Unstable, under development.
+**Status: Unstable, under development.**
 
 ### Planned Features
 - Statically Typed. Built with TypeScript.
