@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "outDir": "dist",
+        "strict": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

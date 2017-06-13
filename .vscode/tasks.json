@@ -1,0 +1,22 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "showOutput": "silent",
+  "tasks": [
+    {
+      "taskName": "Build",
+      "isShellCommand": true,
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "echoCommand": true,
+      "problemMatcher": {
+        "base": "$tsc",
+        "fileLocation": ["relative", "${workspaceRoot}"]
+      },
+      "isBuildCommand": true
+    }
+  ]
+}

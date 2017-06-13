@@ -1,0 +1,13 @@
+- [ ] Remove "skipLibCheck": true from lk-demo-client. Workaround for error TS2300: Duplicate identifier 'RTCDataChannelState'. From symlinked node_modules + ts-loader interactions.
+- [ ] Input handling (interactive games are supposedly more fun!)
+- [ ] Time synchronisation using RTT estimate.
+- [ ] Time aware replication using rewind-replay.
+- [ ] MTU/bandwidth aware replication (currently sends all state every frame).
+- [ ] Decouple packet send/receive rate from simulation rate.
+- [ ] Explore capnproto ts as a networking + gamestate option.
+- [ ] Avoid divergence from quantisation when replicating data. (Quantise all data after simulation step?)
+- [ ] Review and move xxhashjs.d.ts typings to xxhashjs or DefinitelyTyped.
+- [ ] Review and move box-intersect.d.ts typings to box-intersect or DefinitelyTyped.
+- [ ] Figure out which of lk-demo-client's dependencies are actually devDependencies.
+
+- [ ] Other TODO's still in the source code (some small TODO's are better in context of source)

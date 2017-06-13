@@ -1,0 +1,22 @@
+{
+  "name": "lk-demo-server",
+  "version": "0.0.1",
+  "description": "Server of laniakea engine demo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "dependencies": {
+    "laniakea-server": "^0.0.1",
+    "lk-demo-shared": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.84.11",
+    "typescript": "^2.3.4"
+  }
+}
