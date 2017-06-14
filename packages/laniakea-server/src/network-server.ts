@@ -40,7 +40,6 @@ export type AuthCallback = (req: http.ClientRequest) => AuthResult;
 
 // For demo purposes only, do not use in production
 export function INSECURE_AuthCallback(httpRequest: http.ClientRequest) {
-  // TODO: Actual auth
   var creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
   if(!creds) {

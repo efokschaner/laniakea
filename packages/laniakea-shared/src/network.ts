@@ -1,4 +1,3 @@
-// TODO, allow time to be passed in from outside?
 const present = require('present');
 import {SyncEvent} from 'ts-events';
 

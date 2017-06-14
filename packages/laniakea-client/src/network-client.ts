@@ -127,7 +127,6 @@ export class NetworkClient {
   }
 
   private handleDisconnect() {
-    // TODO handle automatically reconnecting
     this.packetConnection = undefined;
     if(this.rtcConnection) {
       this.rtcConnection.close();
@@ -143,8 +142,9 @@ export class NetworkClient {
       this.packetConnection = new lk.PacketConnection(rtcConnection);
       this.packetConnection.onPacketReceived.attach(this.onPacketReceived.post.bind(this.onPacketReceived));
       this.onConnected.post();
-      // TODO figure out if this needs to be done or if re-architecture can eliminate it
-      // if its necessary, is this the right place to do it?
+      // TODO figure out if flushAndStopBuffering needs to be done or if
+      // re-architecture can eliminate it
+      // If it IS necessary, is this the right place to do it?
       this.rtcConnection.flushAndStopBuffering();
     }).catch(() => this.handleDisconnect());
   }
