@@ -4,12 +4,12 @@
   "version": "0.0.1",
   "scripts": {
     "lerna": "./node_modules/.bin/lerna",
-    "bootstrap": "npm install && ./node_modules/.bin/lerna bootstrap --hoist",
-    "build": "cd packages/laniakea-shared && npm run build && cd ../laniakea-client && npm run build && cd ../laniakea-server && npm run build && cd ../lk-demo-shared && npm run build && cd ../lk-demo-client && npm run build && cd ../lk-demo-server && npm run build",
+    "bootstrap": "npm install && lerna bootstrap --hoist",
+    "build": "lerna run build",
     "demo": "$(cd packages/lk-demo-server && npm run start) & $(cd packages/lk-demo-client && npm run start) && fg"
   },
   "devDependencies": {
-    "lerna": "^2.0.0-rc.5"
+    "lerna": "^2.1.0"
   },
   "dependencies": {
     "typescript": "^2.3.4"
