@@ -8,8 +8,7 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "declaration": true,
-        "skipLibCheck": true
+        "declaration": true
     },
     "exclude": [
         "node_modules"
