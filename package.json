@@ -2,16 +2,18 @@
   "name": "laniakea",
   "description": "Not a real npm package, this file just wraps the monorepo packages with some bootstrap and commands",
   "version": "0.0.1",
+  "private": true,
   "scripts": {
     "lerna": "./node_modules/.bin/lerna",
-    "bootstrap": "npm install && lerna bootstrap --hoist",
+    "bootstrap": "yarn install && lerna bootstrap",
     "build": "lerna run build",
-    "demo": "$(cd packages/lk-demo-server && npm run start) & $(cd packages/lk-demo-client && npm run start) && fg"
+    "demo": "$(cd packages/node_modules/lk-demo-server && yarn run start) & $(cd packages/node_modules/lk-demo-client && yarn run start) && fg"
   },
   "devDependencies": {
-    "lerna": "^2.1.0"
-  },
-  "dependencies": {
+    "lerna": "^2.1.0",
     "typescript": "^2.3.4"
-  }
+  },
+  "workspaces": [
+    "packages/node_modules/*"
+  ]
 }

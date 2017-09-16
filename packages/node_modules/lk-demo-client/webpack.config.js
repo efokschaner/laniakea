@@ -62,7 +62,6 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        exclude: /node_modules/,
         use: 'ts-loader'
       }
     ]
@@ -71,9 +70,6 @@ module.exports = {
     new ExtractTextPlugin('styles.css'),
   ],
   resolve: {
-    extensions: ['.ts', '.tsx', '.js'],
-    /*modules: [
-       'node_modules'
-    ]*/
+    extensions: ['.js']
   }
 };
