@@ -5,10 +5,10 @@
       "name": "Launch",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceRoot}/packages/node_modules/laniakea-server/dist/index.js",
+      "program": "${workspaceRoot}/packages/laniakea-server/dist/index.js",
       "stopOnEntry": false,
       "args": [],
-      "cwd": "${workspaceRoot}/packages/node_modules/laniakea-server",
+      "cwd": "${workspaceRoot}/packages/laniakea-server",
       "preLaunchTask": null,
       "runtimeExecutable": null,
       "runtimeArgs": [
@@ -18,7 +18,7 @@
         "NODE_ENV": "development"
       },
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/node_modules/**/dist/**/*.js"]
+      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js"]
     },
     {
       "name": "Attach",
@@ -28,7 +28,7 @@
       "address": "localhost",
       "restart": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/node_modules/**/dist/**/*.js"],
+      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js"],
       "localRoot": "${workspaceRoot}",
       "remoteRoot": null
     }

@@ -7,13 +7,13 @@
     "lerna": "./node_modules/.bin/lerna",
     "bootstrap": "yarn install && lerna bootstrap",
     "build": "lerna run build",
-    "demo": "$(cd packages/node_modules/lk-demo-server && yarn run start) & $(cd packages/node_modules/lk-demo-client && yarn run start) && fg"
+    "demo": "$(cd packages/lk-demo-server && yarn run start) & $(cd packages/lk-demo-client && yarn run start) && fg"
   },
   "devDependencies": {
     "lerna": "^2.1.0",
     "typescript": "^2.3.4"
   },
   "workspaces": [
-    "packages/node_modules/*"
+    "packages/*"
   ]
 }
