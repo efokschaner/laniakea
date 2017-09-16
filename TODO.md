@@ -1,4 +1,3 @@
-- [ ] Remove "skipLibCheck": true from lk-demo-client. Workaround for error TS2300: Duplicate identifier 'RTCDataChannelState'. From symlinked node_modules + ts-loader interactions.
 - [ ] Input handling (interactive games are supposedly more fun!)
 - [ ] Time synchronisation using RTT estimate.
 - [ ] Time aware replication using rewind-replay.

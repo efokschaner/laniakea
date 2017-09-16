@@ -2,21 +2,28 @@
   // See https://go.microsoft.com/fwlink/?LinkId=733558
   // for the documentation about the tasks.json format
   "version": "2.0.0",
-  "showOutput": "silent",
+  "presentation": {
+    "echo": true,
+    "reveal": "silent",
+    "focus": false,
+    "panel": "shared"
+  },
   "tasks": [
     {
       "taskName": "Build",
-      "isShellCommand": true,
-      "command": "npm run build",
+      "type": "shell",
+      "command": "yarn run build",
       "options": {
         "cwd": "${workspaceRoot}"
       },
-      "echoCommand": true,
       "problemMatcher": {
         "base": "$tsc",
         "fileLocation": ["relative", "${workspaceRoot}"]
       },
-      "isBuildCommand": true
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }
