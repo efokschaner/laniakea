@@ -11,8 +11,8 @@ let serverEngine = new lk.ServerEngine(
     simFPS: demo.simFPS
   }
 );
-demo.initialiseGame(serverEngine.engine);
-demo.initialiseLevel(serverEngine.engine);
+demo.ballsDemo.initialiseGame(serverEngine.engine);
+demo.ballsDemo.initialiseLevel(serverEngine.engine);
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)
 .then(function(){

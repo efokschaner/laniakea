@@ -16,10 +16,12 @@
       "options": {
         "cwd": "${workspaceRoot}"
       },
-      "problemMatcher": {
-        "base": "$tsc",
-        "fileLocation": ["relative", "${workspaceRoot}"]
-      },
+      "problemMatcher": [
+        {
+          "base": "$tsc",
+          "fileLocation": ["relative", "${workspaceRoot}"]
+        }
+      ],
       "group": {
         "kind": "build",
         "isDefault": true

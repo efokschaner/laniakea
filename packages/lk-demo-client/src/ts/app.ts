@@ -11,7 +11,7 @@ import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
 
 
-class RenderingSystemImpl implements lk.RenderingSystem {
+class BallsDemoRenderingSystemImpl implements lk.RenderingSystem {
   public scene = new THREE.Scene();
   public camera: THREE.PerspectiveCamera;
   private needsAspectRatioUpdate = true;
@@ -87,7 +87,7 @@ class RenderingSystemImpl implements lk.RenderingSystem {
     }
     if(this.activeCameraLerp) { this.activeCameraLerp(wallTimeNowMS); }
     this.cameraController.update();
-    for(let ball of engine.getComponents(demo.BallShape)!) {
+    for(let ball of engine.getComponents(demo.ballsDemo.BallShape)!) {
       let maybeObj = this.rendererSpheres.get(ball.getId());
       if(maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
@@ -100,7 +100,7 @@ class RenderingSystemImpl implements lk.RenderingSystem {
       maybeObj.position.copy(ball.getData().center);
     }
 
-    for(let wall of engine.getComponents(demo.WallPlane)!) {
+    for(let wall of engine.getComponents(demo.ballsDemo.WallPlane)!) {
       let maybeObj = this.rendererWalls.get(wall.getId());
       if(maybeObj === undefined) {
         let geometry = new THREE.PlaneBufferGeometry(200, 200, 4, 4);
@@ -118,7 +118,7 @@ class RenderingSystemImpl implements lk.RenderingSystem {
   }
 }
 
-let renderingSystem = new RenderingSystemImpl(document.getElementById('scene')!);
+let renderingSystem = new BallsDemoRenderingSystemImpl(document.getElementById('scene')!);
 let axes = new THREE.AxisHelper(1000);
 renderingSystem.scene.add(axes);
 var pointLight = new THREE.PointLight(0xffffff);
@@ -143,7 +143,7 @@ interface HTMLHyperlinkElementUtils {
 };
 
 let clientEngine = new lk.ClientEngine(renderingSystem, demo.simFPS);
-demo.initialiseGame(clientEngine.engine);
+demo.ballsDemo.initialiseGame(clientEngine.engine);
 //demo.initialiseLevel(clientEngine.engine);
 clientEngine.start();
 
