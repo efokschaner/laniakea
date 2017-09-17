@@ -329,3 +329,12 @@ export class PacketConnection {
     return `${sentCount} / ${ackedCount} = ${100 * sentCount / ackedCount}%`;
   }
 }
+
+export class S2C_FrameUpdatePacket implements Serializable {
+  public simulationTimeS: number;
+  public componentData: Uint8Array; // This is a bit silly but temporary state of affairs, packets should not really need to use buffers internally
+  serialize(stream: SerializationStream): void {
+    stream.serializeFloat64(this, 'simulationTimeS');
+    stream.serializeUint8Array(this, 'componentData');
+  }
+}

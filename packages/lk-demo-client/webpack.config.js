@@ -70,6 +70,6 @@ module.exports = {
     new ExtractTextPlugin('styles.css'),
   ],
   resolve: {
-    extensions: ['.js']
+    extensions: ['.js', '.ts']
   }
 };

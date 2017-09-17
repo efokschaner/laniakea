@@ -1,11 +1,11 @@
-import * as msgpack from 'msgpack-lite';
 const present = require('present');
 import * as THREE from 'three';
 
 import {
   createEngine,
   Engine,
-  measureAndSerialize
+  measureAndSerialize,
+  S2C_FrameUpdatePacket,
 } from 'laniakea-shared';
 
 import { NetworkServer, PlayerId } from './network-server';
@@ -63,17 +63,15 @@ export class ServerEngine {
       this.engine.stepSimulation(this.getGameSimPeriodS());
       this.timeAmountInNeedOfSimulationS -= this.getGameSimPeriodS();
     }
-    let componentDataBuffer = measureAndSerialize(this.engine);
-    let message = {
-      simulationTime: this.engine.currentSimulationTimeS,
-      componentData: componentDataBuffer
-    };
+    let componentDataBuffer = new Uint8Array(measureAndSerialize(this.engine));
+    let framePacket = new S2C_FrameUpdatePacket();
+    framePacket.simulationTimeS = this.engine.currentSimulationTimeS,
+    framePacket.componentData = componentDataBuffer;
 
-    let messageBuffer = msgpack.encode(message);
+    let messageBuffer = new Uint8Array(measureAndSerialize(framePacket));
     this.playerInfos.forEach(pi => {
-      // copy because msgpack pools buffers and can overwrite before webrtc has sent.
-      this.networkServer.sendPacket(pi.id, Uint8Array.from(messageBuffer), () => {
-        //console.log('ACK for:', message.serverTime);
+      this.networkServer.sendPacket(pi.id, messageBuffer, () => {
+        //console.log('ACK for:', framePacket.simulationTimeS);
       });
     });
 
