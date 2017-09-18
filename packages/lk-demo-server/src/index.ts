@@ -4,6 +4,9 @@ import * as lk from 'laniakea-server';
 
 import * as demo from 'lk-demo-shared';
 
+import * as ballsDemo from './balls-demo';
+import * as pongDemo from './pong-demo';
+
 const networkServer = new lk.NetworkServer(lk.INSECURE_AuthCallback);
 let serverEngine = new lk.ServerEngine(
   networkServer,
@@ -11,8 +14,22 @@ let serverEngine = new lk.ServerEngine(
     simFPS: demo.simFPS
   }
 );
-demo.ballsDemo.initialiseGame(serverEngine.engine);
-demo.ballsDemo.initialiseLevel(serverEngine.engine);
+
+enum DemoType {
+  BALLS,
+  PONG
+}
+let demoType = DemoType.PONG as DemoType;
+
+switch(demoType) {
+  case DemoType.BALLS:
+    ballsDemo.initialiseServer(serverEngine);
+    break;
+  case DemoType.PONG:
+    pongDemo.initialiseServer(serverEngine);
+    break;
+}
+
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)
 .then(function(){

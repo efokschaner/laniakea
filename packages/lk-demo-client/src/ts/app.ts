@@ -4,7 +4,9 @@ const present = require('present');
 
 import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
+
 import * as ballsDemo from './balls-demo';
+import * as pongDemo from './pong-demo';
 
 interface HTMLHyperlinkElementUtils {
   href: string;
@@ -20,11 +22,26 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 };
 
-let renderingSystem = new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!);
+enum DemoType {
+  BALLS,
+  PONG
+}
+let demoType = DemoType.PONG as DemoType;
+
+let renderingSystem: lk.RenderingSystem;
+
+switch(demoType) {
+  case DemoType.BALLS:
+    renderingSystem = new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!);
+    break;
+  case DemoType.PONG:
+    renderingSystem = new pongDemo.RenderingSystemImpl(document.getElementById('scene')!);
+    break;
+  default:
+    throw new Error('unimplemented');
+}
 
 let clientEngine = new lk.ClientEngine(renderingSystem, demo.simFPS);
-
-demo.ballsDemo.initialiseGame(clientEngine.engine);
 
 clientEngine.start();
 

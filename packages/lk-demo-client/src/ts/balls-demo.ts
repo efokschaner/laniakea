@@ -4,11 +4,15 @@ require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js'
 import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
 
+import {RendererSizeUpdater} from './renderer-size-updater';
+
 export class RenderingSystemImpl implements lk.RenderingSystem {
   private scene = new THREE.Scene();
-  private camera: THREE.PerspectiveCamera;
-  private needsAspectRatioUpdate = true;
+  private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
+  private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
+
+
   private cameraController: THREE.OrbitControls;
   private currentlySelectedObject?: THREE.Object3D;
   private activeCameraLerp?: (currentWallTimeMS: number) => void;
@@ -32,8 +36,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.currentlySelectedObject = object;
   }
 
-
-  // Maybe move out of Engine?
   private raycaster = new THREE.Raycaster();
   private getIntersects(camera: THREE.Camera, topLeftScreenCoord: { x: number, y: number}, objects: THREE.Object3D[]) {
     let centeredScreenCoord = { x: (topLeftScreenCoord.x * 2) - 1, y: 1 - (topLeftScreenCoord.y * 2)};
@@ -42,7 +44,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   }
 
   constructor(private sceneElementContainer: HTMLElement) {
-    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
     this.camera.translateZ(200);
     this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.cameraController.enablePan = true;
@@ -77,17 +78,11 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     var ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
 
-    window.addEventListener("resize", () => { this.needsAspectRatioUpdate = true; });
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
   render(wallTimeNowMS: number, engine: lk.Engine) {
-    if(this.needsAspectRatioUpdate) {
-      this.camera.aspect = this.sceneElementContainer.clientWidth / this.sceneElementContainer.clientHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(this.sceneElementContainer.clientWidth, this.sceneElementContainer.clientHeight);
-      this.needsAspectRatioUpdate = false;
-    }
+    this.rendererSizeUpdater.update();
     if(this.activeCameraLerp) { this.activeCameraLerp(wallTimeNowMS); }
     this.cameraController.update();
     for(let ball of engine.getComponents(demo.ballsDemo.BallShape)!) {
