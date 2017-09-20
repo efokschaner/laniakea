@@ -12,14 +12,37 @@
     {
       "taskName": "Build",
       "type": "shell",
-      "command": "yarn run build",
+      "command": "yarn run build 2> >(node rewrite-build-stderr.js)",
       "options": {
         "cwd": "${workspaceRoot}"
       },
       "problemMatcher": [
         {
           "base": "$tsc",
-          "fileLocation": ["relative", "${workspaceRoot}"]
+          "fileLocation": "absolute"
+        },
+        {
+          "owner": "webpack",
+          "fileLocation": "absolute",
+          "pattern": [
+            {
+              "regexp": "(ERROR|WARNING) in (.+)$",
+              "severity" : 1,
+              "file": 2
+            },
+            {
+              "regexp": "\\((\\d+),(\\d+)\\): error TS\\d+: (.+)$",
+              "line": 1,
+              "column": 2,
+              "message": 3,
+              "loop": true
+            }
+          ],
+          "background": {
+            "activeOnStart": false,
+            "beginsPattern": "Time: \\d+ms",
+            "endsPattern": "webpack: bundle is now VALID."
+          }
         }
       ],
       "group": {

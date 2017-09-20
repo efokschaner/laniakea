@@ -43,6 +43,17 @@ switch(demoType) {
 
 let clientEngine = new lk.ClientEngine(renderingSystem, demo.simFPS);
 
+switch(demoType) {
+  case DemoType.BALLS:
+    demo.ballsDemo.initialiseGame(clientEngine.engine);
+    break;
+  case DemoType.PONG:
+    pongDemo.initialiseClient(clientEngine);
+    break;
+  default:
+    throw new Error('unimplemented');
+}
+
 clientEngine.start();
 
 var gameServerWsUrl = document.createElement('a') as HTMLAnchorElement & HTMLHyperlinkElementUtils;

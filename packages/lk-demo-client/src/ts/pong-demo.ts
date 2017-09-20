@@ -7,7 +7,7 @@ import {RendererSizeUpdater} from './renderer-size-updater';
 
 export class RenderingSystemImpl implements lk.RenderingSystem {
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
+  private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
@@ -16,12 +16,11 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   // private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
 
   constructor(private sceneElementContainer: HTMLElement) {
-    this.camera.translateZ(200);
+    this.camera.translateZ(10);
     let axes = new THREE.AxisHelper(1000);
     this.scene.add(axes);
-    /*var ambientLight = new THREE.AmbientLight(0x202020);
+    var ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
-*/
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
@@ -57,4 +56,8 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     */
     this.renderer.render(this.scene, this.camera);
   }
+}
+
+export function initialiseClient(clientEngine: lk.ClientEngine) {
+  demo.pongDemo.registerSharedComponents(clientEngine.engine);
 }

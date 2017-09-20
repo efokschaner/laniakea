@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "lerna": "^2.1.0",
+    "split": "^1.0.1",
     "typescript": "^2.3.4"
   },
   "workspaces": [
