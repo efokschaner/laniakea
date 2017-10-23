@@ -14,6 +14,17 @@ export class SerializableVector3 extends THREE.Vector3 implements lk.Serializabl
   }
 }
 
+export function serializeVector2(stream: lk.SerializationStream, vector:THREE.Vector2) {
+  stream.serializeFloat32(vector, 'x');
+  stream.serializeFloat32(vector, 'y');
+}
+
+export class SerializableVector2 extends THREE.Vector2 implements lk.Serializable {
+  serialize(stream: lk.SerializationStream): void {
+    return serializeVector2(stream, this);
+  }
+}
+
 export class Position extends SerializableVector3 implements lk.Serializable {
 }
 

@@ -22,32 +22,21 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 };
 
+let clientEngine = new lk.ClientEngine(demo.simFPS);
+
 enum DemoType {
   BALLS,
   PONG
 }
 let demoType = DemoType.PONG as DemoType;
 
-let renderingSystem: lk.RenderingSystem;
-
 switch(demoType) {
   case DemoType.BALLS:
-    renderingSystem = new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!);
-    break;
-  case DemoType.PONG:
-    renderingSystem = new pongDemo.RenderingSystemImpl(document.getElementById('scene')!);
-    break;
-  default:
-    throw new Error('unimplemented');
-}
-
-let clientEngine = new lk.ClientEngine(renderingSystem, demo.simFPS);
-
-switch(demoType) {
-  case DemoType.BALLS:
+    clientEngine.setRenderingSystem(new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!));
     demo.ballsDemo.initialiseGame(clientEngine.engine);
     break;
   case DemoType.PONG:
+    clientEngine.setRenderingSystem(new pongDemo.RenderingSystemImpl(document.getElementById('scene')!, clientEngine));
     pongDemo.initialiseClient(clientEngine);
     break;
   default:
@@ -63,16 +52,3 @@ gameServerWsUrl.password = 'whateverpass';
 
 clientEngine.networkClient.connect(gameServerWsUrl.href);
 clientEngine.networkClient.onConnected.attach(() => { console.log('Connected to server'); });
-
-let logcounter = 0;
-clientEngine.networkClient.onPacketReceived.attach(msg => {
-  let dataView = new DataView(msg.buffer, msg.byteOffset, msg.byteLength);
-  let readStream = new lk.ReadStream(dataView);
-  let framePacket = new lk.S2C_FrameUpdatePacket();
-  framePacket.serialize(readStream);
-  let componentDataDataView = new DataView(framePacket.componentData.buffer, framePacket.componentData.byteOffset, framePacket.componentData.byteLength);
-  clientEngine.engine.serialize(new lk.ReadStream(componentDataDataView));
-  if(++logcounter % 100 == 0) {
-    console.log('message length:', msg.byteLength);
-  }
-});

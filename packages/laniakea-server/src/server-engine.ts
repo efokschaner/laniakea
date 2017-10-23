@@ -1,5 +1,6 @@
 const present = require('present');
 import * as THREE from 'three';
+import * as tsEvents from 'ts-events';
 
 import {
   createEngine,
@@ -28,8 +29,10 @@ export class ServerEngine {
 
   static defaultOptions: ServerEngineOptions = {
     simFPS: 30
-  }
+  };
   options: ServerEngineOptions;
+  onPlayerConnected: tsEvents.BaseEvent<PlayerId> = new tsEvents.QueuedEvent<PlayerId>();
+
   constructor(private networkServer: NetworkServer, options: Partial<ServerEngineOptions>) {
     this.options = Object.assign({}, ServerEngine.defaultOptions, options);
     networkServer.onConnection.attach((playerId) => {
@@ -38,6 +41,7 @@ export class ServerEngine {
         id: playerId,
         displayName: playerId.toString()
       });
+      this.onPlayerConnected.post(playerId);
     });
   }
 
@@ -60,6 +64,7 @@ export class ServerEngine {
     timeDeltaS = Math.min(timeDeltaS, 0.25);
     this.timeAmountInNeedOfSimulationS += timeDeltaS;
     while(this.timeAmountInNeedOfSimulationS >= this.getGameSimPeriodS()) {
+      tsEvents.flush();
       this.engine.stepSimulation(this.getGameSimPeriodS());
       this.timeAmountInNeedOfSimulationS -= this.getGameSimPeriodS();
     }

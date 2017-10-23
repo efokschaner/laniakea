@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "start": "node .",
+    "start": "node -r source-map-support/register .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "efokschaner",
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.84.11",
+    "source-map-support": "^0.5.0",
     "typescript": "^2.3.4"
   }
 }

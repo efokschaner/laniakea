@@ -232,6 +232,9 @@ export interface ComponentEngine extends Serializable {
   createEntity(components?: Serializable[], entityId?: EntityId): Entity;
   createComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T>;
 
+  removeEntity(entityId: EntityId): void;
+  removeComponent(componentId: ComponentId): void;
+
   getComponents<T extends Serializable>(componentType: {new():T}): Iterable<Component<T>>;
   getComponent<T extends Serializable>(componentType: {new():T}, componentId: ComponentId): Component<T> | undefined;
   getComponentOfEntity<T extends Serializable>(componentType: {new():T}, entityId: EntityId): Component<T> | undefined;
@@ -310,6 +313,14 @@ class EngineImpl implements Engine
 
   createComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> {
     return this.createGenericComponent(ownerId, data) as Component<T>;
+  }
+
+  removeEntity(entityId: EntityId): void {
+    throw new Error("Unimplemented");
+  }
+
+  removeComponent(componentId: ComponentId): void {
+    throw new Error("Unimplemented");
   }
 
   *getAllComponents(): Iterable<GenericComponent> {
@@ -413,14 +424,14 @@ class EngineImpl implements Engine
 
   private lastComponentId: ComponentId = 0;
   private getNextComponentId(): ComponentId {
-    return ++this.lastEntityId;
+    return ++this.lastComponentId;
   }
 
   public currentSimulationTimeS = 0;
 
   stepSimulation(timeDeltaS: number) {
-    this.systems.forEach(s => s.Step(this, timeDeltaS));
     this.currentSimulationTimeS += timeDeltaS;
+    this.systems.forEach(s => s.Step(this, timeDeltaS));
   }
 
   serialize(stream: SerializationStream): void {

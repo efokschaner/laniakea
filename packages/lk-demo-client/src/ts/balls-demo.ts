@@ -81,7 +81,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  render(wallTimeNowMS: number, engine: lk.Engine) {
+  render(wallTimeNowMS: number, engine: lk.ComponentEngine) {
     this.rendererSizeUpdater.update();
     if(this.activeCameraLerp) { this.activeCameraLerp(wallTimeNowMS); }
     this.cameraController.update();

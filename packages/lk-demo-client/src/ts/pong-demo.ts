@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import * as datGui from 'dat-gui';
 
 import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
 
-export class RenderingSystemImpl implements lk.RenderingSystem {
+class ThreeRenderer implements lk.RenderingSystem {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
@@ -24,7 +25,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  render(wallTimeNowMS: number, engine: lk.Engine) {
+  render(wallTimeNowMS: number, engine: lk.ComponentEngine) {
     this.rendererSizeUpdater.update();
     /*
     for(let ball of engine.getComponents(demo.ballsDemo.BallShape)!) {
@@ -55,6 +56,38 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     }
     */
     this.renderer.render(this.scene, this.camera);
+  }
+}
+
+export class GuiRenderer implements lk.RenderingSystem {
+  private guiViewModel = {
+    currentSimTime: 0
+  };
+  private guiView = new datGui.GUI();
+
+  constructor(private engine: lk.ClientEngine) {
+    this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
+  }
+
+  render(wallTimeNowMS: number, engine: lk.ComponentEngine) {
+    this.guiViewModel.currentSimTime = this.engine.currentFrameStartWallTimeMS;
+  }
+}
+
+export class RenderingSystemImpl implements lk.RenderingSystem {
+  private threeRenderer: ThreeRenderer;
+  private guiRenderer: GuiRenderer;
+
+  constructor(
+    private sceneElementContainer: HTMLElement,
+    engine: lk.ClientEngine) {
+    this.threeRenderer = new ThreeRenderer(sceneElementContainer);
+    this.guiRenderer = new GuiRenderer(engine);
+  }
+
+  render(wallTimeNowMS: number, engine: lk.ComponentEngine) {
+    this.threeRenderer.render(wallTimeNowMS, engine);
+    this.guiRenderer.render(wallTimeNowMS, engine);
   }
 }
 
