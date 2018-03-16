@@ -14,34 +14,41 @@ export interface RenderingSystem {
   render(wallTimeNowMS: number, engine: ComponentEngine): void;
 }
 
+interface PeriodicCallbackHandle {
+  stop(): void;
+}
+
+function periodicCallback(callback: () => void, periodMS: number, cosmeticName: string) : PeriodicCallbackHandle {
+  let nextTimeoutHandle: NodeJS.Timer;
+  let callbackWrapper = () => {
+    let startTimeMS = present();
+    try {
+      callback();
+    } catch (e) {
+      console.error(`Exception from ${cosmeticName} callback`);
+      console.error(e, e.stack);
+    }
+    let endTimeMS = present();
+    let durationMS = startTimeMS - endTimeMS;
+    let timeToNextCallMS = periodMS - durationMS;
+    if(timeToNextCallMS < 0) {
+      console.warn(`${cosmeticName} callback took longer than period. periodMS=${periodMS} durationMS=${durationMS}`);
+      timeToNextCallMS = 0;
+    }
+    nextTimeoutHandle = setTimeout(callbackWrapper, timeToNextCallMS);
+  };
+  nextTimeoutHandle = setTimeout(callbackWrapper, 0);
+  return {
+    stop() {
+      clearTimeout(nextTimeoutHandle);
+    }
+  }
+}
+
 class ServerTimeEstimator {
   public update() {
 
   }
-
-}
-
-class Loop {
-  constructor(private cb: () => void, private periodMS: number) {
-  }
-
-  start() {
-    this.shouldRun = true;
-    setTimeout(() => {
-      if (this.shouldRun) {
-        let startTime = present();
-        this.cb();
-      }
-    }, 0);
-  }
-
-  stop() {
-
-  }
-
-  private shouldRun = false;
-
-
 }
 
 export class ClientEngine {
@@ -71,7 +78,9 @@ export class ClientEngine {
   gameSimPeriodMS = 1000 * this.gameSimPeriodS;
   public currentFrameStartWallTimeMS = 0;
   private timeAmountInNeedOfSimulationMS = 0;
-  private simLoop() {
+  private updateSimulationHandle: PeriodicCallbackHandle;
+
+  private updateSimulation() {
     let newCurrentFrameStartWallTimeMS = present();
     let wallTimeDeltaMS = newCurrentFrameStartWallTimeMS - this.currentFrameStartWallTimeMS;
     this.currentFrameStartWallTimeMS = newCurrentFrameStartWallTimeMS;
@@ -86,21 +95,18 @@ export class ClientEngine {
       Uint8Array.from([]),
       //() => console.log('acked')
     );
-
-    let currentFrameEndWallTimeMS = present();
-    let frameDurationMS = currentFrameEndWallTimeMS - this.currentFrameStartWallTimeMS;
-    let timeToNextFrameMS = this.gameSimPeriodMS - frameDurationMS;
-    if(timeToNextFrameMS < 0) {
-      console.warn(`simLoop took longer than gameSimPeriodS. frameDurationMS=${frameDurationMS}`);
-      timeToNextFrameMS = 0;
-    }
-    setTimeout(this.simLoop.bind(this), timeToNextFrameMS);
   }
 
   start() {
     this.currentFrameStartWallTimeMS = present();
-    setTimeout(this.simLoop.bind(this), 0);
+    this.updateSimulationHandle = periodicCallback(this.updateSimulation.bind(this), this.gameSimPeriodMS, 'updateSimulation');
+
     requestAnimationFrame(this.renderLoop.bind(this));
+  }
+
+  stop() {
+    this.updateSimulationHandle.stop();
+
   }
 
   renderLoop(wallTimeNowMS: number) {

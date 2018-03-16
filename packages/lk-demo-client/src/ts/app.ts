@@ -30,19 +30,22 @@ enum DemoType {
 }
 let demoType = DemoType.PONG as DemoType;
 
+let renderingSystem: lk.RenderingSystem;
+
 switch(demoType) {
   case DemoType.BALLS:
-    clientEngine.setRenderingSystem(new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!));
+    renderingSystem = new ballsDemo.RenderingSystemImpl(document.getElementById('scene')!);
     demo.ballsDemo.initialiseGame(clientEngine.engine);
     break;
   case DemoType.PONG:
-    clientEngine.setRenderingSystem(new pongDemo.RenderingSystemImpl(document.getElementById('scene')!, clientEngine));
+    renderingSystem = new pongDemo.RenderingSystemImpl(document.getElementById('scene')!, clientEngine);
     pongDemo.initialiseClient(clientEngine);
     break;
   default:
     throw new Error('unimplemented');
 }
 
+clientEngine.setRenderingSystem(renderingSystem);
 clientEngine.start();
 
 var gameServerWsUrl = document.createElement('a') as HTMLAnchorElement & HTMLHyperlinkElementUtils;
