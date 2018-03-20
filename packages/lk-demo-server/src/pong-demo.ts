@@ -4,6 +4,36 @@ import * as lk from 'laniakea-server';
 
 import { pongDemo } from 'lk-demo-shared';
 
+
+// Quick and dirty seedable PRNG to get deterministic results.
+// From https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+class DeterministicPRNG {
+  // seed may be any number other than zero or a multiple of PI
+  constructor(public seed: number) {
+  }
+  public getRandomNumberZeroInclusiveToOneExclusive() {
+    let x = Math.sin(this.seed++) * 10000;
+    return x - Math.floor(x);
+  }
+  public getRandomInt(maxValExclusive: number) {
+    return Math.floor(this.getRandomNumberZeroInclusiveToOneExclusive() * maxValExclusive);
+  }
+}
+
+function calculatePlayersOrdering(numPlayers: number): Array<number> {
+  // default with 2 players in fixed clockwise order to prevent them experiencing
+  // a swapping as the shape grows / contracts from the non-random regime to this one
+  let playerAtVertIndex = [0, 1];
+  let prng = new DeterministicPRNG(1);
+  for(let i = 2; i < numPlayers; ++i) {
+    // Insert the players in a scrambled but deterministic order that
+    // ensures existing players are not reordered
+    let targetIndex = prng.getRandomInt(playerAtVertIndex.length);
+    playerAtVertIndex.splice(targetIndex, 0, i);
+  }
+  return playerAtVertIndex;
+}
+
 function calculateShapeForNumPlayers(numPlayers: number) {
   let scaleFactor = 10;
   // Create a classic pong board
@@ -31,26 +61,12 @@ function calculateShapeForNumPlayers(numPlayers: number) {
     vertices: new Array<THREE.Vector2>(numPlayers),
     vertIndicesOfPlayers: new Array<number>(numPlayers)
   };
-
-  let playerAtVertIndex = new Array<number>();
-  for(let i = 0; i < numPlayers; ++i) {
+  let playerAtVertIndex = calculatePlayersOrdering(numPlayers);
+  for (let i = 0; i < playerAtVertIndex.length; ++i) {
     let angle = 2 * Math.PI * i / numPlayers;
     let vert = new THREE.Vector2(Math.sin(angle), Math.cos(angle));
     vert.multiplyScalar(scaleFactor);
-    result.vertices[numPlayers] = vert;
-
-    // Insert the players in a scrambled but deterministic order that
-    // ensures existing players are not reordered
-    if (i == 0) {
-      playerAtVertIndex[0] = 0;
-    } else if (i == 1) {
-      playerAtVertIndex[1] = 1;
-    } else {
-      let targetIndex = Math.floor(i * (Math.cos(2 * i) ^ 2)) % i;
-      playerAtVertIndex.splice(targetIndex, 0, i);
-    }
-  }
-  for (let i = 0; i < playerAtVertIndex.length; ++i) {
+    result.vertices[i] = vert;
     result.vertIndicesOfPlayers[playerAtVertIndex[i]] = i;
   }
   return result;
