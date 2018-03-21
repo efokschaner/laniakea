@@ -18,7 +18,7 @@ It's likely that these engines have not been able to ship a networking solution 
 unordered (unreliable) networking layers.
 Given the potential of WebRTC DataChannels to fulfil a similar role to UDP in traditional Game Engine architecture, and [support for WebRTC being relatively widespread](https://caniuse.com/#feat=rtcpeerconnection), I thought it would be interesting to explore whether WebRTC could improve this situation. Most of the experiments I've seen, explore WebRTC for its peer-to-peer qualities but I am more interested in its viability as a Client - Server connection.
 
-Given that an efficient game networking strategy benefits from relatively tight coupling to the organisation of game state and its serialisation / deserialisation mechanisms, I'm implementing a full runtime for organising game state and simulation, named **Laniakea**, in addition to the networking subsystem. Thus this is a "game engine" rather than just a "game networking library".
+Given that game networking efficiency benefits from relatively tight coupling to the organisation of game state and its serialisation / deserialisation mechanisms, and it interacts heavily with clock synchronisation and distributed simulation, I'm implementing a full runtime for organising game state and simulation, named **Laniakea**, in addition to the networking subsystem. Thus this is a "game engine" rather than just a "game networking library".
 
 Games shall implement their state and their logic in terms of this runtime, and as a result, will get out-of-the-box state replication between server and client.
 Games will be able to control networking where it intersects with things like "visibility" in a game, in order to achieve both security and performance objectives.
