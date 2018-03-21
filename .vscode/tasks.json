@@ -10,9 +10,9 @@
   },
   "tasks": [
     {
-      "taskName": "Build",
+      "label": "Build",
       "type": "shell",
-      "command": "yarn run build 2> >(node rewrite-build-stderr.js)",
+      "command": "yarn run build 2>&1 | ./rewrite-build-stderr.sh",
       "options": {
         "cwd": "${workspaceRoot}"
       },

@@ -43,3 +43,9 @@ yarn run build
 yarn run demo
 ```
 While it's running open <http://127.0.0.1:8080> to see the demo. Try opening 2 browser tabs!
+
+#### VS Code Development Notes
+Note that tasks defined in tasks.json assume bash. You can have VS evaluate them in bash using the user setting:
+```
+"terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
+```
