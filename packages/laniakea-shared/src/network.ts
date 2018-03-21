@@ -170,10 +170,10 @@ function mod(n: number, m: number) {
 }
 
 class Packet implements Serializable {
-  sequenceNumber: number; // SEQUENCE_NUMBER_BYTES
-  ackSequenceNumber: number; // SEQUENCE_NUMBER_BYTES
-  ackBitfield: number; // ACK_BITFIELD_BITS
-  payload: Uint8Array;
+  sequenceNumber!: number; // SEQUENCE_NUMBER_BYTES
+  ackSequenceNumber!: number; // SEQUENCE_NUMBER_BYTES
+  ackBitfield!: number; // ACK_BITFIELD_BITS
+  payload!: Uint8Array;
 
   serialize(stream: SerializationStream) {
     stream.serializeUint16(this, 'sequenceNumber');
@@ -215,8 +215,11 @@ export class CyclicBuffer<T> {
 
 class SentPacketData {
   sendTimeS: number;
-  ackedTimeS?: number;
   onAck?: () => void;
+  ackedTimeS?: number;
+  constructor(sendTimeS: number) {
+    this.sendTimeS = sendTimeS;
+  }
 }
 
 class ReceivedPacketData {
@@ -290,8 +293,7 @@ export class PacketConnection {
       }
     }
     outboundPacket.payload = payload;
-    let sentPacketData = new SentPacketData();
-    sentPacketData.sendTimeS = present() / 1000;
+    let sentPacketData = new SentPacketData(present() / 1000);
     sentPacketData.onAck = onAck;
     this.sentPacketsHistory.setElement(outboundPacket.sequenceNumber, sentPacketData);
     let outboundBuffer = measureAndSerialize(outboundPacket);
@@ -331,8 +333,8 @@ export class PacketConnection {
 }
 
 export class S2C_FrameUpdatePacket implements Serializable {
-  public simulationTimeS: number;
-  public componentData: Uint8Array; // This is a bit silly but temporary state of affairs, packets should not really need to use buffers internally
+  public simulationTimeS!: number;
+  public componentData!: Uint8Array; // This is a bit silly but temporary state of affairs, packets should not really need to use buffers internally
   serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'simulationTimeS');
     stream.serializeUint8Array(this, 'componentData');

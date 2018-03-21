@@ -78,7 +78,7 @@ export class ClientEngine {
   gameSimPeriodMS = 1000 * this.gameSimPeriodS;
   public currentFrameStartWallTimeMS = 0;
   private timeAmountInNeedOfSimulationMS = 0;
-  private updateSimulationHandle: PeriodicCallbackHandle;
+  private updateSimulationHandle?: PeriodicCallbackHandle;
 
   private updateSimulation() {
     let newCurrentFrameStartWallTimeMS = present();
@@ -105,7 +105,7 @@ export class ClientEngine {
   }
 
   stop() {
-    this.updateSimulationHandle.stop();
+    this.updateSimulationHandle!.stop();
 
   }
 
