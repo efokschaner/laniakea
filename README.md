@@ -33,11 +33,9 @@ Games shall implement their state and their logic in terms of this runtime, and 
 Games will be able to control networking where it intersects with things like "visibility" in a game, in order to achieve both security and performance objectives.
 **Laniakea** will provide a more "bring your own" approach to everything outside of State, Simulation, and Networking.
 
-### Planned Features
-- Statically Typed. Built with TypeScript.
-- Entity/Component/System architecture.
+### Key Features
+- Statically typed. Built with TypeScript.
 - Game state replication over webRTC Data Channels. Avoids [Head-of-line blocking](https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem).
-- Data bindings to game state that allow use of conventional web application frameworks for 2D UI.
 
 ### Demo/Development
 This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).

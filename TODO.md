@@ -4,7 +4,7 @@
 - [ ] Use inter-frame times to send more state sync packets. This ties in with above.
 - [ ] Automatic reconnection (as our connection is over UDP this is more about flushing and re-syncing simulation).
 - [ ] Explore capnproto ts as a networking + gamestate option.
-- [ ] Avoid divergence from quantisation when replicating data. (Quantise all data after simulation step?)
+- [ ] Explore use of conventional web frameworks for 2D UI, with databindings to game state.
 - [ ] Maybe eliminate BufferedRTCDataChannel if we just have handlers ready before the connection attempt?
 - [ ] Maybe eliminate reliable RTCDataChannel as reliable can be implemented on top of unreliable with our protocol.
 - [ ] Graphs / stats from network. Maybe expose for use by other systems.
