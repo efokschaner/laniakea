@@ -5,10 +5,10 @@
       "name": "Launch",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceRoot}/packages/laniakea-server/dist/index.js",
+      "program": "${workspaceRoot}/packages/lk-demo-server/dist/index.js",
       "stopOnEntry": false,
       "args": [],
-      "cwd": "${workspaceRoot}/packages/laniakea-server",
+      "cwd": "${workspaceRoot}/packages/lk-demo-server",
       "preLaunchTask": null,
       "runtimeExecutable": null,
       "runtimeArgs": [

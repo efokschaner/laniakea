@@ -17,6 +17,8 @@ export class RendererSizeUpdater {
     }
     if (sceneElementContainer.clientWidth !== this.prevSize.clientWidth
         || sceneElementContainer.clientHeight !== this.prevSize.clientHeight) {
+      // Set the scroll overflow to hidden to prevent the resizer oscillating with the existence of scrollbars.
+      sceneElementContainer.style.overflow = 'hidden';
       this.prevSize.clientWidth = sceneElementContainer.clientWidth;
       this.prevSize.clientHeight = sceneElementContainer.clientHeight;
       this.camera.aspect = sceneElementContainer.clientWidth / sceneElementContainer.clientHeight;

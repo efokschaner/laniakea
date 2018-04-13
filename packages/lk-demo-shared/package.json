@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.84.11",
-    "typescript": "^2.3.4"
+    "@types/webvr-api": "^0.0.34",
+    "typescript": "^2.7.2"
   }
 }

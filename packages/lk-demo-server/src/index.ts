@@ -19,7 +19,7 @@ enum DemoType {
   BALLS,
   PONG
 }
-let demoType = DemoType.PONG as DemoType;
+let demoType = DemoType.BALLS as DemoType;
 
 switch(demoType) {
   case DemoType.BALLS:
@@ -29,6 +29,10 @@ switch(demoType) {
     pongDemo.initialiseServer(serverEngine);
     break;
 }
+
+enum GameButtons { W, A, S, D }
+
+serverEngine.registerInputButtons(GameButtons);
 
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)

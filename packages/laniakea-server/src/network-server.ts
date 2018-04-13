@@ -39,7 +39,7 @@ export type AuthResult = AuthSuccessResult | AuthFailureResult;
 export type AuthCallback = (req: http.ClientRequest) => AuthResult;
 
 // For demo purposes only, do not use in production
-export function INSECURE_AuthCallback(httpRequest: http.ClientRequest) {
+export function INSECURE_AuthCallback(httpRequest: http.ClientRequest): AuthResult {
   var creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
   if(!creds) {
@@ -49,15 +49,13 @@ export function INSECURE_AuthCallback(httpRequest: http.ClientRequest) {
       extraHeaders: new Map([['WWW-Authenticate', 'Basic realm="Laniakea"']]),
     };
   }
-  return { playerId: creds.name };
+  return { playerId: parseInt(creds.name) };
 }
-
-export type PlayerId = number;
 
 // Handles authentication + establishment of the webRTC conn via WebSockets
 class RTCServer {
-  public readonly onConnection = new SyncEvent<{playerId: PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels}>();
-  private connections = new Map<PlayerId, lk.RTCPeerConnectionWithOpenDataChannels>();
+  public readonly onConnection = new SyncEvent<{playerId: lk.PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels}>();
+  private connections = new Map<lk.PlayerId, lk.RTCPeerConnectionWithOpenDataChannels>();
   private httpServer: http.Server;
   private wsServer: WebSocketServer;
   constructor(private authenticatePlayer: AuthCallback) {
@@ -102,7 +100,7 @@ class RTCServer {
     // TODO: Figure out if origin restrictions are needed
     return true;
   }
-  private _handleNewConnection(playerId: PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels) {
+  private _handleNewConnection(playerId: lk.PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels) {
     let maybeExistingConn = this.connections.get(playerId);
     if(maybeExistingConn !== undefined) {
       maybeExistingConn.close();
@@ -138,7 +136,7 @@ class RTCServer {
     let successfulAuthResult: AuthSuccessResult = authResult;
     console.log('Player with id ' + successfulAuthResult.playerId + ' authed successfully.');
     let wsConnection = request.accept(undefined, request.origin);
-
+    wsConnection.sendUTF(JSON.stringify({playerIdAssignment: successfulAuthResult.playerId}));
     let peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
     wsConnection.on('message', function(message) {
       if (message.type === 'utf8') {
@@ -221,13 +219,21 @@ class RTCServer {
 
 export class NetworkServer {
   private rtcServer: RTCServer;
-  private connections = new Map<PlayerId, lk.PacketConnection>();
+  private connections = new Map<lk.PlayerId, lk.PacketPeer>();
 
   constructor(authenticatePlayer: AuthCallback) {
     this.rtcServer = new RTCServer(authenticatePlayer);
     this.rtcServer.onConnection.attach(({playerId, conn}) => {
-      let packetConn = new lk.PacketConnection(conn);
-      this.connections.set(playerId, packetConn);
+      let packetPeer = new lk.PacketPeer();
+      for(let ctorAndName of this.registeredPacketTypes) {
+        packetPeer.registerPacketType(ctorAndName[0], ctorAndName[1]);
+      }
+      for(let ctorAndHandler of this.registeredPacketHandlers) {
+        let handlerWithPlayerIdParamBound = (packet: lk.Serializable, sequenceNumber: number) => ctorAndHandler[1](playerId, packet, sequenceNumber);
+        packetPeer.registerPacketHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
+      }
+      packetPeer.attachToConnection(conn);
+      this.connections.set(playerId, packetPeer);
       conn.onClose.attach(() => {
         this.connections.delete(playerId);
       });
@@ -243,14 +249,32 @@ export class NetworkServer {
     return this.rtcServer.close();
   }
 
-  onConnection = new SyncEvent<PlayerId>();
+  onConnection = new SyncEvent<lk.PlayerId>();
 
-  // TODO Don't expose these, make a message protocol on top of packets
-  onPacketReceived = new SyncEvent<{playerId: number, payload: Uint8Array}>();
-  sendPacket(playerId: PlayerId, payload: Uint8Array, onAck?: () => void) {
+  /*
+   * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
+   */
+  registerPacketType<T extends lk.Serializable>(
+    ctor: {new(...args: any[]):T},
+    uniquePacketTypeName: string
+  ): void {
+    this.registeredPacketTypes.push([ctor, uniquePacketTypeName]);
+  }
+
+  registerPacketHandler<T extends lk.Serializable>(
+    ctor: {new(...args: any[]):T},
+    handler: (playerId: lk.PlayerId, packet: T, sequenceNumber: number) => void
+  ): void {
+    this.registeredPacketHandlers.push([ctor as {new(...args: any[]): lk.Serializable}, handler as (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]);
+  }
+
+  sendPacket(playerId: lk.PlayerId, packet: lk.Serializable, onAck?: () => void) {
     let maybeConn = this.connections.get(playerId);
     if(maybeConn !== undefined) {
-      maybeConn.sendPacket(payload, onAck);
+      maybeConn.sendPacket(packet, onAck);
     }
   }
+
+  private registeredPacketTypes: [{new(...args: any[]): lk.Serializable}, string][] = [];
+  private registeredPacketHandlers: [{new(...args: any[]): lk.Serializable}, (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void][] = [];
 }

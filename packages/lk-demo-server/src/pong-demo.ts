@@ -76,12 +76,12 @@ function calculateShapeForNumPlayers(numPlayers: number) {
 export function initialiseServer(serverEngine: lk.ServerEngine) {
   pongDemo.registerSharedComponents(serverEngine.engine);
   serverEngine.onPlayerConnected.attach(() => {
-    let paddles = Array.from(serverEngine.engine.getComponents(pongDemo.Paddle));
+    let paddles = Array.from(serverEngine.currentFrame.state.getComponents(pongDemo.Paddle));
     let numPlayersPriorToAddition = paddles.length;
     let { vertices, vertIndicesOfPlayers } = calculateShapeForNumPlayers(numPlayersPriorToAddition + 1);
 
     // Remove any unneeded walls
-    let wallIndices = serverEngine.engine.getComponents(pongDemo.WallIndex);
+    let wallIndices = serverEngine.currentFrame.state.getComponents(pongDemo.WallIndex);
     for(let wallIndex of wallIndices) {
       if (wallIndex.getData().index > vertices.length) {
         // TODO Implement removal // serverEngine.engine.removeEntity(wallIndex.getOwnerId());

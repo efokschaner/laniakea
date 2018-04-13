@@ -81,11 +81,24 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  render(wallTimeNowMS: number, engine: lk.ComponentEngine) {
+  render(domHighResTimestampMS: number, clientSimulation: lk.ClientSimulation) {
     this.rendererSizeUpdater.update();
-    if(this.activeCameraLerp) { this.activeCameraLerp(wallTimeNowMS); }
+    if(this.activeCameraLerp) { this.activeCameraLerp(domHighResTimestampMS); }
     this.cameraController.update();
-    for(let ball of engine.getComponents(demo.ballsDemo.BallShape)!) {
+
+    let simTimeS = clientSimulation.getCurrentSimulationTimeS();
+    if(simTimeS === undefined) {
+      // Nothing to render yet
+      return;
+    }
+    let nearestFrames = clientSimulation.getSimulationFrames(simTimeS);
+    if(nearestFrames === undefined) {
+      // Nothing to render yet
+      return;
+    }
+    let state = nearestFrames.current.state;
+
+    for(let ball of state.getComponents(demo.ballsDemo.BallShape)!) {
       let maybeObj = this.rendererSpheres.get(ball.getId());
       if(maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
@@ -98,7 +111,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       maybeObj.position.copy(ball.getData().center);
     }
 
-    for(let wall of engine.getComponents(demo.ballsDemo.WallPlane)!) {
+    for(let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
       let maybeObj = this.rendererWalls.get(wall.getId());
       if(maybeObj === undefined) {
         let geometry = new THREE.PlaneBufferGeometry(200, 200, 4, 4);

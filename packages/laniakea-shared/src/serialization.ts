@@ -8,6 +8,17 @@
 // all TS-ish? But the data members would become accessors, so still
 // some cognitive burden.... Hmmm
 
+import * as reflection from './reflection';
+
+export interface Serializable {
+  serialize(stream: SerializationStream): void;
+}
+
+// TODO possibly unneeded?
+export function isSerializable(arg: {}): arg is Serializable {
+  return (arg as Serializable).serialize !== undefined;
+}
+
 export interface SerializationStream {
   readonly isReading: boolean;
   readonly isWriting: boolean;
@@ -25,6 +36,8 @@ export interface SerializationStream {
 
   serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
   serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+
+  serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
 }
 
 export class ReadStream implements SerializationStream {
@@ -32,57 +45,68 @@ export class ReadStream implements SerializationStream {
   readonly isWriting = false;
 
   private curOffset = 0;
-  constructor(private dataView: DataView) {
+  constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
-  serializeUint8<T extends {[k in K]: number} & {[others: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeUint8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getUint8(this.curOffset);
     this.curOffset += 1;
   }
-  serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeUint16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getUint16(this.curOffset);
     this.curOffset += 2;
   }
-  serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeUint32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getUint32(this.curOffset);
     this.curOffset += 4;
   }
 
-  serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeInt8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getInt8(this.curOffset);
     this.curOffset += 1;
   }
-  serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeInt16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getInt16(this.curOffset);
     this.curOffset += 2;
   }
-  serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeInt32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getInt32(this.curOffset);
     this.curOffset += 4;
   }
 
-  serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeFloat32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getFloat32(this.curOffset);
     this.curOffset += 4;
   }
-  serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeFloat64<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     obj[key] = this.dataView.getFloat64(this.curOffset);
     this.curOffset += 8;
   }
 
-  serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeStringUTF16<T extends {[k in K]?: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     let strLenBytes = this.dataView.getUint8(this.curOffset);
     this.curOffset += 1;
     let stringView = new Uint16Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, strLenBytes);
     this.curOffset += strLenBytes;
     obj[key] = String.fromCharCode(...stringView);
   }
-  serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  serializeUint8Array<T extends {[k in K]?: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
     let buffLenBytes = this.dataView.getUint16(this.curOffset);
     this.curOffset += 2;
     let buffView = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
     this.curOffset += buffLenBytes;
     obj[key] = buffView;
+  }
+
+  serializeSerializable<T extends {[k in K]?: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    if(this.classRegistry === undefined) {
+      throw new Error('Can not serialize arbitrary type without a classRegistry.')
+    }
+    let kindId = this.dataView.getUint32(this.curOffset);
+    this.curOffset += 4;
+    let result = this.classRegistry.construct(kindId, []) as Serializable;
+    result.serialize(this);
+    obj[key] = result;
   }
 }
 
@@ -91,7 +115,8 @@ export class WriteStream implements SerializationStream {
   readonly isWriting = true;
 
   private curOffset = 0;
-  constructor(private dataView: DataView) {
+  // classRegistry is optional, only required for serialisation of non-builtin types.
+  constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
   serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
@@ -154,6 +179,16 @@ export class WriteStream implements SerializationStream {
     buffView.set(buff);
     this.curOffset += buffLenBytes;
   }
+
+  serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    if(this.classRegistry === undefined) {
+      throw new Error('Can not serialize arbitrary type without a classRegistry.')
+    }
+    let kindId = this.classRegistry.getKindIdFromConstructor(obj[key].constructor)!;
+    this.dataView.setUint32(this.curOffset, kindId);
+    this.curOffset += 4;
+    obj[key].serialize(this);
+  }
 }
 
 export class MeasureStream implements SerializationStream {
@@ -215,22 +250,47 @@ export class MeasureStream implements SerializationStream {
     this.curOffset += 2;
     this.curOffset += buffLenBytes;
   }
+
+  serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.curOffset += 4;
+    obj[key].serialize(this);
+  }
 }
 
-export interface Serializable {
-  serialize(stream: SerializationStream): void;
-}
-
-// TODO possibly unneeded?
-export function isSerializable(arg: {}): arg is Serializable {
-  return (arg as Serializable).serialize !== undefined;
-}
-
-export function measureAndSerialize(obj: Serializable): ArrayBuffer {
+export function measureAndSerialize(obj: Serializable, classRegistry?: reflection.ClassRegistry): ArrayBuffer {
   let measureStream = new MeasureStream();
   obj.serialize(measureStream);
   let writeBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());
-  let writeStream = new WriteStream(new DataView(writeBuffer));
+  let writeStream = new WriteStream(new DataView(writeBuffer), classRegistry);
   obj.serialize(writeStream);
   return writeBuffer;
 }
+
+/* Sketch for SerializableMap class
+TODO because we need some kind of uniform support for class and non-class serialization
+
+export class SerializableMap<K, V> extends Map<K, V> implements Serializable {
+  constructor(
+    keySerializeCb: keyof SerializationStream,
+    valueSerializeCb: keyof SerializationStream,
+  ) {
+   super();
+  }
+
+  serialize(stream: SerializationStream): void {
+    let numEntries = {val:0};
+    if(stream.isWriting) {
+      numEntries.val = this.size;
+    }
+    stream.serializeUint32(numEntries, 'val');
+    if(stream.isWriting) {
+      for(let [key, value] of this.entries()) {
+        stream[this.key]
+      }
+    } else {
+      for(let i = 0; i < numEntries.val; ++i) {
+      }
+    }
+  }
+}
+*/

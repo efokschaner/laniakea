@@ -13,14 +13,16 @@
     "@types/bluebird": "^3.5.5",
     "@types/dat-gui": "^0.6.3",
     "@types/three": "^0.84.11",
+    "@types/webvr-api": "^0.0.34",
     "ts-loader": "^2.1.0",
-    "typescript": "^2.3.4",
+    "typescript": "^2.7.2",
     "webpack-dev-server": "^2.4.2"
   },
   "dependencies": {
     "autoprefixer": "^6.3.6",
     "bluebird": "^3.5.0",
     "colors": "^1.1.0",
+    "caniuse-db": "^1.0.30000652",
     "css-loader": "^0.27.3",
     "csswring": "^5.1.1",
     "dat-gui": "^0.5.0",

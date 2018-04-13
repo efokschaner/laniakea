@@ -32,8 +32,8 @@ export function initialiseGame(engine: lk.Engine) {
   /*
   engine.addSystem(new class implements lk.System {
     private readonly GEE = new THREE.Vector3(0,-9.8,0);
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      for(let velocity of engine.getComponents(Velocity)!) {
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      for(let velocity of state.getComponents(Velocity)!) {
         velocity.getData().add(this.GEE.clone().multiplyScalar(timeDeltaS));
       }
     }
@@ -41,25 +41,25 @@ export function initialiseGame(engine: lk.Engine) {
   */
   // Add viscosity
   /*engine.addSystem(new class implements lk.System {
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      for(let velocity of engine.getComponents(Velocity)!) {
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      for(let velocity of state.getComponents(Velocity)!) {
         velocity.getData().multiplyScalar(0.999);
       }
     }
   });*/
   // integrate velocity
   engine.addSystem(new class implements lk.System {
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      for(let [position, velocity] of engine.getAspect(Position, Velocity)!) {
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      for(let [position, velocity] of state.getAspect(Position, Velocity)!) {
         position.getData().add(velocity.getData().clone().multiplyScalar(timeDeltaS));
       }
     }
   });
   // Update geometry from position
   engine.addSystem(new class implements lk.System {
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      let wallAspects = engine.getAspect(Position, WallPlane)!;
-      for(let [ballposition, ballshape] of engine.getAspect(Position, BallShape)!) {
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      let wallAspects = state.getAspect(Position, WallPlane)!;
+      for(let [ballposition, ballshape] of state.getAspect(Position, BallShape)!) {
         ballshape.getData().center.copy(ballposition.getData());
       }
     }
@@ -67,9 +67,9 @@ export function initialiseGame(engine: lk.Engine) {
   // Collisions between balls and walls
   engine.addSystem(new class implements lk.System {
     private readonly coefficientOfRestitution = 1;
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      for(let [ball, ballvelocitycomp] of engine.getAspect(BallShape, Velocity)!) {
-        for(let wall of engine.getComponents(WallPlane)!) {
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      for(let [ball, ballvelocitycomp] of state.getAspect(BallShape, Velocity)!) {
+        for(let wall of state.getComponents(WallPlane)!) {
           let wallPlane = wall.getData();
           let ballCenter = ball.getData().center;
           let vel = ballvelocitycomp.getData();
@@ -86,8 +86,8 @@ export function initialiseGame(engine: lk.Engine) {
   // Collisions between balls and balls
   engine.addSystem(new class implements lk.System {
     private readonly coefficientOfRestitution = 1;
-    Step(engine: lk.Engine, timeDeltaS: number) {
-      let balls = Array.from(engine.getAspect(BallShape, Velocity)!);
+    Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {
+      let balls = Array.from(state.getAspect(BallShape, Velocity)!);
       let curBoundingBox = new THREE.Box3();
       let aabbs = balls.map(([ball, ballvelocitycomp]) => {
         ball.getData().getBoundingBox(curBoundingBox);
@@ -117,14 +117,14 @@ export function initialiseGame(engine: lk.Engine) {
   });
 }
 
-export function initialiseLevel(engine: lk.Engine) {
+export function initialiseLevel(state: lk.EntityComponentState) {
   var gridSideLength = 100;
-  engine.createEntity([new WallPlane(new THREE.Vector3(0, 1, 0), gridSideLength)]);
-  engine.createEntity([new WallPlane(new THREE.Vector3(0, -1, 0), gridSideLength)]);
-  engine.createEntity([new WallPlane(new THREE.Vector3(0, 0, 1), gridSideLength)]);
-  engine.createEntity([new WallPlane(new THREE.Vector3(0, 0, -1), gridSideLength)]);
-  engine.createEntity([new WallPlane(new THREE.Vector3(1, 0, 0), gridSideLength)]);
-  engine.createEntity([new WallPlane(new THREE.Vector3(-1, 0, 0), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(0, 1, 0), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(0, -1, 0), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, 1), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, -1), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(1, 0, 0), gridSideLength)]);
+  state.createEntity([new WallPlane(new THREE.Vector3(-1, 0, 0), gridSideLength)]);
 
 
   var gridSideNumItems = 4;
@@ -138,7 +138,7 @@ export function initialiseLevel(engine: lk.Engine) {
         THREE.Math.randFloatSpread(velocityVal),
         THREE.Math.randFloatSpread(velocityVal));
       let pos = new THREE.Vector3(x, 0, z);
-      engine.createEntity([
+      state.createEntity([
         new Position(pos.x, pos.y, pos.z),
         new Velocity(velocity.x, velocity.y, velocity.z),
         new BallShape(pos, 16.0)

@@ -1,8 +1,10 @@
+// TODO figure out if this is necessary
 //require('webrtc-adapter/out/adapter_no_edge_no_global.js')
 
 import {VoidSyncEvent, SyncEvent} from 'ts-events';
 import * as Bluebird from 'bluebird';
 import * as lk from 'laniakea-shared';
+import { Serializable } from 'laniakea-shared';
 
 function logError(message: string) {
   return console.error(message);
@@ -17,7 +19,12 @@ class ClientRTCConnection extends lk.RTCPeerConnectionWithOpenDataChannels {
   }
 }
 
-function connectToRTCServer(serverWsUrl: string): Bluebird<ClientRTCConnection> {
+interface ConnectionAndPlayerId {
+  connection: ClientRTCConnection;
+  assignedPlayerId: lk.PlayerId;
+}
+
+function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId> {
   let disposableWebsocket = Bluebird.try(function() {
     return new WebSocket(serverWsUrl);
   }).disposer((ws) => { ws.close()});
@@ -39,6 +46,7 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ClientRTCConnection> 
       };
     })
     .then(function(connectedWsClient) {
+      let assignedPlayerId : number|undefined = undefined;
       connectedWsClient.onmessage = (evt) => {
         console.log('connectedWsClient.onmessage', evt);
         var message = JSON.parse(evt.data);
@@ -51,6 +59,8 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ClientRTCConnection> 
           }
         } else if (message.candidate) {
           peerConnection.addIceCandidate(message.candidate).catch(logError);
+        } else if (message.playerIdAssignment) {
+          assignedPlayerId = message.playerIdAssignment;
         } else {
           console.log('Unhandled ws mesage', message);
         }
@@ -85,13 +95,22 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ClientRTCConnection> 
         peerConnection.createDataChannel('unreliable', { ordered: false, maxRetransmits: 0 }));
       unreliableChannel.binaryType = 'arraybuffer';
       var unreliableChannelIsOpen = false;
-      return new Bluebird<ClientRTCConnection>(function(resolve, reject) {
+      return new Bluebird<ConnectionAndPlayerId>(function(resolve, reject) {
         function onChannelOpen() {
           if(reliableChannelIsOpen && unreliableChannelIsOpen) {
-            resolve(new ClientRTCConnection(
-              peerConnection,
-              reliableChannel,
-              unreliableChannel));
+            if(assignedPlayerId === undefined) {
+              // This should never happen as playerId should be transmitted before rtc stuff.
+              reject(new Error('Expected to have assignedPlayerId before connection was fully open.'));
+            } else {
+              resolve({
+                connection: new ClientRTCConnection(
+                  peerConnection,
+                  reliableChannel,
+                  unreliableChannel
+                ),
+                assignedPlayerId: assignedPlayerId
+              });
+            }
           }
         }
         reliableChannel.onopen = function () {
@@ -121,44 +140,59 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ClientRTCConnection> 
 
 
 export class NetworkClient {
-  private rtcConnection?: ClientRTCConnection;
-  private packetConnection?: lk.PacketConnection;
   constructor() {
-  }
-
-  private handleDisconnect() {
-    this.packetConnection = undefined;
-    if(this.rtcConnection) {
-      this.rtcConnection.close();
-    }
-    this.rtcConnection = undefined;
-    this.onDisconnected.post();
+    this.packetPeer = new lk.PacketPeer();
   }
 
   connect(serverWsUrl: string): Bluebird<void> {
-    return connectToRTCServer(serverWsUrl).then((rtcConnection) => {
-      this.rtcConnection = rtcConnection;
-      rtcConnection.onClose.attach(() => this.handleDisconnect());
-      this.packetConnection = new lk.PacketConnection(rtcConnection);
-      this.packetConnection.onPacketReceived.attach(this.onPacketReceived.post.bind(this.onPacketReceived));
-      this.onConnected.post();
+    return connectToRTCServer(serverWsUrl).then((connectResult) => {
+      this.rtcConnection = connectResult.connection;
+      this.rtcConnection.onClose.attach(() => this.handleDisconnect());
+      this.packetPeer.attachToConnection(this.rtcConnection);
+      this.isConnected = true;
+      this.onConnected.post(connectResult.assignedPlayerId);
       // TODO figure out if flushAndStopBuffering needs to be done or if
-      // re-architecture can eliminate it
+      // re-architecture can eliminate it (by hooking up handlers before connecting)
       // If it IS necessary, is this the right place to do it?
       this.rtcConnection.flushAndStopBuffering();
     }).catch(() => this.handleDisconnect());
   }
 
-  onConnected = new VoidSyncEvent();
+  isConnected = false;
+  // Carries our assigned playerId
+  onConnected = new SyncEvent<lk.PlayerId>();
   onDisconnected = new VoidSyncEvent();
 
-  // TODO Don't expose these, make a message protocol on top of packets
-  onPacketReceived = new SyncEvent<Uint8Array>();
-  sendPacket(payload: Uint8Array, onAck?: () => void) {
-    if(this.packetConnection) {
-      this.packetConnection.sendPacket(payload, onAck);
-    }
+  /*
+   * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
+   */
+  registerPacketType<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    uniquePacketTypeName: string
+  ): void {
+    return this.packetPeer.registerPacketType(ctor, uniquePacketTypeName);
   }
 
+  registerPacketHandler<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    handler: (t: T, sequenceNumber: number) => void
+  ): void {
+    return this.packetPeer.registerPacketHandler(ctor, handler);
+  }
 
+  sendPacket(packet: Serializable, onAck?: () => void) {
+    return this.packetPeer.sendPacket(packet, onAck);
+  }
+
+  private rtcConnection?: ClientRTCConnection;
+  private packetPeer = new lk.PacketPeer();
+
+  private handleDisconnect() {
+    if(this.rtcConnection) {
+      this.rtcConnection.close();
+    }
+    this.rtcConnection = undefined;
+    this.isConnected = false;
+    this.onDisconnected.post();
+  }
 }

@@ -1,12 +1,18 @@
 const present = require('present');
-import {SyncEvent} from 'ts-events';
-
+import { SyncEvent } from 'ts-events';
+import { CyclicBuffer } from './cyclic-buffer';
+import * as reflection from './reflection';
 import {
-  measureAndSerialize,
+  MeasureStream,
+  ReadStream,
   Serializable,
   SerializationStream,
-  ReadStream,
+  WriteStream,
+  measureAndSerialize
 } from './serialization';
+
+
+
 
 declare global {
   // Apply some improvements to RTCPeerConnection's interface
@@ -160,11 +166,17 @@ function sequenceNumberIsGreaterThan(lhs: number, rhs: number){
   return ((diff > 0) && (diff <= halfRange)) || diff < -halfRange;
 }
 
-function incrementSequenceNumber(num: number) {
-  return mod((num + 1), MAX_SEQUENCE_NUMBER_EXCLUSIVE);
+function normalizeSequenceNumber(num: number) {
+  return mod(num, MAX_SEQUENCE_NUMBER_EXCLUSIVE);
 }
 
-// Because who knew JS's % operator was so odd
+function incrementSequenceNumber(num: number) {
+  return normalizeSequenceNumber(num + 1);
+}
+
+// Because JS's % operator returns negative values
+// for modulus of negative numbers,
+// which we don't want.
 function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
@@ -180,36 +192,6 @@ class Packet implements Serializable {
     stream.serializeUint16(this, 'ackSequenceNumber');
     stream.serializeUint32(this, 'ackBitfield');
     stream.serializeUint8Array(this, 'payload');
-  }
-}
-
-export class CyclicBuffer<T> {
-  public entries: {index?: number, data?: T}[];
-  constructor(bufferSize: number) {
-    this.entries = new Array(bufferSize);
-    for(let i = 0; i < this.entries.length; ++i) {
-      this.entries[i] = {index: undefined, data: undefined};
-    }
-  }
-  public getElement(index: number) {
-    let entryIndex = mod(index, this.entries.length);
-    let entry = this.entries[entryIndex];
-    if(entry.index === index) {
-      return entry.data;
-    }
-    return undefined;
-  }
-  public setElement(index: number, data: T) {
-    let entryIndex = mod(index, this.entries.length);
-    let entry = this.entries[entryIndex];
-    entry.index = index;
-    entry.data = data;
-  }
-  public clearElement(index: number) {
-    let entryIndex = mod(index, this.entries.length);
-    let entry = this.entries[entryIndex];
-    entry.index = undefined;
-    entry.data = undefined;
   }
 }
 
@@ -230,56 +212,18 @@ class ReceivedPacketData {
  * Handles packet acking / rtt estimation
  * and other fun stuff
  */
-export class PacketConnection {
-  private packetHistoryBufferSize = 512;
-  private sentPacketsHistory = new CyclicBuffer<SentPacketData>(this.packetHistoryBufferSize);
-  private receivedPacketsHistory = new CyclicBuffer<ReceivedPacketData>(this.packetHistoryBufferSize);
-  private nextOutboundSequenceNumber = 0;
-  private getNextOutboundSequenceNumber(): number {
-    let ret = this.nextOutboundSequenceNumber;
-    this.nextOutboundSequenceNumber = incrementSequenceNumber(this.nextOutboundSequenceNumber);
-    return ret;
-  }
-  private highestReceivedSequenceNumber = -1;
-  private processAck(sentSequenceNumber: number, receivedTimeS: number) {
-    let sentPacketEntry = this.sentPacketsHistory.getElement(sentSequenceNumber);
-    if (sentPacketEntry !== undefined && sentPacketEntry.ackedTimeS === undefined) {
-      sentPacketEntry.ackedTimeS = receivedTimeS;
-      if(sentPacketEntry.onAck !== undefined) {
-        sentPacketEntry.onAck();
-        sentPacketEntry.onAck = undefined;
-      }
-    }
-  }
-  private handleIncomingPacket(data: ArrayBuffer) {
-    let inboundPacket = new Packet();
-    inboundPacket.serialize(new ReadStream(new DataView(data)));
-    if(sequenceNumberIsGreaterThan(inboundPacket.sequenceNumber, this.highestReceivedSequenceNumber)) {
-      for(let i = incrementSequenceNumber(this.highestReceivedSequenceNumber);
-          sequenceNumberIsGreaterThan(inboundPacket.sequenceNumber, i);
-          i = incrementSequenceNumber(i)) {
-        this.receivedPacketsHistory.clearElement(i);
-      }
-      this.highestReceivedSequenceNumber = inboundPacket.sequenceNumber;
-    }
-    this.receivedPacketsHistory.setElement(inboundPacket.sequenceNumber, new ReceivedPacketData());
-    let receivedTimeS = present() / 1000;
-    this.processAck(inboundPacket.ackSequenceNumber, receivedTimeS);
-    for(let i = 0; i < ACK_BITFIELD_BYTES * 8; ++i) {
-      let bitMask = 1 << i;
-      if(bitMask & inboundPacket.ackBitfield) {
-        let sequenceNumberRepresentedByBit = mod(inboundPacket.ackSequenceNumber - 1 - i, MAX_SEQUENCE_NUMBER_EXCLUSIVE);
-        this.processAck(sequenceNumberRepresentedByBit, receivedTimeS);
-      }
-    }
-    this.onPacketReceived.post(inboundPacket.payload);
-  }
-
-  onPacketReceived = new SyncEvent<Uint8Array>();
-  constructor(private openRtcPeerConnection: RTCPeerConnectionWithOpenDataChannels) {
+export class AckingPacketProtocol {
+  constructor(
+    private openRtcPeerConnection: RTCPeerConnectionWithOpenDataChannels
+  ) {
     console.assert(mod(MAX_SEQUENCE_NUMBER_EXCLUSIVE, this.packetHistoryBufferSize) == 0);
     openRtcPeerConnection.onUnreliableData.attach(this.handleIncomingPacket.bind(this));
   }
+
+  // Exposing the sequence number allows higher level systems to know whether
+  // this payload is new data that supersedes old data.
+  onPacketReceived = new SyncEvent<{payload: Uint8Array, sequenceNumber: number}>();
+
   sendPacket(payload: Uint8Array, onAck?: () => void) {
     let outboundPacket = new Packet();
     outboundPacket.sequenceNumber = this.getNextOutboundSequenceNumber();
@@ -296,7 +240,8 @@ export class PacketConnection {
     let sentPacketData = new SentPacketData(present() / 1000);
     sentPacketData.onAck = onAck;
     this.sentPacketsHistory.setElement(outboundPacket.sequenceNumber, sentPacketData);
-    let outboundBuffer = measureAndSerialize(outboundPacket);
+    this.lastSentAckSequenceNumber = outboundPacket.ackSequenceNumber;
+    let outboundBuffer = measureAndSerialize(outboundPacket, undefined);
     this.openRtcPeerConnection.sendUnreliable(outboundBuffer);
   }
 
@@ -330,13 +275,165 @@ export class PacketConnection {
     }
     return `${sentCount} / ${ackedCount} = ${100 * sentCount / ackedCount}%`;
   }
+
+  private packetHistoryBufferSize = 512;
+  private sentPacketsHistory = new CyclicBuffer<SentPacketData>(this.packetHistoryBufferSize);
+  private receivedPacketsHistory = new CyclicBuffer<ReceivedPacketData>(this.packetHistoryBufferSize);
+  private nextOutboundSequenceNumber = 0;
+  private getNextOutboundSequenceNumber(): number {
+    let ret = this.nextOutboundSequenceNumber;
+    this.nextOutboundSequenceNumber = incrementSequenceNumber(this.nextOutboundSequenceNumber);
+    return ret;
+  }
+  private highestReceivedSequenceNumber = -1;
+  private lastSentAckSequenceNumber = -1;
+  private processAck(sentSequenceNumber: number, receivedTimeS: number) {
+    let sentPacketEntry = this.sentPacketsHistory.getElement(sentSequenceNumber);
+    if (sentPacketEntry !== undefined && sentPacketEntry.ackedTimeS === undefined) {
+      sentPacketEntry.ackedTimeS = receivedTimeS;
+      if(sentPacketEntry.onAck !== undefined) {
+        sentPacketEntry.onAck();
+        sentPacketEntry.onAck = undefined;
+      }
+    }
+  }
+  private handleIncomingPacket(data: ArrayBuffer) {
+    let inboundPacket = new Packet();
+    inboundPacket.serialize(new ReadStream(new DataView(data), undefined));
+    if(sequenceNumberIsGreaterThan(inboundPacket.sequenceNumber, this.highestReceivedSequenceNumber)) {
+      for(let i = incrementSequenceNumber(this.highestReceivedSequenceNumber);
+          sequenceNumberIsGreaterThan(inboundPacket.sequenceNumber, i);
+          i = incrementSequenceNumber(i)) {
+        this.receivedPacketsHistory.clearElement(i);
+      }
+      this.highestReceivedSequenceNumber = inboundPacket.sequenceNumber;
+    }
+    this.receivedPacketsHistory.setElement(inboundPacket.sequenceNumber, new ReceivedPacketData());
+    let receivedTimeS = present() / 1000;
+    this.processAck(inboundPacket.ackSequenceNumber, receivedTimeS);
+    for(let i = 0; i < ACK_BITFIELD_BYTES * 8; ++i) {
+      let bitMask = 1 << i;
+      if(bitMask & inboundPacket.ackBitfield) {
+        let sequenceNumberRepresentedByBit = mod(inboundPacket.ackSequenceNumber - 1 - i, MAX_SEQUENCE_NUMBER_EXCLUSIVE);
+        this.processAck(sequenceNumberRepresentedByBit, receivedTimeS);
+      }
+    }
+    // If we've received multiple packets without having transmitted any, send an empty ack packet so that the
+    // other end knows we're getting them.
+    let halfTheAckRangeOfAPacket = ACK_BITFIELD_BYTES * 4;
+    if(sequenceNumberIsGreaterThan(
+      inboundPacket.sequenceNumber,
+      this.lastSentAckSequenceNumber + halfTheAckRangeOfAPacket)) {
+      // This implies we have half a packet's ack capacity of un-acked packets to ack
+      // Send a packet with zero length payload so that we transmit some acks.
+      this.sendPacket(new Uint8Array(0));
+    }
+    // Only event on packets that have a non-zero payload.
+    // Zero length payloads can be used to transmit acks when there's nothing else to send.
+    if(inboundPacket.payload.length > 0) {
+      this.onPacketReceived.post(inboundPacket);
+    }
+  }
 }
 
-export class S2C_FrameUpdatePacket implements Serializable {
-  public simulationTimeS!: number;
-  public componentData!: Uint8Array; // This is a bit silly but temporary state of affairs, packets should not really need to use buffers internally
-  serialize(stream: SerializationStream): void {
-    stream.serializeFloat64(this, 'simulationTimeS');
-    stream.serializeUint8Array(this, 'componentData');
+// Provides routing of different payload types to different callbacks
+export class PacketPayloadRouter {
+  constructor() {
   }
+
+  /*
+   * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
+   */
+  registerPacketType<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    uniquePacketTypeName: string
+  ): void {
+    this.classRegistry.registerClass(ctor, uniquePacketTypeName);
+  }
+
+  /*
+   * Add handlers for any packet type you wish to handle
+   */
+  registerHandler<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    handler: (t: T, sequenceNumber: number) => void) : void {
+    this.callbacks.set(ctor, handler);
+  }
+
+  handleRoutedPacket({payload, sequenceNumber}: {payload: Uint8Array, sequenceNumber: number}): void {
+    let dataView = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    let readStream = new ReadStream(dataView, this.classRegistry);
+    let readResult: {packet: Serializable|undefined } = { packet: undefined };
+    readStream.serializeSerializable(readResult, 'packet');
+    let packet = readResult.packet!;
+    let maybeCb = this.callbacks.get(packet.constructor);
+    if (maybeCb == undefined) {
+      console.error(`No handler registered for packet type: ${packet.constructor.name}`)
+      return;
+    }
+    maybeCb(packet, sequenceNumber);
+  }
+
+  serializeRoutedPacket(packet: Serializable): ArrayBuffer {
+    let measureStream = new MeasureStream();
+    let packetWrapper = {packet};
+    measureStream.serializeSerializable(packetWrapper, 'packet');
+    let writeBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());
+    let writeStream = new WriteStream(new DataView(writeBuffer), this.classRegistry);
+    writeStream.serializeSerializable(packetWrapper, 'packet');
+    return writeBuffer;
+  }
+
+  private classRegistry = new reflection.ClassRegistry();
+  private callbacks: Map<Function, (p: any, sequenceNumber: number) => void> = new Map();
+}
+
+
+/*
+ * This class does the recoupling of all the different networking layers,
+ * to remove boilerplate from client and server.
+ */
+export class PacketPeer {
+  constructor() {
+  }
+
+  attachToConnection(openRtcPeerConnection: RTCPeerConnectionWithOpenDataChannels) {
+    this.ackingTransport = new AckingPacketProtocol(openRtcPeerConnection);
+    this.ackingTransport.onPacketReceived.attach(this.packetRouter.handleRoutedPacket.bind(this.packetRouter));
+  }
+
+  /*
+   * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
+   */
+  registerPacketType<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    uniquePacketTypeName: string
+  ): void {
+    return this.packetRouter.registerPacketType(ctor, uniquePacketTypeName);
+  }
+
+  registerPacketHandler<T extends Serializable>(
+    ctor: {new(...args: any[]):T},
+    handler: (t: T, sequenceNumber: number) => void
+  ): void {
+    this.packetRouter.registerHandler(ctor, handler);
+  }
+
+  sendPacket(packet: Serializable, onAck?: () => void) {
+    if(this.ackingTransport) {
+      let payload = new Uint8Array(this.packetRouter.serializeRoutedPacket(packet));
+      this.ackingTransport.sendPacket(payload, onAck);
+    }
+  }
+
+  getRttEstimate() {
+    return this.ackingTransport ? this.ackingTransport.getRttEstimate() : 0;
+  }
+
+  getFractionAcked() {
+    return this.ackingTransport ? this.ackingTransport.getFractionAcked() : 0;
+  }
+
+  private ackingTransport?: AckingPacketProtocol;
+  private packetRouter = new PacketPayloadRouter();
 }
