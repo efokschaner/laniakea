@@ -10,7 +10,6 @@ import {
   S2C_FrameUpdatePacket
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
-import { onPossiblyUnhandledRejection } from 'bluebird';
 
 
 export class ClientSimluationFrameData {
@@ -191,6 +190,8 @@ export class ClientSimulation {
       return;
     }
     targetFrameData.predictedInput = inputFrame;
+    // We've modified the frame so mark it as dirty.
+    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex, targetFrameIndex);
   }
 
   /**
@@ -207,6 +208,19 @@ export class ClientSimulation {
       return;
     }
     let frameIndexToSimulate = this.oldestDirtySimulationFrameIndex;
+
+    // Our oldest stored frame can become dirty if we receive a state update for it but we cannot
+    // resimualte the whole frame because we do not have a previous frame.
+    // In this case we do not perform a full resimulation, we just apply the known authoritative updates.
+    if(frameIndexToSimulate === this.getOldestInitializedFrameIndex()) {
+      let frame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate)!;
+      this.applyPredictedOrAuthoritativeInputsToResolvedInputs(frame);
+      this.applyAuthoritativeStateToResolvedState(frame);
+      // Mark the NEXT frame as dirty as this frame is completely "up to date" now.
+      ++frameIndexToSimulate;
+      this.oldestDirtySimulationFrameIndex = frameIndexToSimulate;
+    }
+
     while(true) {
       let previousFrame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate - 1)!;
       if(previousFrame.resolvedFrameData.simulationTimeS > simulationTimeS) {
@@ -236,6 +250,27 @@ export class ClientSimulation {
     this.engine.copySimulationState(nextFrame.resolvedFrameData.state, nextFrame.resolvedFrameData.state);
   }
 
+  private insertNewFrame(frameIndex: number) : ClientSimluationFrameData {
+    let newFrame = this.engine.createSimulationFrame();
+    newFrame.simulationFrameIndex = frameIndex;
+    let newClientFrame = new ClientSimluationFrameData(newFrame);
+    // In situations where the renderer is not ticking the simulation, eg. because the tab is not focused
+    // The simulation can get so far behind that we can end up expiring the last known good frame outside our
+    // cyclic buffer in which case our simulation mechanism breaks.
+    // In order to avoid that we check for that case here and advance the simulation one tick to avoid
+    // expiring our only simulated frame.
+    let frameIndexWeAreAboutToReplace = frameIndex - this.frames.entries.length;
+    if(this.oldestDirtySimulationFrameIndex === frameIndexWeAreAboutToReplace + 1 ) {
+      this.simulateOneFrame(
+        this.frames.getElement(frameIndexWeAreAboutToReplace)!,
+        this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!
+      );
+      this.oldestDirtySimulationFrameIndex += 1;
+    }
+    this.frames.setElement(frameIndex, newClientFrame);
+    return newClientFrame;
+  };
+
   /**
    * Gets the frame data for frameIndex, initializes any new frames up to that index,
    * does NOT perform any simulation on any new frames that are added
@@ -243,28 +278,6 @@ export class ClientSimulation {
    * @param frameIndex
    */
   private getOrInsertFrameWithoutSimulation(frameIndex: number): ClientSimluationFrameData | undefined  {
-    let insertNewFrame = (frameIndex: number) : ClientSimluationFrameData => {
-      let newFrame = this.engine.createSimulationFrame();
-      newFrame.simulationFrameIndex = frameIndex;
-      let newClientFrame = new ClientSimluationFrameData(newFrame);
-
-      // In situations where the renderer is not ticking the simulation, eg. because the tab is not focused
-      // The simulation can get so far behind that we can end up expiring the last known good frame outside our
-      // cyclic buffer in which case our simulation mechanism breaks.
-      // In order to avoid that we check for that case here and advance the simulation one tick to avoid
-      // expiring our only simulated frame.
-      let frameIndexWeAreAboutToReplace = frameIndex - this.frames.entries.length;
-      if(this.oldestDirtySimulationFrameIndex === frameIndexWeAreAboutToReplace + 1 ) {
-        this.simulateOneFrame(
-          this.frames.getElement(frameIndexWeAreAboutToReplace)!,
-          this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!
-        );
-        this.oldestDirtySimulationFrameIndex += 1;
-      }
-
-      this.frames.setElement(frameIndex, newClientFrame);
-      return newClientFrame;
-    };
     if(this.largestInitializedFrameIndex !== undefined) {
       if(this.largestInitializedFrameIndex >= frameIndex) {
         // We either already have the frame or it has been discarded
@@ -276,10 +289,10 @@ export class ClientSimulation {
       }
       // Create all frames between the highest and this one.
       for(let frameIndexToInit = this.largestInitializedFrameIndex + 1; frameIndexToInit < frameIndex; ++frameIndexToInit) {
-        insertNewFrame(frameIndexToInit);
+        this.insertNewFrame(frameIndexToInit);
       }
     }
-    let result = insertNewFrame(frameIndex);
+    let result = this.insertNewFrame(frameIndex);
     if(this.largestInitializedFrameIndex === undefined) {
       this.firstEverFrameIndex = frameIndex;
       this.oldestDirtySimulationFrameIndex = frameIndex;
