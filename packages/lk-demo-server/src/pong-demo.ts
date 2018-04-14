@@ -4,6 +4,9 @@ import * as lk from 'laniakea-server';
 
 import { pongDemo } from 'lk-demo-shared';
 
+// Draft Strategy for pong AI
+// Find nearest ball with net velocity in direction of ai, intersect ball velocity with base line,
+// move in direction of intersect. If no balls match, move to centre.
 
 // Quick and dirty seedable PRNG to get deterministic results.
 // From https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
