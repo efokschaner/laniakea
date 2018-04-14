@@ -45,6 +45,7 @@ export class ClientInputHandler {
       targetSimulationTimeS = serverSimTimeS + (packetRttS / 2);
       packet.targetSimulationTimeS = targetSimulationTimeS;
     }
+    this.networkClient.sendPacket(packet);
     if (targetSimulationTimeS !== undefined) {
       this.clientSimulation.notifyInputBeingSent(this.currentInputState.clone(), targetSimulationTimeS);
     }
