@@ -185,7 +185,6 @@ export class ClientEngine {
     }
     // targetSimTimeS is selected to do minimal extrapolation in this fallback case
     let targetSimTimeS = currentSimTimeS - inputTravelTimeS;
-    console.log('Fallback: ' + targetSimTimeS);
     this.clientSimulation.doSimulationWork(targetSimTimeS);
   }
 }
