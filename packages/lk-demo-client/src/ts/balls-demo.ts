@@ -1,3 +1,4 @@
+import * as datGui from 'dat-gui';
 import * as THREE from 'three';
 require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
@@ -7,6 +8,13 @@ import * as demo from 'lk-demo-shared';
 import {RendererSizeUpdater} from './renderer-size-updater';
 
 export class RenderingSystemImpl implements lk.RenderingSystem {
+
+  private guiViewModel = {
+    currentSimTimeS: 0,
+    inputTravelTimeMS: 0
+  };
+  private guiView = new datGui.GUI();
+
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
@@ -44,6 +52,8 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   }
 
   constructor(private sceneElementContainer: HTMLElement) {
+    this.guiView.add(this.guiViewModel, 'currentSimTimeS').listen();
+    this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
     this.camera.translateZ(200);
     this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.cameraController.enablePan = true;
@@ -74,6 +84,9 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     var pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(160, 120, 140);
     pointLight.castShadow = true;
+    pointLight.shadow.camera.near = 0.1;
+    pointLight.shadow.camera.far = 1000;
+    pointLight.shadow.bias = -0.005;
     this.scene.add(pointLight);
     var ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
@@ -85,13 +98,15 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.rendererSizeUpdater.update();
     if(this.activeCameraLerp) { this.activeCameraLerp(domHighResTimestampMS); }
     this.cameraController.update();
-
     let simTimeS = clientSimulation.getCurrentSimulationTimeS();
+    this.guiViewModel.currentSimTimeS = simTimeS || 0;
+    let inputTravelTimeS = clientSimulation.getInputTravelTimeS();
+    this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
     if(simTimeS === undefined) {
       // Nothing to render yet
       return;
     }
-    let nearestFrames = clientSimulation.getSimulationFrames(simTimeS);
+    let nearestFrames = clientSimulation.getSimulationFrames(simTimeS + inputTravelTimeS);
     if(nearestFrames === undefined) {
       // Nothing to render yet
       return;
@@ -113,16 +128,19 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
 
     for(let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
       let maybeObj = this.rendererWalls.get(wall.getId());
+      let wallData = wall.getData();
       if(maybeObj === undefined) {
-        let geometry = new THREE.PlaneBufferGeometry(200, 200, 4, 4);
+        let geometry = new THREE.PlaneBufferGeometry(1, 1, 16, 16);
         let material = new THREE.MeshLambertMaterial( { color: 0xdddddd, wireframe: false } );
         maybeObj = new THREE.Mesh( geometry, material );
         maybeObj.receiveShadow = true;
         this.rendererWalls.set(wall.getId(), maybeObj);
         this.scene.add(maybeObj);
       }
-      wall.getData().projectPoint(new THREE.Vector3(0,0,0), maybeObj.position);
-      maybeObj.lookAt(wall.getData().normal);
+      let widthAndHeight = 2 * wallData.constant;
+      maybeObj.scale.setScalar(widthAndHeight);
+      wallData.projectPoint(new THREE.Vector3(0,0,0), maybeObj.position);
+      maybeObj.lookAt(wallData.normal);
     }
 
     this.renderer.render(this.scene, this.camera);

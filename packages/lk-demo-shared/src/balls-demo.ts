@@ -10,6 +10,9 @@ import {
   Velocity
 } from './shared-components';
 
+import { GameButtons } from '.';
+
+
 export class WallPlane extends THREE.Plane implements lk.Serializable {
   serialize(stream: lk.SerializationStream): void {
     stream.serializeFloat32(this, 'constant');
@@ -47,6 +50,30 @@ export function initialiseGame(engine: lk.Engine) {
       }
     }
   });*/
+  // Apply movement control to walls
+  engine.addSystem(new class implements lk.System {
+    Step({state, timeDeltaS, inputs}: lk.StepParams) {
+      let anyDown = false;
+      let anyUp = false;
+      for(let input of inputs.values()) {
+        if(input.buttons.get(GameButtons.DOWN) == lk.ButtonState.DOWN) {
+          anyDown = true;
+        }
+        if(input.buttons.get(GameButtons.UP) == lk.ButtonState.DOWN) {
+          anyUp = true;
+        }
+      }
+      for(let wall of state.getComponents(WallPlane)!) {
+        let wallPlane = wall.getData();
+        if(anyDown) {
+          wallPlane.constant -= timeDeltaS * 6;
+        } else if(anyUp) {
+          wallPlane.constant += timeDeltaS * 6;
+        }
+      }
+    }
+  });
+
   // integrate velocity
   engine.addSystem(new class implements lk.System {
     Step({state, timeDeltaS}: {state: lk.EntityComponentState, timeDeltaS: number}) {

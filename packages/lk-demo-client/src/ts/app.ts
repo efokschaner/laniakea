@@ -45,14 +45,12 @@ switch(demoType) {
     throw new Error('unimplemented');
 }
 
-enum GameButtons { UP, LEFT, DOWN, RIGHT }
-
-clientEngine.registerInputButtons(GameButtons, (key: string) => {
+clientEngine.registerInputButtons(demo.GameButtons, (key: string) => {
   switch (key) {
-    case 'w': return GameButtons.UP;
-    case 'a': return GameButtons.LEFT;
-    case 's': return GameButtons.DOWN;
-    case 'd': return GameButtons.RIGHT;
+    case 'w': return demo.GameButtons.UP;
+    case 'a': return demo.GameButtons.LEFT;
+    case 's': return demo.GameButtons.DOWN;
+    case 'd': return demo.GameButtons.RIGHT;
   }
   return undefined;
 });

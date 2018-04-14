@@ -30,9 +30,7 @@ switch(demoType) {
     break;
 }
 
-enum GameButtons { W, A, S, D }
-
-serverEngine.registerInputButtons(GameButtons);
+serverEngine.registerInputButtons(demo.GameButtons);
 
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)
