@@ -2,18 +2,21 @@ import * as Bluebird from 'bluebird';
 const present = require('present');
 import { SyncEvent, VoidSyncEvent } from 'ts-events';
 import {
+  C2S_InputFramePacket,
+  ContinuousInputKind,
   createEngine,
   Engine,
-  NumericEnum,
+  InputFrame,
+  measureAndSerialize,
   PlayerId,
   ReadStream,
   registerPacketTypes,
+  Serializable,
   S2C_FrameUpdatePacket
 } from 'laniakea-shared';
 import { NetworkClient } from './network-client';
 import { ServerTimeEstimator } from './server-time-estimator';
 import { ClientSimulation } from './client-simulation';
-import { ClientInputHandler } from './client-input-handler';
 
 export interface RenderingSystem {
   render(domHighResTimestampMS: number, simulation: ClientSimulation): void;
@@ -72,11 +75,6 @@ export class ClientEngine {
       this.options.simFPS,
       this.serverTimeEstimator,
       this.engine);
-    this.inputHandler = new ClientInputHandler(
-      this.serverTimeEstimator,
-      this.clientSimulation,
-      this.networkClient);
-
     registerPacketTypes(this.networkClient.registerPacketType.bind(this.networkClient));
     this.networkClient.registerPacketHandler(
       S2C_FrameUpdatePacket,
@@ -89,9 +87,20 @@ export class ClientEngine {
     });
   }
 
+  public registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: string): void {
+    this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
+  }
+
+  public getCurrentContinuousInput<T extends Serializable>(inputType: {new():T}): T|undefined {
+    if(this.currentInputFrame === undefined) {
+      return undefined;
+    }
+    return this.currentInputFrame.getContinuousInput(inputType);
+  }
+
   /**
-   * TODO, given we have determined it's unreasonable to expect a running ClientEngine
-   * to switch between server + serverless modes, we should consider passing the server info in to the constructor.
+   * TODO, given we have determined it's unreasonable to expect ClientEngine to handle both
+   * server + serverless modes, we should consider passing the server info in to the constructor.
    * @param serverWsUrl
    */
   public connectToServer(serverWsUrl: string): Bluebird<void> {
@@ -104,39 +113,17 @@ export class ClientEngine {
     this.renderingSystem = s;
   }
 
-  /**
-   * TODO, replace input "buttons" with a component style registration of continuous and evented inputs
-   * Continuous: server assumes input remains the same if it doesnt get an update from client.
-   * Evented: guaranteed once delivery, and only happens on a single frame.
-   * Move the buttons code that exists into a "stock" Buttons Input Component or something
-   */
-  /**
-   * Used to register the button-style inputs that will be networked for the game.
-   *
-   * @param buttonsEnum either a TypeScript enum of an object of string keys to numeric values
-   * that describes the button-style inputs you support in a keyboard-agnostic form. See buttonMappingCallback
-   * for converting actual keyboard keys into the key-agnostic button.
-   *
-   * @param buttonMappingCallback accepts https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
-   * should return a value from your buttonsEnum or undefined if the button is not used.
-   */
-  public registerInputButtons(
-    buttonsEnum: any,
-    buttonMappingCallback: (keyboardKey: string) => number | undefined): void {
-    this.engine.registerButtons(buttonsEnum);
-    this.inputHandler.registerButtons(buttonsEnum, buttonMappingCallback);
-  }
-
   public start() {
+    this.currentInputFrame = this.engine.createInputFrame();
     this.updateServerTimeEstimatorHandle = periodicCallback(this.serverTimeEstimator.update.bind(this.serverTimeEstimator), 50, 'updateServerTimeEstimator');
     this.animationFrameReqeuestHandle = requestAnimationFrame(this.renderLoop.bind(this));
-    this.updateInputHandlerHandle = periodicCallback(this.updateInputHandler.bind(this), 1000 / 60, 'updateInputHandler');
+    this.updateInputHandle = periodicCallback(this.updateInput.bind(this), 1000 / 60, 'updateInputHandler');
     this.fallbackClientSimulationHandle = periodicCallback(this.fallbackClientSimulation.bind(this), 1000, 'fallbackClientSimulation');
   }
 
   public stop() {
     this.fallbackClientSimulationHandle!.stop();
-    this.updateInputHandlerHandle!.stop();
+    this.updateInputHandle!.stop();
     cancelAnimationFrame(this.animationFrameReqeuestHandle!);
     this.updateServerTimeEstimatorHandle!.stop();
   }
@@ -149,15 +136,30 @@ export class ClientEngine {
   private networkClient = new NetworkClient();
   private serverTimeEstimator = new ServerTimeEstimator(this.networkClient);
   private clientSimulation: ClientSimulation;
-  private inputHandler: ClientInputHandler;
+  private currentInputFrame?: InputFrame;
   private renderingSystem?: RenderingSystem;
   private updateServerTimeEstimatorHandle?: PeriodicCallbackHandle;
   private animationFrameReqeuestHandle?: number;
-  private updateInputHandlerHandle?: PeriodicCallbackHandle;
+  private updateInputHandle?: PeriodicCallbackHandle;
   private fallbackClientSimulationHandle?: PeriodicCallbackHandle;
 
-  private updateInputHandler() {
-    this.inputHandler.update();
+  private updateInput() {
+    if(this.currentInputFrame === undefined) {
+      return;
+    }
+    let serverSimTimeS = this.clientSimulation.getCurrentSimulationTimeS();
+    let inputTravelTime = this.clientSimulation.getInputTravelTimeS();
+    let targetSimulationTimeS : number | undefined;
+    let packet = new C2S_InputFramePacket();
+    packet.inputFrame = new Uint8Array(measureAndSerialize(this.currentInputFrame));
+    if (serverSimTimeS !== undefined && inputTravelTime !== undefined) {
+      targetSimulationTimeS = serverSimTimeS + inputTravelTime;
+      packet.targetSimulationTimeS = targetSimulationTimeS;
+    }
+    this.networkClient.sendPacket(packet);
+    if (targetSimulationTimeS !== undefined) {
+      this.clientSimulation.notifyInputBeingSent(this.currentInputFrame, targetSimulationTimeS);
+    }
   }
 
   private renderLoop(domHighResTimestampMS: number) {

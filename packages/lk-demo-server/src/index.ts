@@ -30,7 +30,7 @@ switch(demoType) {
     break;
 }
 
-serverEngine.registerInputButtons(demo.GameButtons);
+serverEngine.registerContinuousInputType(demo.GameButtonsInput, 'GameButtonsInput');
 
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)

@@ -1,59 +1,61 @@
-export type NumericEnum = { [key: string]: number; }
+import { ClassRegistry } from './reflection';
+import { Serializable, SerializationStream } from './serialization';
 
-function getEnumNames(e: NumericEnum) : string[] {
-  return Object.keys(e).filter(function (key) { return isNaN(+key); });
-}
+// Trick to get nominally typed Id types
+// https://basarat.gitbooks.io/typescript/docs/tips/nominalTyping.html
 
-function getEnumValues(e: NumericEnum) : number[] {
-  return getEnumNames(e).map(function (name) { return e[name]; });
-};
+export enum _ContinuousInputKindBrand {}
+export type ContinuousInputKind = string & _ContinuousInputKindBrand;
 
-export enum ButtonState {
-  UP,
-  DOWN
-}
+export enum _ContinuousInputKindIdBrand {}
+export type ContinuousInputKindId = number & _ContinuousInputKindIdBrand;
 
-export class InputFrame {
-  /**
-   * For binary "button"-style input.
-   * Eventually this class could also handle (parameterized) message style input.
-   * These would be reliable (and probably ordered) by making use of the acking system
-   * in the packet protocol (or likely the packet protocol should have a reliable send method).
-   */
-  buttons = new Map<number, ButtonState>();
+export enum _EventedInputKindBrand {}
+export type EventedInputKind = string & _EventedInputKindBrand;
 
-  clone(): InputFrame {
-    let clone = new InputFrame();
-    clone.buttons = new Map(this.buttons);
-    return clone;
-  }
-}
-
-export function createInputFrame(buttonsEnum: NumericEnum): InputFrame {
-  let inputFrame = new InputFrame();
-  for (const button of getEnumValues(buttonsEnum)) {
-    inputFrame.buttons.set(button, ButtonState.UP);
-  }
-  return inputFrame;
-}
+export enum _EventedInputKindIdBrand {}
+export type EventedInputKindId = number & _EventedInputKindIdBrand;
 
 
-export function createInputFrameFromDownButtons(buttonsEnum: NumericEnum, downButtons: Set<number>): InputFrame {
-  let newFrame = createInputFrame(buttonsEnum);
-  for(let downButton of downButtons.values()) {
-    newFrame.buttons.set(downButton, ButtonState.DOWN);
-  }
-  return newFrame;
-}
+export class InputFrame implements Serializable {
+  private continuousInputs = new Map<ContinuousInputKindId, Serializable>();
 
-export function createDownButtonsFromInputFrame(inputFrame: InputFrame): Set<number> {
-  let result = new Set<number>();
-  inputFrame.buttons.forEach((value, key) => {
-    if(value === ButtonState.DOWN) {
-      result.add(key);
+  constructor(private continuousInputTypes: ClassRegistry) {
+    for(let continuousInputkindId of this.continuousInputTypes.getKindIds()) {
+      this.continuousInputs.set(
+        continuousInputkindId,
+        this.continuousInputTypes.construct(continuousInputkindId, []) as Serializable);
     }
-  });
-  return result;
+  }
+
+  serialize(stream: SerializationStream): void {
+    let numContinuousInputsObj =  {val: this.continuousInputs.size};
+    stream.serializeUint32(numContinuousInputsObj, 'val');
+    if(stream.isWriting) {
+      for(let [kindId, input] of this.continuousInputs.entries()) {
+        stream.serializeUint32({kindId}, 'kindId');
+        input.serialize(stream);
+      }
+    } else {
+      this.continuousInputs.clear();
+      for(let i = 0; i < numContinuousInputsObj.val; ++i) {
+        let kindId = {val:0};
+        stream.serializeUint32(kindId, 'val');
+        let input = this.continuousInputTypes.construct(kindId.val as ContinuousInputKindId, []) as Serializable;
+        input.serialize(stream);
+        this.continuousInputs.set(kindId.val, input);
+      }
+    }
+  }
+
+  /** returns the object of the requested type, it's mutable to allow the application of inputs */
+  public getContinuousInput<T extends Serializable>(inputType: {new():T}): T | undefined {
+    let inputKindId = this.continuousInputTypes.getKindIdFromConstructor(inputType);
+    if(inputKindId === undefined) {
+      return undefined;
+    }
+    let input = this.continuousInputs.get(inputKindId);
+    return input as T | undefined;
+  }
+
 }
-
-

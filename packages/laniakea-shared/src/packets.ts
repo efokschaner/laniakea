@@ -2,17 +2,22 @@ import {
   Serializable,
   SerializationStream
 } from './serialization';
+import { InputFrame } from './input';
 
 export class S2C_FrameUpdatePacket implements Serializable {
   public simulationFrameIndex = -1;
   public simulationTimeS = -1;
-  public downButtons = new Set<number>();
+  // Difficulty stems from the fact that correct construction
+  // of these types depends on having the engine reflection info.
+  // We therefore tunnel them as opaque buffers to a layer that has the info.
+  // TODO We should try to revise this so that we don't have to do this.
+  public inputUsedForPlayerThisFrame!: Uint8Array;
   public componentData!: Uint8Array;
 
   serialize(stream: SerializationStream): void {
     stream.serializeUint32(this, 'simulationFrameIndex');
     stream.serializeFloat64(this, 'simulationTimeS');
-    serializeSetOfUint8(stream, this.downButtons);
+    stream.serializeUint8Array(this, 'inputUsedForPlayerThisFrame');
     stream.serializeUint8Array(this, 'componentData');
   }
 }
@@ -35,13 +40,10 @@ export class S2C_TimeSyncResponsePacket implements Serializable {
 
 export class C2S_InputFramePacket implements Serializable {
   public targetSimulationTimeS = -1;
-  /**
-   * Buttons in the down state are sent, other buttons are assumed to be in the up state.
-   */
-  public downButtons = new Set<number>();
+  public inputFrame!: Uint8Array;
   serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'targetSimulationTimeS');
-    serializeSetOfUint8(stream, this.downButtons);
+    stream.serializeUint8Array(this, 'inputFrame');
   }
 }
 
@@ -53,25 +55,4 @@ export function registerPacketTypes(
   registerCb(C2S_TimeSyncRequestPacket, 'C2S_TimeSyncRequestPacket');
   registerCb(S2C_TimeSyncResponsePacket, 'S2C_TimeSyncResponsePacket');
   registerCb(C2S_InputFramePacket, 'C2S_InputFramePacket');
-}
-
-function serializeSetOfUint8(stream: SerializationStream, set: Set<number>): void {
-  let numEntries = {val:0};
-  if(stream.isWriting) {
-    numEntries.val = set.size;
-  }
-  stream.serializeUint8(numEntries, 'val');
-  if(stream.isWriting) {
-    for(let number of set.values()) {
-      let numberObj = { number };
-      stream.serializeUint8(numberObj, 'number');
-    }
-  } else {
-    set.clear();
-    for(let i = 0; i < numEntries.val; ++i) {
-      let numberObj = { number: 0 };
-      stream.serializeUint8(numberObj, 'number');
-      set.add(numberObj.number);
-    }
-  }
 }

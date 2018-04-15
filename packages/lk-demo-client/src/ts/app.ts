@@ -7,6 +7,7 @@ import * as demo from 'lk-demo-shared';
 
 import * as ballsDemo from './balls-demo';
 import * as pongDemo from './pong-demo';
+import { ClientEngine } from 'laniakea-client';
 
 interface HTMLHyperlinkElementUtils {
   href: string;
@@ -21,6 +22,53 @@ interface HTMLHyperlinkElementUtils {
   search: string;
   hash: string;
 };
+
+// Boilerplate keyboard handler. TODO extract to some kind of demo-utils package when we split demos out.
+class KeyboardHandler {
+  /**
+   * @param buttonMappingCallback accepts https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+   * should return a value from your buttonsEnum or undefined if the button is not used.
+   */
+  constructor(
+    private clientEngine: ClientEngine,
+    private buttonMappingCallback: (keyboardKey: string) => number | undefined) {
+    document.addEventListener('keydown', this.onKeyDown.bind(this));
+    document.addEventListener('keyup', this.onKeyUp.bind(this));
+    // TODO maybe set all buttons up on a "blur" event (when game loses focus)
+  }
+
+  private getMappedButtonToChange(keyboardEvent: KeyboardEvent): number|undefined {
+    if(keyboardEvent.repeat) {
+      // Ignore
+      return undefined;
+    }
+    let mappedButton = this.buttonMappingCallback(keyboardEvent.key);
+    if(mappedButton === undefined) {
+      // User wants to ignore button.
+      return undefined;
+    }
+    return mappedButton;
+  }
+
+  private onKeyDown(keyDownEvent: KeyboardEvent) {
+    let mappedButton = this.getMappedButtonToChange(keyDownEvent);
+    if(mappedButton === undefined) {
+      return;
+    }
+    let buttonsInput = this.clientEngine.getCurrentContinuousInput(demo.GameButtonsInput)!;
+    buttonsInput.buttonStates.set(mappedButton, demo.ButtonState.DOWN);
+  }
+
+  private onKeyUp(keyUpEvent: KeyboardEvent) {
+    let mappedButton = this.getMappedButtonToChange(keyUpEvent);
+    if(mappedButton === undefined) {
+      return;
+    }
+    let buttonsInput = this.clientEngine.getCurrentContinuousInput(demo.GameButtonsInput)!;
+    buttonsInput.buttonStates.set(mappedButton, demo.ButtonState.UP);
+  }
+}
+
 
 let clientEngine = new lk.ClientEngine({simFPS: demo.simFPS});
 
@@ -45,7 +93,9 @@ switch(demoType) {
     throw new Error('unimplemented');
 }
 
-clientEngine.registerInputButtons(demo.GameButtons, (key: string) => {
+clientEngine.registerContinuousInputType(demo.GameButtonsInput, 'GameButtonsInput');
+
+new KeyboardHandler(clientEngine, (key: string) => {
   switch (key) {
     case 'w': return demo.GameButtons.UP;
     case 'a': return demo.GameButtons.LEFT;
@@ -56,6 +106,7 @@ clientEngine.registerInputButtons(demo.GameButtons, (key: string) => {
 });
 
 clientEngine.setRenderingSystem(renderingSystem);
+
 clientEngine.start();
 
 var gameServerWsUrl = document.createElement('a') as HTMLAnchorElement & HTMLHyperlinkElementUtils;

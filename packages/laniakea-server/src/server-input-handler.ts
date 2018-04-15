@@ -1,13 +1,11 @@
 import { Heap } from 'typescript-collections';
 
 import {
-  ButtonState,
   C2S_InputFramePacket,
-  createInputFrame,
-  createInputFrameFromDownButtons,
   InputFrame,
-  NumericEnum,
   PlayerId,
+  ReadStream,
+  Engine,
 } from 'laniakea-shared';
 
 
@@ -35,17 +33,22 @@ function comparePacketSequenceNumber(a: InputBufferHeapEntry, b: InputBufferHeap
 }
 
 class InputBuffer {
-  constructor(private buttonsEnum: NumericEnum) {
+  constructor(private engine: Engine) {
     // Initialise with an empty input at t-zero
     this.inputHeap.add({
       targetSimulationTimeS: 0,
-      inputs: createInputFrame(this.buttonsEnum),
+      inputs: this.engine.createInputFrame(),
       packetSequenceNumber: 0
     });
   }
 
   public onInputFramePacket(packet: C2S_InputFramePacket, packetSequenceNumber: number) {
-    let newFrame = createInputFrameFromDownButtons(this.buttonsEnum, packet.downButtons);
+    let newFrame = this.engine.createInputFrame();
+    let inputFrameDataView = new DataView(
+      packet.inputFrame.buffer,
+      packet.inputFrame.byteOffset,
+      packet.inputFrame.byteLength);
+    newFrame.serialize(new ReadStream(inputFrameDataView));
     this.inputHeap.add({
       targetSimulationTimeS: packet.targetSimulationTimeS,
       inputs: newFrame,
@@ -77,7 +80,7 @@ class InputBuffer {
     // in order to preserve the inputs in to the next frame's calculation.
     this.inputHeap.add({
       targetSimulationTimeS: simulationTimeS,
-      inputs: result.inputs.clone(),
+      inputs: result.inputs,
       packetSequenceNumber: 0
     });
     return result.inputs;
@@ -92,8 +95,7 @@ class InputBuffer {
  * Receives input packets and processes them so that they can be consumed per simulation frame.
  */
 export class ServerInputHandler {
-  public registerButtons(buttonsEnum: NumericEnum) {
-    this.buttonsEnum = buttonsEnum;
+  constructor(private engine: Engine) {
   }
 
   public onInputFramePacket(playerId: PlayerId, packet: C2S_InputFramePacket, packetSequenceNumber: number) {
@@ -114,12 +116,11 @@ export class ServerInputHandler {
     if(maybePlayerInputBuffer !== undefined) {
       return maybePlayerInputBuffer;
     }
-    maybePlayerInputBuffer = new InputBuffer(this.buttonsEnum!);
+    maybePlayerInputBuffer = new InputBuffer(this.engine);
     this.perPlayerInputBuffers.set(playerId, maybePlayerInputBuffer);
     return maybePlayerInputBuffer;
   }
 
   private perPlayerInputBuffers = new Map<PlayerId, InputBuffer>();
-  private buttonsEnum?: NumericEnum;
 }
 

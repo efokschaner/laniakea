@@ -9,8 +9,7 @@ import {
   serializeVector3,
   Velocity
 } from './shared-components';
-
-import { GameButtons } from '.';
+import { GameButtonsInput, GameButtons, ButtonState } from '.';
 
 
 export class WallPlane extends THREE.Plane implements lk.Serializable {
@@ -56,10 +55,11 @@ export function initialiseGame(engine: lk.Engine) {
       let anyDown = false;
       let anyUp = false;
       for(let input of inputs.values()) {
-        if(input.buttons.get(GameButtons.DOWN) == lk.ButtonState.DOWN) {
+        let buttonsInput = input.getContinuousInput(GameButtonsInput)!;
+        if(buttonsInput.buttonStates.get(GameButtons.DOWN) == ButtonState.DOWN) {
           anyDown = true;
         }
-        if(input.buttons.get(GameButtons.UP) == lk.ButtonState.DOWN) {
+        if(buttonsInput.buttonStates.get(GameButtons.UP) == ButtonState.DOWN) {
           anyUp = true;
         }
       }

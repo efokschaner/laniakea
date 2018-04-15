@@ -2,13 +2,13 @@ const present = require('present');
 import {
   C2S_InputFramePacket,
   C2S_TimeSyncRequestPacket,
-  createDownButtonsFromInputFrame,
+  ContinuousInputKind,
   Engine,
   InputFrame,
-  NumericEnum,
   PlayerId,
   S2C_FrameUpdatePacket,
   S2C_TimeSyncResponsePacket,
+  Serializable,
   SimluationFrameData,
   StepParams,
   createEngine,
@@ -66,9 +66,8 @@ export class ServerEngine {
     });
   }
 
-  registerInputButtons(buttonsEnum: any): void {
-    this.engine.registerButtons(buttonsEnum);
-    this.inputHandler.registerButtons(buttonsEnum);
+  public registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: string): void {
+    this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
   }
 
   // TODO, encapsulate engine
@@ -79,7 +78,7 @@ export class ServerEngine {
 
   private presentTimeToSimulationTimeDeltaS = 0;
 
-  private inputHandler = new ServerInputHandler();
+  private inputHandler = new ServerInputHandler(this.engine);
 
   /**
    * A continuous time that represents how far along the simulation should be.
@@ -148,11 +147,11 @@ export class ServerEngine {
       let framePacket = new S2C_FrameUpdatePacket();
       framePacket.simulationFrameIndex = this.currentFrame.simulationFrameIndex;
       framePacket.simulationTimeS = this.currentFrame.simulationTimeS;
-      framePacket.componentData = componentDataBuffer;
       let maybeInputs = this.currentFrame.inputs.get(pi.id);
       if(maybeInputs !== undefined) {
-        framePacket.downButtons = createDownButtonsFromInputFrame(maybeInputs);
+        framePacket.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
       }
+      framePacket.componentData = componentDataBuffer;
       this.networkServer.sendPacket(pi.id, framePacket, () => {
         //console.log('ACK for:', framePacket.simulationTimeS);
       });

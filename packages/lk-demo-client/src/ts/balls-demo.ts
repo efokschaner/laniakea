@@ -100,7 +100,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.cameraController.update();
     let simTimeS = clientSimulation.getCurrentSimulationTimeS();
     this.guiViewModel.currentSimTimeS = simTimeS || 0;
-    let inputTravelTimeS = clientSimulation.getInputTravelTimeS();
+    let inputTravelTimeS = clientSimulation.getInputTravelTimeS() || 0;
     this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
     if(simTimeS === undefined) {
       // Nothing to render yet

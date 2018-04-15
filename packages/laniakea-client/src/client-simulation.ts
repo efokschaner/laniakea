@@ -1,5 +1,4 @@
 import {
-  createInputFrameFromDownButtons,
   CyclicBuffer,
   InputFrame,
   Engine,
@@ -76,19 +75,23 @@ export class ClientSimulation {
   }
 
   /**
-   * This is either the estimate of the current simulation time on the server
-   * OR the local authoritative simulation time if there is no server.
-   * undefined is returned when we are expecting to use a server but are not synchronised.
+   * This is the estimate of the current simulation time on the server.
+   * undefined is returned when we are not synchronised with the server.
    */
   public getCurrentSimulationTimeS(): number | undefined {
     return this.serverTimeEstimator.getServerSimulationTimeS();
   }
 
   /**
-   * This is either the 1 way latency to the server OR zero in the case of client-only simulation.
+   * This is the 1 way latency to the server
+   * undefined is returned when we are not synchronised with the server.
    */
-  public getInputTravelTimeS(): number {
-    return (this.serverTimeEstimator.getPacketRoundTripTimeS() || 0) / 2;
+  public getInputTravelTimeS(): number | undefined {
+    let rtt = this.serverTimeEstimator.getPacketRoundTripTimeS();
+    if(rtt === undefined) {
+      return undefined;
+    }
+    return rtt / 2;
   }
 
   /**
@@ -154,10 +157,18 @@ export class ClientSimulation {
       return;
     }
     targetFrame.receivedAuthoritativeSimulationTimeS = framePacket.simulationTimeS;
-    targetFrame.receivedAuthoritativeInput = this.engine.createInputFrameFromDownButtons(framePacket.downButtons);
+
+    targetFrame.receivedAuthoritativeInput = this.engine.createInputFrame();
+    let inputFrameDataView = new DataView(
+      framePacket.inputUsedForPlayerThisFrame.buffer,
+      framePacket.inputUsedForPlayerThisFrame.byteOffset,
+      framePacket.inputUsedForPlayerThisFrame.byteLength);
+    targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
+
     targetFrame.receivedAuthoritativeState = this.engine.createState();
     let componentDataDataView = new DataView(framePacket.componentData.buffer, framePacket.componentData.byteOffset, framePacket.componentData.byteLength);
     targetFrame.receivedAuthoritativeState.serialize(new ReadStream(componentDataDataView));
+
     // Now make sure the frame is marked as dirty
     this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, framePacket.simulationFrameIndex);
     // If this is the first frame we have received we immediately apply the authoritative state so that the
@@ -189,7 +200,13 @@ export class ClientSimulation {
     if(targetFrameData === undefined) {
       return;
     }
-    targetFrameData.predictedInput = inputFrame;
+    // Copy the input frame so that any modifications to the passed data are not applied to our entry
+    // By virtue of the fact that this uses serialisation, it also ensures the inputframe is "quantized"
+    // before its used for client prediction, so that it matches what the server would get.
+    if(targetFrameData.predictedInput === undefined) {
+      targetFrameData.predictedInput = this.engine.createInputFrame();
+    }
+    this.engine.copyInputFrame(inputFrame, targetFrameData.predictedInput);
     // We've modified the frame so mark it as dirty.
     this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex, targetFrameIndex);
   }
