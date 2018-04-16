@@ -1,5 +1,6 @@
 import * as datGui from 'dat-gui';
 import * as THREE from 'three';
+// tslint:disable-next-line:no-var-requires
 require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
 import * as lk from 'laniakea-client';
@@ -11,7 +12,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
 
   private guiViewModel = {
     currentSimTimeS: 0,
-    inputTravelTimeMS: 0
+    inputTravelTimeMS: 0,
   };
   private guiView = new datGui.GUI();
 
@@ -20,8 +21,8 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
-
   private cameraController: THREE.OrbitControls;
+  // tslint:disable-next-line:no-unused-variable
   private currentlySelectedObject?: THREE.Object3D;
   private activeCameraLerp?: (currentWallTimeMS: number) => void;
   private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
@@ -33,7 +34,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     let lerpStartTime = performance.now();
     this.activeCameraLerp = (currentWallTimeMS: number) => {
       let lerpFactor = (currentWallTimeMS - lerpStartTime) / 500;
-      if(lerpFactor >= 1) {
+      if (lerpFactor >= 1) {
         lerpFactor = 1;
         this.activeCameraLerp = undefined;
       }
@@ -51,6 +52,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     return this.raycaster.intersectObjects(objects);
   }
 
+  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.guiView.add(this.guiViewModel, 'currentSimTimeS').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
@@ -59,13 +61,13 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.cameraController.enablePan = true;
     this.cameraController.mouseButtons = {
       ORBIT: THREE.MOUSE.RIGHT,
+      ZOOM: THREE.MOUSE.MIDDLE,
       PAN: THREE.MOUSE.LEFT,
-      ZOOM: THREE.MOUSE.MIDDLE
-    }
+    };
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.domElement.addEventListener('mousedown', (mouseEvent: MouseEvent) => {
-      if(mouseEvent.button !== 0) {
+      if (mouseEvent.button !== 0) {
         // handle left click only
         return;
       }
@@ -74,48 +76,48 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
         { x: mouseEvent.offsetX / this.renderer.domElement.clientWidth,
           y: mouseEvent.offsetY / this.renderer.domElement.clientHeight },
         this.scene.children);
-      if(intersects.length) {
+      if (intersects.length) {
         this.focusObject(intersects[0].object);
       }
     });
 
     let axes = new THREE.AxisHelper(1000);
     this.scene.add(axes);
-    var pointLight = new THREE.PointLight(0xffffff);
+    let pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(160, 120, 140);
     pointLight.castShadow = true;
     pointLight.shadow.camera.near = 0.1;
     pointLight.shadow.camera.far = 1000;
     pointLight.shadow.bias = -0.005;
     this.scene.add(pointLight);
-    var ambientLight = new THREE.AmbientLight(0x202020);
+    let ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
 
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  render(domHighResTimestampMS: number, clientSimulation: lk.ClientSimulation) {
+  public render(domHighResTimestampMS: number, clientSimulation: lk.ClientSimulation) {
     this.rendererSizeUpdater.update();
-    if(this.activeCameraLerp) { this.activeCameraLerp(domHighResTimestampMS); }
+    if (this.activeCameraLerp) { this.activeCameraLerp(domHighResTimestampMS); }
     this.cameraController.update();
     let simTimeS = clientSimulation.getCurrentSimulationTimeS();
     this.guiViewModel.currentSimTimeS = simTimeS || 0;
     let inputTravelTimeS = clientSimulation.getInputTravelTimeS() || 0;
     this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
-    if(simTimeS === undefined) {
+    if (simTimeS === undefined) {
       // Nothing to render yet
       return;
     }
     let nearestFrames = clientSimulation.getSimulationFrames(simTimeS + inputTravelTimeS);
-    if(nearestFrames === undefined) {
+    if (nearestFrames === undefined) {
       // Nothing to render yet
       return;
     }
     let state = nearestFrames.current.state;
 
-    for(let ball of state.getComponents(demo.ballsDemo.BallShape)!) {
+    for (let ball of state.getComponents(demo.ballsDemo.BallShape)!) {
       let maybeObj = this.rendererSpheres.get(ball.getId());
-      if(maybeObj === undefined) {
+      if (maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
         let material = new THREE.MeshLambertMaterial( { color: 0x0055ff, wireframe: false } );
         maybeObj = new THREE.Mesh( geometry, material );
@@ -126,10 +128,10 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       maybeObj.position.copy(ball.getData().center);
     }
 
-    for(let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
+    for (let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
       let maybeObj = this.rendererWalls.get(wall.getId());
       let wallData = wall.getData();
-      if(maybeObj === undefined) {
+      if (maybeObj === undefined) {
         let geometry = new THREE.PlaneBufferGeometry(1, 1, 16, 16);
         let material = new THREE.MeshLambertMaterial( { color: 0xdddddd, wireframe: false } );
         maybeObj = new THREE.Mesh( geometry, material );
@@ -139,7 +141,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       }
       let widthAndHeight = 2 * wallData.constant;
       maybeObj.scale.setScalar(widthAndHeight);
-      wallData.projectPoint(new THREE.Vector3(0,0,0), maybeObj.position);
+      wallData.projectPoint(new THREE.Vector3(0, 0, 0), maybeObj.position);
       maybeObj.lookAt(wallData.normal);
     }
 

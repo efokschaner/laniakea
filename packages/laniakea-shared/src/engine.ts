@@ -1,17 +1,15 @@
 import {
-  InputFrame,
   ContinuousInputKind,
-  EventedInputKind
+  EventedInputKind,
+  InputFrame,
 } from './input';
 import { ClassRegistry } from './reflection';
 import {
-  SerializationStream,
-  Serializable,
   measureAndSerialize,
-  ReadStream
+  ReadStream,
+  Serializable,
 } from './serialization';
-import { EntityComponentState, EntityComponentStateImpl, ComponentKind, ComponentReflection } from './state';
-
+import { ComponentKind, ComponentReflection, EntityComponentState, EntityComponentStateImpl } from './state';
 
 export enum _PlayerIdBrand {}
 export type PlayerId = number & _PlayerIdBrand;
@@ -26,13 +24,13 @@ export class SimluationFrameData {
 }
 
 export interface StepParams {
-  simulationTimeS: number;
   timeDeltaS: number;
+  simulationTimeS: number;
   inputs: Map<PlayerId, InputFrame>;
   state: EntityComponentState;
+  previousFrameSimulationTimeS: number;
   previousFrameInputs: Map<PlayerId, InputFrame>;
   previousFrameState: EntityComponentState;
-  previousFrameSimulationTimeS: number;
 }
 
 export interface System {
@@ -45,16 +43,16 @@ export interface Engine {
    * Continuous input remains the same on the server if it doesnt get an update from client.
    * Good for things like player movement instructions from inputs that are held down by the player.
    */
-  registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: ContinuousInputKind): void
+  registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: ContinuousInputKind): void;
 
   /**
    * Evented input has reliable and ordered delivery, and does not persist beyond the frame it is processed in.
    * Good for things like shooting a single projectile in a target direction, putting points in a stat.
    */
-  registerEventedInputType<T extends Serializable>(inputType: {new():T}, inputKind: EventedInputKind): void
+  registerEventedInputType<T extends Serializable>(inputType: {new(): T}, inputKind: EventedInputKind): void;
 
   // State Registration
-  registerComponentType<T extends Serializable>(componentType: {new():T}, componentKind: ComponentKind): void;
+  registerComponentType<T extends Serializable>(componentType: {new(): T}, componentKind: ComponentKind): void;
 
   // System Registration
   addSystem(system: System): void;
@@ -62,10 +60,10 @@ export interface Engine {
 
   // Input + State utils
   createInputFrame(): InputFrame;
-  copyInputFrame(src: InputFrame, dst: InputFrame) : void;
-  createState() : EntityComponentState;
-  copySimulationState(src: EntityComponentState, dst: EntityComponentState) : void;
-  createSimulationFrame() : SimluationFrameData;
+  copyInputFrame(src: InputFrame, dst: InputFrame): void;
+  createState(): EntityComponentState;
+  copySimulationState(src: EntityComponentState, dst: EntityComponentState): void;
+  createSimulationFrame(): SimluationFrameData;
 
   /**
    * Runs 1 simulation step with duration of timeDeltaS to produce nextFrame from previousFrame
@@ -78,71 +76,70 @@ export function createEngine(): Engine {
   return new EngineImpl();
 }
 
-class EngineImpl implements Engine
-{
+class EngineImpl implements Engine {
   private continuousInputTypes = new ClassRegistry();
   private componentReflection = new ComponentReflection();
   private systems: System[] = [];
 
-  registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: ContinuousInputKind): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: ContinuousInputKind): void {
     this.continuousInputTypes.registerClass(inputType, inputKind);
   }
 
-  registerEventedInputType<T extends Serializable>(inputType: {new():T}, inputKind: EventedInputKind): void {
-    throw new Error("Unimplemented");
+  public registerEventedInputType<T extends Serializable>(inputType: {new(): T}, inputKind: EventedInputKind): void {
+    throw new Error('Unimplemented');
   }
 
-  registerComponentType<T extends Serializable>(componentType: {new(): T}, componentKind: ComponentKind) {
+  public registerComponentType<T extends Serializable>(componentType: {new(): T}, componentKind: ComponentKind) {
     this.componentReflection.registerType(componentType, componentKind);
   }
 
-  addSystem(system: System): void {
+  public addSystem(system: System): void {
     this.systems.push(system);
   }
-  removeSystem(system: System) {
-    this.systems = this.systems.filter(s => s !== system)
+  public removeSystem(system: System) {
+    this.systems = this.systems.filter((s) => s !== system);
   }
 
-  createInputFrame(): InputFrame {
+  public createInputFrame(): InputFrame {
     return new InputFrame(this.continuousInputTypes);
   }
 
-  copyInputFrame(src: InputFrame, dst: InputFrame) : void {
+  public copyInputFrame(src: InputFrame, dst: InputFrame): void {
     let serialized = measureAndSerialize(src);
     let readStream = new ReadStream(new DataView(serialized));
     dst.serialize(readStream);
   }
 
-  createState() : EntityComponentState {
+  public createState(): EntityComponentState {
     return new EntityComponentStateImpl(this.componentReflection);
   }
 
-  copySimulationState(src: EntityComponentState, dst: EntityComponentState) : void {
+  public copySimulationState(src: EntityComponentState, dst: EntityComponentState): void {
     let serialized = measureAndSerialize(src);
     let readStream = new ReadStream(new DataView(serialized));
     dst.serialize(readStream);
   }
 
-  createSimulationFrame() : SimluationFrameData {
+  public createSimulationFrame(): SimluationFrameData {
     let state = new EntityComponentStateImpl(this.componentReflection);
     let inputs = new Map<PlayerId, InputFrame>();
     let frame = new SimluationFrameData(-1, 0, inputs, state);
     return frame;
   }
 
-  stepSimulation(timeDeltaS: number, previousFrame: SimluationFrameData, nextFrame: SimluationFrameData): void {
+  public stepSimulation(timeDeltaS: number, previousFrame: SimluationFrameData, nextFrame: SimluationFrameData): void {
     nextFrame.simulationFrameIndex = previousFrame.simulationFrameIndex + 1;
     nextFrame.simulationTimeS = previousFrame.simulationTimeS + timeDeltaS;
     this.copySimulationState(previousFrame.state, nextFrame.state);
     let stepParams: StepParams = {
+      timeDeltaS,
       simulationTimeS: nextFrame.simulationTimeS,
-      timeDeltaS: timeDeltaS,
       inputs: nextFrame.inputs,
       state: nextFrame.state,
+      previousFrameSimulationTimeS: previousFrame.simulationTimeS,
       previousFrameInputs: previousFrame.inputs,
       previousFrameState: previousFrame.state,
-      previousFrameSimulationTimeS: previousFrame.simulationTimeS,
     };
-    this.systems.forEach(s => s.Step(stepParams));
+    this.systems.forEach((s) => s.Step(stepParams));
   }
 }

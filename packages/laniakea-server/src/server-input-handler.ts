@@ -2,12 +2,11 @@ import { Heap } from 'typescript-collections';
 
 import {
   C2S_InputFramePacket,
+  Engine,
   InputFrame,
   PlayerId,
   ReadStream,
-  Engine,
 } from 'laniakea-shared';
-
 
 interface InputBufferHeapEntry {
   targetSimulationTimeS: number;
@@ -18,7 +17,8 @@ interface InputBufferHeapEntry {
 function collectionsCompare(a: number, b: number): number {
   if (a < b) {
     return -1;
-  } if (a > b) {
+  }
+  if (a > b) {
     return 1;
   }
   return 0;
@@ -28,17 +28,13 @@ function compareTargetSimulationTimeS(a: InputBufferHeapEntry, b: InputBufferHea
   return collectionsCompare(a.targetSimulationTimeS, b.targetSimulationTimeS);
 }
 
-function comparePacketSequenceNumber(a: InputBufferHeapEntry, b: InputBufferHeapEntry): number {
-  return collectionsCompare(a.packetSequenceNumber, b.packetSequenceNumber);
-}
-
 class InputBuffer {
   constructor(private engine: Engine) {
     // Initialise with an empty input at t-zero
     this.inputHeap.add({
       targetSimulationTimeS: 0,
       inputs: this.engine.createInputFrame(),
-      packetSequenceNumber: 0
+      packetSequenceNumber: 0,
     });
   }
 
@@ -52,14 +48,14 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: packet.targetSimulationTimeS,
       inputs: newFrame,
-      packetSequenceNumber: packetSequenceNumber
+      packetSequenceNumber,
     });
   }
 
   public getInputFrameForSimTime(simulationTimeS: number): InputFrame {
     // Pull all the input frames with a targetSimulationTimeS smaller than or equal to simulationTimeS
     let framesToCoallesce: InputBufferHeapEntry[] = [];
-    for(let nextInput = this.inputHeap.peek();
+    for (let nextInput = this.inputHeap.peek();
         nextInput !== undefined && nextInput.targetSimulationTimeS <= simulationTimeS;
         nextInput = this.inputHeap.peek()) {
       framesToCoallesce.push(nextInput);
@@ -67,13 +63,13 @@ class InputBuffer {
     }
     // Coallescing inputs for now just means grabbing the one with the highest sequence number.
     let result = framesToCoallesce.reduce((acc: InputBufferHeapEntry|undefined, frame) => {
-      if(acc === undefined || frame.packetSequenceNumber > acc.packetSequenceNumber) {
+      if (acc === undefined || frame.packetSequenceNumber > acc.packetSequenceNumber) {
         return frame;
       }
       return acc;
     }, undefined);
 
-    if(result === undefined) {
+    if (result === undefined) {
       throw new Error('There should have been at least one entry in framesToCoallesce.');
     }
     // After calculating we "save" the result as the new smallest value in the heap
@@ -81,7 +77,7 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: simulationTimeS,
       inputs: result.inputs,
-      packetSequenceNumber: 0
+      packetSequenceNumber: 0,
     });
     return result.inputs;
   }
@@ -104,8 +100,8 @@ export class ServerInputHandler {
   }
 
   public getInputFramesForSimTime(simulationTimeS: number): Map<PlayerId, InputFrame> {
-    let result = new Map<PlayerId, InputFrame>()
-    for(let [playerId, inputBuffer] of this.perPlayerInputBuffers.entries()) {
+    let result = new Map<PlayerId, InputFrame>();
+    for (let [playerId, inputBuffer] of this.perPlayerInputBuffers.entries()) {
       result.set(playerId, inputBuffer.getInputFrameForSimTime(simulationTimeS));
     }
     return result;
@@ -113,7 +109,7 @@ export class ServerInputHandler {
 
   private getOrAddPlayerInputBuffer(playerId: PlayerId): InputBuffer {
     let maybePlayerInputBuffer = this.perPlayerInputBuffers.get(playerId);
-    if(maybePlayerInputBuffer !== undefined) {
+    if (maybePlayerInputBuffer !== undefined) {
       return maybePlayerInputBuffer;
     }
     maybePlayerInputBuffer = new InputBuffer(this.engine);
@@ -123,4 +119,3 @@ export class ServerInputHandler {
 
   private perPlayerInputBuffers = new Map<PlayerId, InputBuffer>();
 }
-

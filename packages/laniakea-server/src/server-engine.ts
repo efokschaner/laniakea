@@ -1,24 +1,22 @@
+// tslint:disable-next-line:no-var-requires
 const present = require('present');
 import {
   C2S_InputFramePacket,
   C2S_TimeSyncRequestPacket,
   ContinuousInputKind,
+  createEngine,
   Engine,
-  InputFrame,
+  measureAndSerialize,
   PlayerId,
+  registerPacketTypes,
   S2C_FrameUpdatePacket,
   S2C_TimeSyncResponsePacket,
   Serializable,
   SimluationFrameData,
-  StepParams,
-  createEngine,
-  measureAndSerialize,
-  registerPacketTypes
 } from 'laniakea-shared';
 import * as tsEvents from 'ts-events';
 import { NetworkServer } from './network-server';
 import { ServerInputHandler } from './server-input-handler';
-
 
 export interface PlayerInfo {
   id: PlayerId;
@@ -26,25 +24,25 @@ export interface PlayerInfo {
 }
 
 export interface ServerEngineOptions {
-  simFPS: number
+  simFPS: number;
 }
 
 export class ServerEngine {
   private playerInfos = new Map<PlayerId, PlayerInfo>();
 
-  static defaultOptions: ServerEngineOptions = {
-    simFPS: 30
+  public static defaultOptions: ServerEngineOptions = {
+    simFPS: 30,
   };
-  options: ServerEngineOptions;
-  onPlayerConnected: tsEvents.BaseEvent<PlayerId> = new tsEvents.QueuedEvent<PlayerId>();
+  public options: ServerEngineOptions;
+  public onPlayerConnected: tsEvents.BaseEvent<PlayerId> = new tsEvents.QueuedEvent<PlayerId>();
 
   constructor(private networkServer: NetworkServer, options: Partial<ServerEngineOptions>) {
     this.options = Object.assign({}, ServerEngine.defaultOptions, options);
-    networkServer.onConnection.attach(playerId => {
+    networkServer.onConnection.attach((playerId) => {
       console.log(`Player connected: playerId = ${playerId}`);
       this.playerInfos.set(playerId, {
         id: playerId,
-        displayName: playerId.toString()
+        displayName: playerId.toString(),
       });
       this.onPlayerConnected.post(playerId);
     });
@@ -58,7 +56,7 @@ export class ServerEngine {
     networkServer.registerPacketHandler(C2S_InputFramePacket, (playerId, inputFramePacket, packetSequenceNumber) => {
       // Discard input packets too far in the future so that we cannot be spammed with data that persists for a long time
       let futureInputTimeWindowS = 4;
-      if(inputFramePacket.targetSimulationTimeS > this.currentFrame.simulationTimeS + futureInputTimeWindowS) {
+      if (inputFramePacket.targetSimulationTimeS > this.currentFrame.simulationTimeS + futureInputTimeWindowS) {
         console.warn(`Discarding inputFramePacket greater than ${futureInputTimeWindowS} seconds ahead of simulation.`);
         return;
       }
@@ -66,15 +64,15 @@ export class ServerEngine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: string): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: string): void {
     this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
   }
 
   // TODO, encapsulate engine
-  engine = createEngine();
+  public engine: Engine = createEngine();
   public currentFrame: SimluationFrameData = this.engine.createSimulationFrame();
 
-  getGameSimPeriodS() { return 1 / this.options.simFPS; }
+  public getGameSimPeriodS() { return 1 / this.options.simFPS; }
 
   private presentTimeToSimulationTimeDeltaS = 0;
 
@@ -84,17 +82,17 @@ export class ServerEngine {
    * A continuous time that represents how far along the simulation should be.
    * Not quantised to the frame timestamps, see frame time for that value.
    */
-  getSimulationTimeS() {
+  public getSimulationTimeS() {
     return (present() / 1000) + this.presentTimeToSimulationTimeDeltaS;
   }
 
-  start() {
+  public start() {
     this.presentTimeToSimulationTimeDeltaS = - (present() / 1000);
     this.currentFrame.simulationTimeS = this.getSimulationTimeS();
     this.updateLoop();
   }
 
-  updateLoop() {
+  public updateLoop() {
     let curSimTimeS = this.getSimulationTimeS();
     let timeAmountInNeedOfSimulationS = curSimTimeS - this.currentFrame.simulationTimeS;
 
@@ -109,7 +107,7 @@ export class ServerEngine {
     // otherwise we will still "owe" the remaining simulation time on the next
     // update loop.
     let numFramesThreshold = 4;
-    if(timeAmountInNeedOfSimulationS > numFramesThreshold * this.getGameSimPeriodS()) {
+    if (timeAmountInNeedOfSimulationS > numFramesThreshold * this.getGameSimPeriodS()) {
       console.warn('Decreasing simulation rate to compensate for delayed processing.');
       // Keep 1 frame's worth of elapsed time and discard the rest.
       let timeToDiscardS = timeAmountInNeedOfSimulationS - this.getGameSimPeriodS();
@@ -117,7 +115,7 @@ export class ServerEngine {
       timeAmountInNeedOfSimulationS = this.getGameSimPeriodS();
     }
 
-    while(timeAmountInNeedOfSimulationS >= this.getGameSimPeriodS()) {
+    while (timeAmountInNeedOfSimulationS >= this.getGameSimPeriodS()) {
       let previousFrame = this.currentFrame;
       this.currentFrame = this.engine.createSimulationFrame();
       let newSimTimeS = previousFrame.simulationTimeS + this.getGameSimPeriodS();
@@ -143,17 +141,17 @@ export class ServerEngine {
     // We could potentially tick networking at other times too to utilise bandwidth between
     // simulation updates.
     let componentDataBuffer = new Uint8Array(measureAndSerialize(this.currentFrame.state));
-    this.playerInfos.forEach(pi => {
+    this.playerInfos.forEach((pi) => {
       let framePacket = new S2C_FrameUpdatePacket();
       framePacket.simulationFrameIndex = this.currentFrame.simulationFrameIndex;
       framePacket.simulationTimeS = this.currentFrame.simulationTimeS;
       let maybeInputs = this.currentFrame.inputs.get(pi.id);
-      if(maybeInputs !== undefined) {
+      if (maybeInputs !== undefined) {
         framePacket.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
       }
       framePacket.componentData = componentDataBuffer;
       this.networkServer.sendPacket(pi.id, framePacket, () => {
-        //console.log('ACK for:', framePacket.simulationTimeS);
+        // console.log('ACK for:', framePacket.simulationTimeS);
       });
     });
 

@@ -1,11 +1,12 @@
 import * as http from 'http';
 
+// tslint:disable-next-line:no-var-requires
 const getBasicAuthCreds = require('basic-auth');
 
 import * as Bluebird from 'bluebird';
 import { SyncEvent } from 'ts-events';
+import { request as WebSocketRequest, server as WebSocketServer } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
-import { server as WebSocketServer, request as WebSocketRequest } from 'websocket';
 
 import * as lk from 'laniakea-shared';
 
@@ -28,7 +29,7 @@ export interface AuthFailureResult {
 }
 
 function isAuthFailureResult(x: any): x is AuthFailureResult {
-  return x && x.playerId == undefined;
+  return x && x.playerId === undefined;
 }
 
 export type AuthResult = AuthSuccessResult | AuthFailureResult;
@@ -40,16 +41,16 @@ export type AuthCallback = (req: http.ClientRequest) => AuthResult;
 
 // For demo purposes only, do not use in production
 export function INSECURE_AuthCallback(httpRequest: http.ClientRequest): AuthResult {
-  var creds = getBasicAuthCreds(httpRequest);
+  let creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
-  if(!creds) {
+  if (!creds) {
     return {
+      extraHeaders: new Map([['WWW-Authenticate', 'Basic realm="Laniakea"']]),
       httpStatus: 401,
       reason: 'Unauthorized',
-      extraHeaders: new Map([['WWW-Authenticate', 'Basic realm="Laniakea"']]),
     };
   }
-  return { playerId: parseInt(creds.name) };
+  return { playerId: parseInt(creds.name, 10) };
 }
 
 // Handles authentication + establishment of the webRTC conn via WebSockets
@@ -59,17 +60,17 @@ class RTCServer {
   private httpServer: http.Server;
   private wsServer: WebSocketServer;
   constructor(private authenticatePlayer: AuthCallback) {
-    this.httpServer = http.createServer(function(request, response) {
+    this.httpServer = http.createServer((request, response) => {
       response.writeHead(404);
       response.end();
     });
     this.wsServer = new WebSocketServer({
+      autoAcceptConnections: false,
       httpServer: this.httpServer,
-      autoAcceptConnections: false
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  listen(serverPort: number) {
+  public listen(serverPort: number) {
     return new Bluebird((resolve, reject) => {
       this.httpServer.listen(serverPort, () => {
         let address = this.httpServer.address();
@@ -81,15 +82,15 @@ class RTCServer {
       });
     });
   }
-  close() {
+  public close() {
     return new Bluebird((resolve, reject) => {
       this.wsServer.on('close', (connection, closeReason, description) => {
-        if(this.wsServer.connections.length === 0) {
+        if (this.wsServer.connections.length === 0) {
           resolve();
         }
       });
       this.wsServer.shutDown();
-      setTimeout(function() {
+      setTimeout(() => {
         reject(new Error('Could not shut down all ws connections in time.'));
       }, 500);
     }).finally(() => {
@@ -102,7 +103,7 @@ class RTCServer {
   }
   private _handleNewConnection(playerId: lk.PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels) {
     let maybeExistingConn = this.connections.get(playerId);
-    if(maybeExistingConn !== undefined) {
+    if (maybeExistingConn !== undefined) {
       maybeExistingConn.close();
     }
     conn.onClose.attach(() => {
@@ -121,7 +122,7 @@ class RTCServer {
     let authResult = this.authenticatePlayer(request.httpRequest);
     if (isAuthFailureResult(authResult)) {
       let headerObj: any = {};
-      if(authResult.extraHeaders) {
+      if (authResult.extraHeaders) {
         authResult.extraHeaders.forEach((headerValue, headerName) => {
           headerObj[headerName] = headerValue;
         });
@@ -138,21 +139,21 @@ class RTCServer {
     let wsConnection = request.accept(undefined, request.origin);
     wsConnection.sendUTF(JSON.stringify({playerIdAssignment: successfulAuthResult.playerId}));
     let peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
-    wsConnection.on('message', function(message) {
+    wsConnection.on('message', (message) => {
       if (message.type === 'utf8') {
         let messageObj = JSON.parse(message.utf8Data!);
         if (messageObj.desc) {
           let desc = messageObj.desc;
           // if we get an offer, we need to reply with an answer
-          if (desc.type == "offer") {
-            peerConnection.setRemoteDescription(desc).then(function () {
+          if (desc.type === 'offer') {
+            peerConnection.setRemoteDescription(desc).then(() => {
               return peerConnection.createAnswer();
             })
-            .then(function (answer) {
+            .then((answer) => {
               return peerConnection.setLocalDescription(answer);
             })
-            .then(function () {
-              wsConnection.sendUTF(JSON.stringify({ "desc": peerConnection.localDescription }));
+            .then(() => {
+              wsConnection.sendUTF(JSON.stringify({ desc: peerConnection.localDescription }));
             })
             .catch(logError);
           } else {
@@ -165,32 +166,32 @@ class RTCServer {
         logError('Ignoring Binary Message: ', message.binaryData!);
       }
     });
-    wsConnection.on('close', function(reasonCode, description) {
+    wsConnection.on('close', (reasonCode, description) => {
       console.log('WebSocket client ' + wsConnection.remoteAddress + ' disconnected.');
     });
     // send any ice candidates to the other peer
-    peerConnection.onicecandidate = function (evt) {
-      wsConnection.sendUTF(JSON.stringify({ "candidate": evt.candidate }));
+    peerConnection.onicecandidate = (evt) => {
+      wsConnection.sendUTF(JSON.stringify({ candidate: evt.candidate }));
     };
     let reliableChannel: lk.BufferedRTCDataChannel;
     let unreliableChannel: lk.BufferedRTCDataChannel;
     function isOpen(chan: lk.BufferedRTCDataChannel) {
-      return chan && chan.readyState == 'open';
+      return chan && chan.readyState === 'open';
     }
     let thisConnHandled = false;
     let onDataChannelOpen = () => {
-      if(!thisConnHandled && isOpen(reliableChannel) && isOpen(unreliableChannel)) {
+      if (!thisConnHandled && isOpen(reliableChannel) && isOpen(unreliableChannel)) {
         thisConnHandled = true;
         wsConnection.close();
         let newConn = new lk.RTCPeerConnectionWithOpenDataChannels(
           peerConnection,
           reliableChannel,
-          unreliableChannel
+          unreliableChannel,
         );
         this._handleNewConnection(successfulAuthResult.playerId, newConn);
       }
-    }
-    peerConnection.ondatachannel = function (evt: RTCDataChannelEvent) {
+    };
+    peerConnection.ondatachannel = (evt: RTCDataChannelEvent) => {
       let dataChannel = evt.channel;
       console.log('peerConnection.ondatachannel ' + dataChannel.label);
       // Because we're waiting for two channels to open,
@@ -198,18 +199,18 @@ class RTCServer {
       // the other is complete, so listeners wont be ready.
       // To compensate, we buffer both channels and let the
       // listeners call flushAndStopBuffering when they're ready
-      if(dataChannel.label === 'reliable') {
+      if (dataChannel.label === 'reliable') {
         reliableChannel = lk.bufferRTCDataChannel(dataChannel);
         reliableChannel.binaryType = 'arraybuffer';
-        reliableChannel.onopen = function() {
+        reliableChannel.onopen = () => {
           onDataChannelOpen();
-        }
-      } else if(dataChannel.label === 'unreliable') {
+        };
+      } else if (dataChannel.label === 'unreliable') {
         unreliableChannel = lk.bufferRTCDataChannel(dataChannel);
         unreliableChannel.binaryType = 'arraybuffer';
-        dataChannel.onopen = function() {
+        dataChannel.onopen = () => {
           onDataChannelOpen();
-        }
+        };
       } else {
         logError('Unexpected channel opened', dataChannel);
       }
@@ -225,10 +226,10 @@ export class NetworkServer {
     this.rtcServer = new RTCServer(authenticatePlayer);
     this.rtcServer.onConnection.attach(({playerId, conn}) => {
       let packetPeer = new lk.PacketPeer();
-      for(let ctorAndName of this.registeredPacketTypes) {
+      for (let ctorAndName of this.registeredPacketTypes) {
         packetPeer.registerPacketType(ctorAndName[0], ctorAndName[1]);
       }
-      for(let ctorAndHandler of this.registeredPacketHandlers) {
+      for (let ctorAndHandler of this.registeredPacketHandlers) {
         let handlerWithPlayerIdParamBound = (packet: lk.Serializable, sequenceNumber: number) => ctorAndHandler[1](playerId, packet, sequenceNumber);
         packetPeer.registerPacketHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
       }
@@ -241,40 +242,44 @@ export class NetworkServer {
       conn.flushAndStopBuffering();
     });
   }
-  listen(serverPort: number) {
+  public listen(serverPort: number) {
     return this.rtcServer.listen(serverPort);
   }
-  close() {
+  public close() {
     this.connections.clear();
     return this.rtcServer.close();
   }
 
-  onConnection = new SyncEvent<lk.PlayerId>();
+  public onConnection = new SyncEvent<lk.PlayerId>();
 
   /*
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
-  registerPacketType<T extends lk.Serializable>(
-    ctor: {new(...args: any[]):T},
-    uniquePacketTypeName: string
+  public registerPacketType<T extends lk.Serializable>(
+    ctor: {new(...args: any[]): T},
+    uniquePacketTypeName: string,
   ): void {
     this.registeredPacketTypes.push([ctor, uniquePacketTypeName]);
   }
 
-  registerPacketHandler<T extends lk.Serializable>(
-    ctor: {new(...args: any[]):T},
-    handler: (playerId: lk.PlayerId, packet: T, sequenceNumber: number) => void
+  public registerPacketHandler<T extends lk.Serializable>(
+    ctor: {new(...args: any[]): T},
+    handler: (playerId: lk.PlayerId, packet: T, sequenceNumber: number) => void,
   ): void {
-    this.registeredPacketHandlers.push([ctor as {new(...args: any[]): lk.Serializable}, handler as (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]);
+    this.registeredPacketHandlers.push([
+      ctor as {new(...args: any[]): lk.Serializable},
+      handler as (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]);
   }
 
-  sendPacket(playerId: lk.PlayerId, packet: lk.Serializable, onAck?: () => void) {
+  public sendPacket(playerId: lk.PlayerId, packet: lk.Serializable, onAck?: () => void) {
     let maybeConn = this.connections.get(playerId);
-    if(maybeConn !== undefined) {
+    if (maybeConn !== undefined) {
       maybeConn.sendPacket(packet, onAck);
     }
   }
 
-  private registeredPacketTypes: [{new(...args: any[]): lk.Serializable}, string][] = [];
-  private registeredPacketHandlers: [{new(...args: any[]): lk.Serializable}, (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void][] = [];
+  private registeredPacketTypes: Array<[{new(...args: any[]): lk.Serializable}, string]> = [];
+  private registeredPacketHandlers: Array<[
+    {new(...args: any[]): lk.Serializable},
+    (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]> = [];
 }

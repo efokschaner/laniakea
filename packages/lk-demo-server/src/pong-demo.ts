@@ -23,12 +23,12 @@ class DeterministicPRNG {
   }
 }
 
-function calculatePlayersOrdering(numPlayers: number): Array<number> {
+function calculatePlayersOrdering(numPlayers: number): number[] {
   // default with 2 players in fixed clockwise order to prevent them experiencing
   // a swapping as the shape grows / contracts from the non-random regime to this one
   let playerAtVertIndex = [0, 1];
   let prng = new DeterministicPRNG(1);
-  for(let i = 2; i < numPlayers; ++i) {
+  for (let i = 2; i < numPlayers; ++i) {
     // Insert the players in a scrambled but deterministic order that
     // ensures existing players are not reordered
     let targetIndex = prng.getRandomInt(playerAtVertIndex.length);
@@ -41,28 +41,28 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   let scaleFactor = 10;
   // Create a classic pong board
   if (numPlayers < 3) {
-    let boxMax = new THREE.Vector2(0.9 * scaleFactor, 0.5 * scaleFactor)
+    let boxMax = new THREE.Vector2(0.9 * scaleFactor, 0.5 * scaleFactor);
     let box = new THREE.Box2(
       boxMax.clone().multiplyScalar(-1),
-      boxMax
+      boxMax,
     );
     return {
+      vertIndicesOfPlayers: [0, 2],
       vertices: [
         // Order matters here, we start in the top right so its not far
         // from the top vertex that is usually the start off wall 0 in the polygon
         new THREE.Vector2(box.max.x, box.max.y),
         new THREE.Vector2(box.max.x, box.min.y),
         new THREE.Vector2(box.min.x, box.min.y),
-        new THREE.Vector2(box.min.x, box.max.y)
+        new THREE.Vector2(box.min.x, box.max.y),
       ],
-      vertIndicesOfPlayers: [0, 2]
-    }
+    };
   }
 
   // Arrange players around a circle to create a polygon
   let result = {
+    vertIndicesOfPlayers: new Array<number>(numPlayers),
     vertices: new Array<THREE.Vector2>(numPlayers),
-    vertIndicesOfPlayers: new Array<number>(numPlayers)
   };
   let playerAtVertIndex = calculatePlayersOrdering(numPlayers);
   for (let i = 0; i < playerAtVertIndex.length; ++i) {
@@ -75,7 +75,6 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   return result;
 }
 
-
 export function initialiseServer(serverEngine: lk.ServerEngine) {
   pongDemo.registerSharedComponents(serverEngine.engine);
   serverEngine.onPlayerConnected.attach(() => {
@@ -85,7 +84,7 @@ export function initialiseServer(serverEngine: lk.ServerEngine) {
 
     // Remove any unneeded walls
     let wallIndices = serverEngine.currentFrame.state.getComponents(pongDemo.WallIndex);
-    for(let wallIndex of wallIndices) {
+    for (let wallIndex of wallIndices) {
       if (wallIndex.getData().index > vertices.length) {
         // TODO Implement removal // serverEngine.engine.removeEntity(wallIndex.getOwnerId());
       }
@@ -95,11 +94,10 @@ export function initialiseServer(serverEngine: lk.ServerEngine) {
     let indexOfNewPlayer = vertIndicesOfPlayers.length - 1;
     let vertIndexOfNewPlayer = vertIndicesOfPlayers[indexOfNewPlayer];
 
+    // let maybePrevPlayer = vertices[];
 
-    //let maybePrevPlayer = vertices[];
-
+    // tslint:disable-next-line:no-unused-variable
     let vertOfNewPlayer = vertices[vertIndexOfNewPlayer];
-
 
     // Begin Lerp all walls to new positions
 

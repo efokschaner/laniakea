@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import * as datGui from 'dat-gui';
+import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
@@ -16,28 +16,30 @@ class ThreeRenderer implements lk.RenderingSystem {
   // private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
   // private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
 
+  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.camera.translateZ(10);
     let axes = new THREE.AxisHelper(1000);
     this.scene.add(axes);
-    var ambientLight = new THREE.AmbientLight(0x202020);
+    let ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
     this.rendererSizeUpdater.update();
 
     let simTimeS = simulation.getCurrentSimulationTimeS();
-    if(simTimeS === undefined) {
+    if (simTimeS === undefined) {
       // Nothing to render yet
       return;
     }
     let nearestFrames = simulation.getSimulationFrames(simTimeS);
-    if(nearestFrames === undefined) {
+    if (nearestFrames === undefined) {
       // Nothing to render yet
       return;
     }
+    // tslint:disable-next-line:no-unused-variable
     let state = nearestFrames.current.state;
 
     /*
@@ -74,7 +76,7 @@ class ThreeRenderer implements lk.RenderingSystem {
 
 export class GuiRenderer implements lk.RenderingSystem {
   private guiViewModel = {
-    currentSimTime: 0
+    currentSimTime: 0,
   };
   private guiView = new datGui.GUI();
 
@@ -82,7 +84,7 @@ export class GuiRenderer implements lk.RenderingSystem {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
   }
 
-  render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
     this.guiViewModel.currentSimTime = simulation.getCurrentSimulationTimeS() || 0;
   }
 }
@@ -91,12 +93,13 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private threeRenderer: ThreeRenderer;
   private guiRenderer: GuiRenderer;
 
+  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.threeRenderer = new ThreeRenderer(sceneElementContainer);
     this.guiRenderer = new GuiRenderer();
   }
 
-  render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
     // Strategy for this renderer is loosely inspired by "local perception filters".
     // For information on these, see:
     // https://0fps.net/2014/02/26/replication-in-networked-games-spacetime-consistency-part-3/
@@ -127,7 +130,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     // are rendered at that state.
     // NOTE: technically we should probably do some kind of lerp based on an estimate of where between 2 frames
     // the worldline of the object intersected the lightcone.
-
 
     // Finally, we may add in some cosmetic blending / interpolating to smooth things as
     // we're not being fully rigorous in our use of a local perception filter, with our given game mechanics.

@@ -1,19 +1,19 @@
-import * as util from 'util';
 import * as R from 'ramda';
+import * as util from 'util';
 import * as winston from 'winston';
 
 const logger = new (winston.Logger)({
   transports: [
     new (winston.transports.Console)({
-      timestamp: function() {
+      timestamp() {
         return (new Date()).toString();
       },
-      formatter: function(options: any) {
-        return options.timestamp() +' '+ options.level.toUpperCase() +' '+ (undefined !== options.message ? options.message : '') +
-          (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-      }
-    })
-  ]
+      formatter(options: any) {
+        return options.timestamp() + ' ' + options.level.toUpperCase() + ' ' + (undefined !== options.message ? options.message : '') +
+          (options.meta && Object.keys(options.meta).length ? '\n\t' + JSON.stringify(options.meta) : '' );
+      },
+    }),
+  ],
 });
 
 const formatArgs = util.format.bind(util);

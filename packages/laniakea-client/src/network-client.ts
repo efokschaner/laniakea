@@ -1,10 +1,10 @@
 // TODO figure out if this is necessary
-//require('webrtc-adapter/out/adapter_no_edge_no_global.js')
+// require('webrtc-adapter/out/adapter_no_edge_no_global.js')
 
-import {VoidSyncEvent, SyncEvent} from 'ts-events';
 import * as Bluebird from 'bluebird';
 import * as lk from 'laniakea-shared';
 import { Serializable } from 'laniakea-shared';
+import {SyncEvent, VoidSyncEvent} from 'ts-events';
 
 function logError(message: string) {
   return console.error(message);
@@ -25,11 +25,11 @@ interface ConnectionAndPlayerId {
 }
 
 function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId> {
-  let disposableWebsocket = Bluebird.try(function() {
+  let disposableWebsocket = Bluebird.try(() => {
     return new WebSocket(serverWsUrl);
-  }).disposer((ws) => { ws.close()});
-  return Bluebird.using(disposableWebsocket, function(wsClient) {
-    return new Bluebird<WebSocket>(function(resolve, reject) {
+  }).disposer((ws) => { ws.close(); });
+  return Bluebird.using(disposableWebsocket, (wsClient) => {
+    return new Bluebird<WebSocket>((resolve, reject) => {
       wsClient.onopen = (openEvent) => {
         console.log('wsClient.onopen', openEvent);
         resolve(wsClient);
@@ -45,14 +45,14 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
         console.log('wsClient.onerror', error);
       };
     })
-    .then(function(connectedWsClient) {
-      let assignedPlayerId : number|undefined = undefined;
+    .then((connectedWsClient) => {
+      let assignedPlayerId: number|undefined;
       connectedWsClient.onmessage = (evt) => {
         console.log('connectedWsClient.onmessage', evt);
-        var message = JSON.parse(evt.data);
+        let message = JSON.parse(evt.data);
         if (message.desc) {
-          var desc = message.desc;
-          if (desc.type == 'answer') {
+          let desc = message.desc;
+          if (desc.type === 'answer') {
             peerConnection.setRemoteDescription(desc).catch(logError);
           } else {
             console.log('Unhandled session description mesage', desc);
@@ -66,19 +66,19 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
         }
       };
       // RTCPeerConnection's configuration is optional
-      var peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
+      let peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
       // send any ice candidates to the other peer
-      peerConnection.onicecandidate = function (evt) {
-        connectedWsClient.send(JSON.stringify({ "candidate": evt.candidate }));
+      peerConnection.onicecandidate = (evt) => {
+        connectedWsClient.send(JSON.stringify({ candidate: evt.candidate }));
       };
       // let the "negotiationneeded" event trigger offer generation
-      peerConnection.onnegotiationneeded = function () {
-        peerConnection.createOffer().then(function (offer) {
+      peerConnection.onnegotiationneeded = () => {
+        peerConnection.createOffer().then((offer) => {
           return peerConnection.setLocalDescription(offer);
         })
-        .then(function () {
+        .then(() => {
           // send the offer to the other peer
-          connectedWsClient.send(JSON.stringify({ "desc": peerConnection.localDescription }));
+          connectedWsClient.send(JSON.stringify({ desc: peerConnection.localDescription }));
         })
         .catch(logError);
       };
@@ -87,64 +87,63 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
       // the other is complete, so listeners wont be ready.
       // To compensate, we buffer both channels and let the
       // listeners call flushAndStopBuffering when they're ready
-      var reliableChannel = lk.bufferRTCDataChannel(
+      let reliableChannel = lk.bufferRTCDataChannel(
         peerConnection.createDataChannel('reliable'));
       reliableChannel.binaryType = 'arraybuffer';
-      var reliableChannelIsOpen = false;
-      var unreliableChannel = lk.bufferRTCDataChannel(
+      let reliableChannelIsOpen = false;
+      let unreliableChannel = lk.bufferRTCDataChannel(
         peerConnection.createDataChannel('unreliable', { ordered: false, maxRetransmits: 0 }));
       unreliableChannel.binaryType = 'arraybuffer';
-      var unreliableChannelIsOpen = false;
-      return new Bluebird<ConnectionAndPlayerId>(function(resolve, reject) {
+      let unreliableChannelIsOpen = false;
+      return new Bluebird<ConnectionAndPlayerId>((resolve, reject) => {
         function onChannelOpen() {
-          if(reliableChannelIsOpen && unreliableChannelIsOpen) {
-            if(assignedPlayerId === undefined) {
+          if (reliableChannelIsOpen && unreliableChannelIsOpen) {
+            if (assignedPlayerId === undefined) {
               // This should never happen as playerId should be transmitted before rtc stuff.
               reject(new Error('Expected to have assignedPlayerId before connection was fully open.'));
             } else {
               resolve({
+                assignedPlayerId,
                 connection: new ClientRTCConnection(
                   peerConnection,
                   reliableChannel,
-                  unreliableChannel
+                  unreliableChannel,
                 ),
-                assignedPlayerId: assignedPlayerId
               });
             }
           }
         }
-        reliableChannel.onopen = function () {
+        reliableChannel.onopen = () => {
           reliableChannelIsOpen = true;
           onChannelOpen();
         };
-        reliableChannel.onerror = error => {
+        reliableChannel.onerror = (error) => {
           reject(new Error(error.message));
         };
         reliableChannel.onclose = () => {
           reject(new Error('Reliable channel closed during startup.'));
-        }
-        unreliableChannel.onopen = function () {
+        };
+        unreliableChannel.onopen = () => {
           unreliableChannelIsOpen = true;
           onChannelOpen();
         };
-        unreliableChannel.onerror = error => {
+        unreliableChannel.onerror = (error) => {
           reject(new Error(error.message));
         };
         unreliableChannel.onclose = () => {
           reject(new Error('Unreliable channel closed during startup.'));
-        }
+        };
       });
     });
-  })
+  });
 }
-
 
 export class NetworkClient {
   constructor() {
     this.packetPeer = new lk.PacketPeer();
   }
 
-  connect(serverWsUrl: string): Bluebird<void> {
+  public connect(serverWsUrl: string): Bluebird<void> {
     return connectToRTCServer(serverWsUrl).then((connectResult) => {
       this.rtcConnection = connectResult.connection;
       this.rtcConnection.onClose.attach(() => this.handleDisconnect());
@@ -158,29 +157,29 @@ export class NetworkClient {
     }).catch(() => this.handleDisconnect());
   }
 
-  isConnected = false;
+  public isConnected = false;
   // Carries our assigned playerId
-  onConnected = new SyncEvent<lk.PlayerId>();
-  onDisconnected = new VoidSyncEvent();
+  public onConnected = new SyncEvent<lk.PlayerId>();
+  public onDisconnected = new VoidSyncEvent();
 
   /*
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
-  registerPacketType<T extends Serializable>(
-    ctor: {new(...args: any[]):T},
-    uniquePacketTypeName: string
+  public registerPacketType<T extends Serializable>(
+    ctor: {new(...args: any[]): T},
+    uniquePacketTypeName: string,
   ): void {
     return this.packetPeer.registerPacketType(ctor, uniquePacketTypeName);
   }
 
-  registerPacketHandler<T extends Serializable>(
-    ctor: {new(...args: any[]):T},
-    handler: (t: T, sequenceNumber: number) => void
+  public registerPacketHandler<T extends Serializable>(
+    ctor: {new(...args: any[]): T},
+    handler: (t: T, sequenceNumber: number) => void,
   ): void {
     return this.packetPeer.registerPacketHandler(ctor, handler);
   }
 
-  sendPacket(packet: Serializable, onAck?: () => void) {
+  public sendPacket(packet: Serializable, onAck?: () => void) {
     return this.packetPeer.sendPacket(packet, onAck);
   }
 
@@ -188,7 +187,7 @@ export class NetworkClient {
   private packetPeer = new lk.PacketPeer();
 
   private handleDisconnect() {
-    if(this.rtcConnection) {
+    if (this.rtcConnection) {
       this.rtcConnection.close();
     }
     this.rtcConnection = undefined;

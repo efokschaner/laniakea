@@ -1,19 +1,18 @@
 import {
   CyclicBuffer,
-  InputFrame,
   Engine,
   EntityComponentState,
+  InputFrame,
   PlayerId,
   ReadStream,
+  S2C_FrameUpdatePacket,
   SimluationFrameData,
-  S2C_FrameUpdatePacket
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
 
-
 export class ClientSimluationFrameData {
   constructor(
-    public resolvedFrameData: SimluationFrameData
+    public resolvedFrameData: SimluationFrameData,
   ) {
   }
 
@@ -88,7 +87,7 @@ export class ClientSimulation {
    */
   public getInputTravelTimeS(): number | undefined {
     let rtt = this.serverTimeEstimator.getPacketRoundTripTimeS();
-    if(rtt === undefined) {
+    if (rtt === undefined) {
       return undefined;
     }
     return rtt / 2;
@@ -103,12 +102,12 @@ export class ClientSimulation {
   public getSimulationFrames(simulationTimeS: number): { current: SimluationFrameData, next: SimluationFrameData } | undefined {
     this.doSimulationWork(simulationTimeS);
     let successorFrameIndex =  this.getSuccessorFrameForSimTime(simulationTimeS);
-    if(successorFrameIndex === undefined) {
+    if (successorFrameIndex === undefined) {
       return undefined;
     }
     let current = this.frames.getElement(successorFrameIndex - 1);
     let next = this.frames.getElement(successorFrameIndex);
-    if(next === undefined || current === undefined) {
+    if (next === undefined || current === undefined) {
       return undefined;
     }
     return {current: current.resolvedFrameData, next: next.resolvedFrameData};
@@ -122,25 +121,26 @@ export class ClientSimulation {
    */
   private getSuccessorFrameForSimTime(simulationTimeS: number): number|undefined {
     let lowerBound = this.getOldestInitializedFrameIndex();
-    if(lowerBound === undefined) {
+    if (lowerBound === undefined) {
       return undefined;
     }
-    if(this.largestInitializedFrameIndex === undefined) {
+    if (this.largestInitializedFrameIndex === undefined) {
       return undefined;
     }
-    let initialUpperBound = this.largestInitializedFrameIndex
+    let initialUpperBound = this.largestInitializedFrameIndex;
     let upperBound = initialUpperBound;
-    while(lowerBound <= upperBound) {
+    while (lowerBound <= upperBound) {
+      // tslint:disable-next-line:no-bitwise
       let middleIndex: number = lowerBound + (upperBound - lowerBound >> 1);
       let midValue = this.frames.getElement(middleIndex)!.resolvedFrameData.simulationTimeS;
-      if(midValue > simulationTimeS) {
+      if (midValue > simulationTimeS) {
         upperBound = middleIndex - 1;
       } else {
         lowerBound = middleIndex + 1;
       }
     }
     // Handle the possibility that none of the frame times were greater:
-    if(upperBound == initialUpperBound) {
+    if (upperBound === initialUpperBound) {
       return undefined;
     }
     return upperBound + 1;
@@ -151,7 +151,7 @@ export class ClientSimulation {
    */
   public onFrameUpdatePacket(framePacket: S2C_FrameUpdatePacket) {
     let targetFrame = this.getOrInsertFrameWithoutSimulation(framePacket.simulationFrameIndex);
-    if(targetFrame === undefined) {
+    if (targetFrame === undefined) {
       console.warn('Discarding update for frame that was too old. ' +
         `simulationFrameIndex: ${framePacket.simulationFrameIndex} simulationTimeS: ${framePacket.simulationTimeS}`);
       return;
@@ -173,7 +173,7 @@ export class ClientSimulation {
     this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, framePacket.simulationFrameIndex);
     // If this is the first frame we have received we immediately apply the authoritative state so that the
     // frame is considered useable to simulate the next frame.
-    if(this.firstEverFrameIndex === framePacket.simulationFrameIndex) {
+    if (this.firstEverFrameIndex === framePacket.simulationFrameIndex) {
       this.applyPredictedOrAuthoritativeInputsToResolvedInputs(targetFrame);
       this.applyAuthoritativeStateToResolvedState(targetFrame);
       // Mark the NEXT frame as dirty as this frame is completely "up to date" now.
@@ -188,7 +188,7 @@ export class ClientSimulation {
    */
   public notifyInputBeingSent(inputFrame: InputFrame, targetSimulationTimeS: number) {
     // Estimate the frame index of arrival
-    if(this.oldestDirtySimulationFrameIndex === undefined) {
+    if (this.oldestDirtySimulationFrameIndex === undefined) {
       return;
     }
     let oldestConfidentSimFrame = this.frames.getElement(this.oldestDirtySimulationFrameIndex - 1)!;
@@ -197,13 +197,13 @@ export class ClientSimulation {
     let targetFrameIndex = oldestConfidentSimFrame.resolvedFrameData.simulationFrameIndex + numFramesAhead;
     // We don't care about simulation we just need a data structure in which to store our predicted input
     let targetFrameData = this.getOrInsertFrameWithoutSimulation(targetFrameIndex);
-    if(targetFrameData === undefined) {
+    if (targetFrameData === undefined) {
       return;
     }
     // Copy the input frame so that any modifications to the passed data are not applied to our entry
     // By virtue of the fact that this uses serialisation, it also ensures the inputframe is "quantized"
     // before its used for client prediction, so that it matches what the server would get.
-    if(targetFrameData.predictedInput === undefined) {
+    if (targetFrameData.predictedInput === undefined) {
       targetFrameData.predictedInput = this.engine.createInputFrame();
     }
     this.engine.copyInputFrame(inputFrame, targetFrameData.predictedInput);
@@ -220,7 +220,7 @@ export class ClientSimulation {
    * Uninitialised frames will be added as we go.
    */
   public doSimulationWork(simulationTimeS: number) {
-    if(this.oldestDirtySimulationFrameIndex == undefined) {
+    if (this.oldestDirtySimulationFrameIndex === undefined) {
       // We have nothing to simulate yet
       return;
     }
@@ -229,7 +229,7 @@ export class ClientSimulation {
     // Our oldest stored frame can become dirty if we receive a state update for it but we cannot
     // resimualte the whole frame because we do not have a previous frame.
     // In this case we do not perform a full resimulation, we just apply the known authoritative updates.
-    if(frameIndexToSimulate === this.getOldestInitializedFrameIndex()) {
+    if (frameIndexToSimulate === this.getOldestInitializedFrameIndex()) {
       let frame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate)!;
       this.applyPredictedOrAuthoritativeInputsToResolvedInputs(frame);
       this.applyAuthoritativeStateToResolvedState(frame);
@@ -238,9 +238,9 @@ export class ClientSimulation {
       this.oldestDirtySimulationFrameIndex = frameIndexToSimulate;
     }
 
-    while(true) {
+    while (true) {
       let previousFrame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate - 1)!;
-      if(previousFrame.resolvedFrameData.simulationTimeS > simulationTimeS) {
+      if (previousFrame.resolvedFrameData.simulationTimeS > simulationTimeS) {
         // We're done
         break;
       }
@@ -257,7 +257,7 @@ export class ClientSimulation {
     // in the absence of any other changes.
     nextFrame.resolvedFrameData.inputs = previousFrame.resolvedFrameData.inputs;
     this.applyPredictedOrAuthoritativeInputsToResolvedInputs(nextFrame);
-    this.engine.stepSimulation(1/this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
+    this.engine.stepSimulation(1 / this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
     this.applyAuthoritativeStateToResolvedState(nextFrame);
     // By copying the data to itself, we quantize the state, which ensures that the values being
     // passed in to the next step will match more closely those that the client will receive
@@ -267,7 +267,7 @@ export class ClientSimulation {
     this.engine.copySimulationState(nextFrame.resolvedFrameData.state, nextFrame.resolvedFrameData.state);
   }
 
-  private insertNewFrame(frameIndex: number) : ClientSimluationFrameData {
+  private insertNewFrame(frameIndex: number): ClientSimluationFrameData {
     let newFrame = this.engine.createSimulationFrame();
     newFrame.simulationFrameIndex = frameIndex;
     let newClientFrame = new ClientSimluationFrameData(newFrame);
@@ -277,16 +277,16 @@ export class ClientSimulation {
     // In order to avoid that we check for that case here and advance the simulation one tick to avoid
     // expiring our only simulated frame.
     let frameIndexWeAreAboutToReplace = frameIndex - this.frames.entries.length;
-    if(this.oldestDirtySimulationFrameIndex === frameIndexWeAreAboutToReplace + 1 ) {
+    if (this.oldestDirtySimulationFrameIndex === frameIndexWeAreAboutToReplace + 1 ) {
       this.simulateOneFrame(
         this.frames.getElement(frameIndexWeAreAboutToReplace)!,
-        this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!
+        this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!,
       );
       this.oldestDirtySimulationFrameIndex += 1;
     }
     this.frames.setElement(frameIndex, newClientFrame);
     return newClientFrame;
-  };
+  }
 
   /**
    * Gets the frame data for frameIndex, initializes any new frames up to that index,
@@ -295,22 +295,22 @@ export class ClientSimulation {
    * @param frameIndex
    */
   private getOrInsertFrameWithoutSimulation(frameIndex: number): ClientSimluationFrameData | undefined  {
-    if(this.largestInitializedFrameIndex !== undefined) {
-      if(this.largestInitializedFrameIndex >= frameIndex) {
+    if (this.largestInitializedFrameIndex !== undefined) {
+      if (this.largestInitializedFrameIndex >= frameIndex) {
         // We either already have the frame or it has been discarded
-        if(this.getOldestInitializedFrameIndex()! <= frameIndex) {
+        if (this.getOldestInitializedFrameIndex()! <= frameIndex) {
           return this.frames.getElement(frameIndex);
         } else {
           return undefined;
         }
       }
       // Create all frames between the highest and this one.
-      for(let frameIndexToInit = this.largestInitializedFrameIndex + 1; frameIndexToInit < frameIndex; ++frameIndexToInit) {
+      for (let frameIndexToInit = this.largestInitializedFrameIndex + 1; frameIndexToInit < frameIndex; ++frameIndexToInit) {
         this.insertNewFrame(frameIndexToInit);
       }
     }
     let result = this.insertNewFrame(frameIndex);
-    if(this.largestInitializedFrameIndex === undefined) {
+    if (this.largestInitializedFrameIndex === undefined) {
       this.firstEverFrameIndex = frameIndex;
       this.oldestDirtySimulationFrameIndex = frameIndex;
     } else {
@@ -323,14 +323,14 @@ export class ClientSimulation {
   }
 
   private applyPredictedOrAuthoritativeInputsToResolvedInputs(frame: ClientSimluationFrameData) {
-    if(frame.receivedAuthoritativeSimulationTimeS !== undefined) {
+    if (frame.receivedAuthoritativeSimulationTimeS !== undefined) {
       frame.resolvedFrameData.simulationTimeS = frame.receivedAuthoritativeSimulationTimeS;
     }
-    if(this.playerId === undefined) {
+    if (this.playerId === undefined) {
       // We cannot apply our own inputs before we know our own playerId
       return;
     }
-    if(frame.receivedAuthoritativeInput !== undefined) {
+    if (frame.receivedAuthoritativeInput !== undefined) {
       frame.resolvedFrameData.inputs = new Map([[this.playerId, frame.receivedAuthoritativeInput]]);
     } else if (frame.predictedInput !== undefined) {
       frame.resolvedFrameData.inputs = new Map([[this.playerId, frame.predictedInput]]);
@@ -338,32 +338,8 @@ export class ClientSimulation {
   }
 
   private applyAuthoritativeStateToResolvedState(frame: ClientSimluationFrameData): void {
-    if(frame.receivedAuthoritativeState !== undefined) {
+    if (frame.receivedAuthoritativeState !== undefined) {
       this.engine.copySimulationState(frame.receivedAuthoritativeState, frame.resolvedFrameData.state);
-    }
-  }
-
-  /**
-   * Gets the frame data for frameIndex, including doing any simulation that remains to be done
-   * Returns undefined if:
-   * - frameIndex is so far in the past that it is no longer available.
-   * - We have insufficient data from the server to begin any simulation
-   * @param frameIndex
-   */
-  private getSimulatedFrame(frameIndex: number): ClientSimluationFrameData | undefined  {
-    if(this.largestInitializedFrameIndex === undefined) {
-      // We don't have a starting point for sim data yet
-      return undefined;
-    }
-    if(this.largestInitializedFrameIndex >= frameIndex) {
-      // We either already have the frame or it has been discarded
-      if(this.getOldestInitializedFrameIndex()! <= frameIndex) {
-        // We have the frame but it may be dirty so we trigger simulation up to it.
-
-        return this.frames.getElement(frameIndex);
-      } else {
-        return undefined;
-      }
     }
   }
 
@@ -389,7 +365,7 @@ export class ClientSimulation {
    * and ramps up to however many frames we store behind largestInitializedFrameIndex
    */
   private getOldestInitializedFrameIndex(): number | undefined {
-    if(this.largestInitializedFrameIndex === undefined || this.firstEverFrameIndex === undefined) {
+    if (this.largestInitializedFrameIndex === undefined || this.firstEverFrameIndex === undefined) {
       return undefined;
     }
     return this.largestInitializedFrameIndex - Math.min(

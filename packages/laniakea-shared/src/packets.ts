@@ -1,8 +1,10 @@
 import {
   Serializable,
-  SerializationStream
+  SerializationStream,
 } from './serialization';
-import { InputFrame } from './input';
+
+// Allow our packet name format
+// tslint:disable:class-name
 
 export class S2C_FrameUpdatePacket implements Serializable {
   public simulationFrameIndex = -1;
@@ -14,7 +16,7 @@ export class S2C_FrameUpdatePacket implements Serializable {
   public inputUsedForPlayerThisFrame!: Uint8Array;
   public componentData!: Uint8Array;
 
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeUint32(this, 'simulationFrameIndex');
     stream.serializeFloat64(this, 'simulationTimeS');
     stream.serializeUint8Array(this, 'inputUsedForPlayerThisFrame');
@@ -24,7 +26,7 @@ export class S2C_FrameUpdatePacket implements Serializable {
 
 export class C2S_TimeSyncRequestPacket implements Serializable {
   public clientTimeS = 0;
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'clientTimeS');
   }
 }
@@ -32,7 +34,7 @@ export class C2S_TimeSyncRequestPacket implements Serializable {
 export class S2C_TimeSyncResponsePacket implements Serializable {
   public clientTimeS = 0;
   public serverTimeS = 0;
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'clientTimeS');
     stream.serializeFloat64(this, 'serverTimeS');
   }
@@ -41,7 +43,7 @@ export class S2C_TimeSyncResponsePacket implements Serializable {
 export class C2S_InputFramePacket implements Serializable {
   public targetSimulationTimeS = -1;
   public inputFrame!: Uint8Array;
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'targetSimulationTimeS');
     stream.serializeUint8Array(this, 'inputFrame');
   }
@@ -49,7 +51,7 @@ export class C2S_InputFramePacket implements Serializable {
 
 export function registerPacketTypes(
   registerCb: <T extends Serializable>(
-    ctor: {new(...args: any[]):T},
+    ctor: {new(...args: any[]): T},
     uniquePacketTypeName: string) => void) {
   registerCb(S2C_FrameUpdatePacket, 'S2C_FrameUpdatePacket');
   registerCb(C2S_TimeSyncRequestPacket, 'C2S_TimeSyncRequestPacket');

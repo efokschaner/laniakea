@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
+// tslint:disable-next-line:no-var-requires
 const present = require('present');
-import { SyncEvent, VoidSyncEvent } from 'ts-events';
 import {
   C2S_InputFramePacket,
   ContinuousInputKind,
@@ -9,14 +9,14 @@ import {
   InputFrame,
   measureAndSerialize,
   PlayerId,
-  ReadStream,
   registerPacketTypes,
+  S2C_FrameUpdatePacket,
   Serializable,
-  S2C_FrameUpdatePacket
 } from 'laniakea-shared';
+import { SyncEvent } from 'ts-events';
+import { ClientSimulation } from './client-simulation';
 import { NetworkClient } from './network-client';
 import { ServerTimeEstimator } from './server-time-estimator';
-import { ClientSimulation } from './client-simulation';
 
 export interface RenderingSystem {
   render(domHighResTimestampMS: number, simulation: ClientSimulation): void;
@@ -26,7 +26,7 @@ interface PeriodicCallbackHandle {
   stop(): void;
 }
 
-function periodicCallback(callback: () => void, periodMS: number, cosmeticName: string) : PeriodicCallbackHandle {
+function periodicCallback(callback: () => void, periodMS: number, cosmeticName: string): PeriodicCallbackHandle {
   let nextTimeoutHandle: NodeJS.Timer;
   let callbackWrapper = () => {
     let startTimeMS = present();
@@ -39,7 +39,7 @@ function periodicCallback(callback: () => void, periodMS: number, cosmeticName: 
     let endTimeMS = present();
     let durationMS = startTimeMS - endTimeMS;
     let timeToNextCallMS = periodMS - durationMS;
-    if(timeToNextCallMS < 0) {
+    if (timeToNextCallMS < 0) {
       console.warn(`${cosmeticName} callback took longer than period. periodMS=${periodMS} durationMS=${durationMS}`);
       timeToNextCallMS = 0;
     }
@@ -49,8 +49,8 @@ function periodicCallback(callback: () => void, periodMS: number, cosmeticName: 
   return {
     stop() {
       clearTimeout(nextTimeoutHandle);
-    }
-  }
+    },
+  };
 }
 
 export interface ClientEngineOptions {
@@ -62,11 +62,11 @@ export interface ClientEngineOptions {
 // Have ClientEngine and ServerEngine share an interface, probably called Engine.
 // Interface allows common configuration / registration code across client and server.
 export class ClientEngine {
-  static defaultOptions: ClientEngineOptions = {
+  public static defaultOptions: ClientEngineOptions = {
     simFPS: 30,
-    secondsOfSimulationFramesToRetain: 2
+    secondsOfSimulationFramesToRetain: 2,
   };
-  options: ClientEngineOptions;
+  public options: ClientEngineOptions;
 
   constructor(options: Partial<ClientEngineOptions>) {
     this.options = Object.assign({}, ClientEngine.defaultOptions, options);
@@ -78,7 +78,7 @@ export class ClientEngine {
     registerPacketTypes(this.networkClient.registerPacketType.bind(this.networkClient));
     this.networkClient.registerPacketHandler(
       S2C_FrameUpdatePacket,
-      this.clientSimulation.onFrameUpdatePacket.bind(this.clientSimulation)
+      this.clientSimulation.onFrameUpdatePacket.bind(this.clientSimulation),
     );
     this.networkClient.onConnected.attach((playerId) => {
       this.playerId = playerId;
@@ -87,12 +87,12 @@ export class ClientEngine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: {new():T}, inputKind: string): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: string): void {
     this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
   }
 
-  public getCurrentContinuousInput<T extends Serializable>(inputType: {new():T}): T|undefined {
-    if(this.currentInputFrame === undefined) {
+  public getCurrentContinuousInput<T extends Serializable>(inputType: {new(): T}): T|undefined {
+    if (this.currentInputFrame === undefined) {
       return undefined;
     }
     return this.currentInputFrame.getContinuousInput(inputType);
@@ -131,7 +131,7 @@ export class ClientEngine {
   public playerId?: PlayerId = undefined;
 
   // TODO make private
-  public readonly engine = createEngine();
+  public readonly engine: Engine = createEngine();
 
   private networkClient = new NetworkClient();
   private serverTimeEstimator = new ServerTimeEstimator(this.networkClient);
@@ -144,12 +144,12 @@ export class ClientEngine {
   private fallbackClientSimulationHandle?: PeriodicCallbackHandle;
 
   private updateInput() {
-    if(this.currentInputFrame === undefined) {
+    if (this.currentInputFrame === undefined) {
       return;
     }
     let serverSimTimeS = this.clientSimulation.getCurrentSimulationTimeS();
     let inputTravelTime = this.clientSimulation.getInputTravelTimeS();
-    let targetSimulationTimeS : number | undefined;
+    let targetSimulationTimeS: number | undefined;
     let packet = new C2S_InputFramePacket();
     packet.inputFrame = new Uint8Array(measureAndSerialize(this.currentInputFrame));
     if (serverSimTimeS !== undefined && inputTravelTime !== undefined) {
@@ -182,7 +182,7 @@ export class ClientEngine {
   private fallbackClientSimulation() {
     let currentSimTimeS = this.clientSimulation.getCurrentSimulationTimeS();
     let inputTravelTimeS = this.clientSimulation.getInputTravelTimeS();
-    if(currentSimTimeS === undefined || inputTravelTimeS === undefined) {
+    if (currentSimTimeS === undefined || inputTravelTimeS === undefined) {
       return;
     }
     // targetSimTimeS is selected to do minimal extrapolation in this fallback case

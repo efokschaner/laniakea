@@ -1,46 +1,46 @@
 import * as ballsDemoImport from './balls-demo';
 export const ballsDemo = ballsDemoImport;
 
-import * as pongDemoImport from './pong-demo';
 import { Serializable, SerializationStream } from 'laniakea-shared';
+import * as pongDemoImport from './pong-demo';
 export const pongDemo = pongDemoImport;
 
 export const gameServerWsPort = 9876;
-export function getGameServerWsUrl(hostname: string) { return `ws://${hostname}:${gameServerWsPort}` };
+export function getGameServerWsUrl(hostname: string) { return `ws://${hostname}:${gameServerWsPort}`; }
 export const simFPS = 20;
 
-type NumericEnum = { [key: string]: number; }
+interface NumericEnum { [key: string]: number; }
 
-function getEnumNames(e: NumericEnum) : string[] {
-  return Object.keys(e).filter(function (key) { return isNaN(+key); });
+function getEnumNames(e: NumericEnum): string[] {
+  return Object.keys(e).filter((key) => isNaN(+key));
 }
 
-function getEnumValues(e: NumericEnum) : number[] {
-  return getEnumNames(e).map(function (name) { return e[name]; });
-};
+function getEnumValues(e: NumericEnum): number[] {
+  return getEnumNames(e).map((name) => e[name]);
+}
 
 export enum ButtonState {
   UP,
-  DOWN
+  DOWN,
 }
 
 function serializeSetOfUint8(stream: SerializationStream, set: Set<number>): void {
-  let numEntries = {val:0};
-  if(stream.isWriting) {
+  let numEntries = {val: 0};
+  if (stream.isWriting) {
     numEntries.val = set.size;
   }
   stream.serializeUint8(numEntries, 'val');
-  if(stream.isWriting) {
-    for(let number of set.values()) {
-      let numberObj = { number };
-      stream.serializeUint8(numberObj, 'number');
+  if (stream.isWriting) {
+    for (let value of set.values()) {
+      let valueObj = { value };
+      stream.serializeUint8(valueObj, 'value');
     }
   } else {
     set.clear();
-    for(let i = 0; i < numEntries.val; ++i) {
-      let numberObj = { number: 0 };
-      stream.serializeUint8(numberObj, 'number');
-      set.add(numberObj.number);
+    for (let i = 0; i < numEntries.val; ++i) {
+      let valueObj = { value: 0 };
+      stream.serializeUint8(valueObj, 'value');
+      set.add(valueObj.value);
     }
   }
 }
@@ -59,20 +59,20 @@ function createButtonsInputType(buttonsEnum: any) {
         this.buttonStates.set(button, ButtonState.UP);
       }
     }
-    serialize(stream: SerializationStream): void {
-      //Buttons in the down state are sent, other buttons are assumed to be in the up state.
+    public serialize(stream: SerializationStream): void {
+      // Buttons in the down state are sent, other buttons are assumed to be in the up state.
       let downButtons = new Set<number>();
-      if(stream.isWriting) {
+      if (stream.isWriting) {
         this.buttonStates.forEach((value, key) => {
-          if(value === ButtonState.DOWN) {
+          if (value === ButtonState.DOWN) {
             downButtons.add(key);
           }
         });
       }
       serializeSetOfUint8(stream, downButtons);
-      if(stream.isReading) {
+      if (stream.isReading) {
         for (const button of getEnumValues(buttonsEnum)) {
-          if(downButtons.has(button)) {
+          if (downButtons.has(button)) {
             this.buttonStates.set(button, ButtonState.DOWN);
           } else {
             this.buttonStates.set(button, ButtonState.UP);
@@ -80,9 +80,11 @@ function createButtonsInputType(buttonsEnum: any) {
         }
       }
     }
-  }
+  };
 }
 
-export enum GameButtons { UP, LEFT, DOWN, RIGHT };
+export enum GameButtons { UP, LEFT, DOWN, RIGHT }
 
+// This variable is a dynamic Class
+// tslint:disable-next-line:variable-name
 export let GameButtonsInput = createButtonsInputType(GameButtons);

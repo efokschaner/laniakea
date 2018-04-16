@@ -4,19 +4,21 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "lerna": "./node_modules/.bin/lerna",
     "bootstrap": "yarn install && lerna bootstrap",
     "build": "lerna run --sort build",
-    "demo": "$(cd packages/lk-demo-server && yarn run start) & $(cd packages/lk-demo-client && yarn run start) && fg"
+    "demo": "$(cd packages/lk-demo-server && yarn run start) & $(cd packages/lk-demo-client && yarn run start) && fg",
+    "lerna": "./node_modules/.bin/lerna",
+    "tslint": "lerna run --sort tslint",
+    "tslint:fix": "lerna run --sort tslint:fix"
   },
   "devDependencies": {
     "lerna": "^2.1.0",
     "split": "^1.0.1",
+    "tslint": "^5.9.1",
     "typescript": "^2.7.2"
   },
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {
-  }
+  "dependencies": {}
 }

@@ -1,10 +1,8 @@
 import * as XXH from 'xxhashjs';
 const XXHASH_SEED = 0;
 import {
-  SerializationStream,
   Serializable,
-  measureAndSerialize,
-  ReadStream
+  SerializationStream,
 } from './serialization';
 
 // Trick to get nominally typed Id types
@@ -40,12 +38,12 @@ export interface GenericComponent extends Serializable {
   getId(): ComponentId;
   getKindId(): ComponentKindId;
   getOwnerId(): EntityId;
-  getData() : Serializable;
+  getData(): Serializable;
 }
 
 export interface Component<T extends Serializable> extends GenericComponent {
-  getData() : T;
-  setData(val: T) : void;
+  getData(): T;
+  setData(val: T): void;
 }
 
 export interface Entity {
@@ -65,18 +63,17 @@ export interface EntityComponentState extends Serializable {
   createEntity(components?: Serializable[], entityId?: EntityId): Entity;
   createComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T>;
 
-  getComponents<T extends Serializable>(componentType: {new():T}): Iterable<Component<T>>;
-  getComponent<T extends Serializable>(componentType: {new():T}, componentId: ComponentId): Component<T> | undefined;
-  getComponentOfEntity<T extends Serializable>(componentType: {new():T}, entityId: EntityId): Component<T> | undefined;
+  getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>>;
+  getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined;
+  getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined;
   getAspect<T extends Serializable, U extends Serializable>(
-    componentTypeT: {new():T},
-    componentTypeU: {new():U}): Iterable<[Component<T>, Component<U>]> | undefined;
+    componentTypeT: {new(): T},
+    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]> | undefined;
   getEntity(entityId: EntityId): Entity | undefined;
 
   removeEntity(entityId: EntityId): void;
   removeComponent(componentId: ComponentId): void;
 }
-
 
 class ComponentImpl<T extends Serializable> implements Component<T> {
   constructor(
@@ -85,12 +82,12 @@ class ComponentImpl<T extends Serializable> implements Component<T> {
     public ownerId: EntityId,
     public data: T) {
   }
-  getId(): ComponentId { return this.id; }
-  getKindId(): ComponentKindId { return this.kindId; }
-  getOwnerId(): EntityId { return this.ownerId; }
-  getData() : T { return this.data; }
-  setData(val: T) : void { this.data = val; }
-  serialize(stream: SerializationStream): void {
+  public getId(): ComponentId { return this.id; }
+  public getKindId(): ComponentKindId { return this.kindId; }
+  public getOwnerId(): EntityId { return this.ownerId; }
+  public getData(): T { return this.data; }
+  public setData(val: T): void { this.data = val; }
+  public serialize(stream: SerializationStream): void {
     stream.serializeUint32(this, 'id');
     stream.serializeUint32(this, 'kindId');
     stream.serializeUint32(this, 'ownerId');
@@ -104,26 +101,22 @@ type GenericComponentFactory = (
   ownerId: EntityId,
   data: any) => GenericComponent;
 
-type ComponentFactory<T extends Serializable> = (
-  kindId: ComponentKindId,
-  id: ComponentId,
-  ownerId: EntityId,
-  data: T) => Component<T>;
-
 export class ComponentReflection {
-  getComponentKindId(componentKind: ComponentKind) {
+  public getComponentKindId(componentKind: ComponentKind) {
     return XXH.h32(componentKind, XXHASH_SEED).toNumber();
   }
-  getComponentKindIdFromConstructor(ctor: Function) {
+  // Allow the use of Function. It's truly the type of constructors in TS...
+  // tslint:disable-next-line:ban-types
+  public getComponentKindIdFromConstructor(ctor: Function) {
     return this.componentDataConstructorToComponentKindId.get(ctor);
   }
-  getComponentKind(componentKindId: ComponentKindId): ComponentKind | undefined {
+  public getComponentKind(componentKindId: ComponentKindId): ComponentKind | undefined {
     return this.componentKindIdToComponentKind.get(componentKindId);
   }
-  getComponentKindIds(): Iterable<ComponentKindId> {
+  public getComponentKindIds(): Iterable<ComponentKindId> {
     return this.componentKindIdToComponentKind.keys();
   }
-  registerType<T extends Serializable>(ctor: {new():T}, componentKind: ComponentKind): ComponentKindId {
+  public registerType<T extends Serializable>(ctor: {new(): T}, componentKind: ComponentKind): ComponentKindId {
     let componentKindId = this.getComponentKindId(componentKind);
     this.componentKindIdToComponentKind.set(componentKindId, componentKind);
     this.componentKindIdToComponentDataConstructor.set(componentKindId, ctor);
@@ -132,21 +125,21 @@ export class ComponentReflection {
       kindId: ComponentKindId,
       id: ComponentId,
       ownerId: EntityId,
-      data: T) => new ComponentImpl<T>(kindId, id, ownerId, data)
+      data: T) => new ComponentImpl<T>(kindId, id, ownerId, data),
     );
     return componentKindId;
   }
-  constructComponentData(componentKindId: ComponentKindId) {
+  public constructComponentData(componentKindId: ComponentKindId) {
     return new (this.componentKindIdToComponentDataConstructor.get(componentKindId)!) ();
   }
-  constructComponent(
+  public constructComponent(
     componentKindId: ComponentKindId,
     id: ComponentId,
     ownerId: EntityId) {
     let data = new (this.componentKindIdToComponentDataConstructor.get(componentKindId)!) ();
     return this.constructComponentFromData(componentKindId, id,  ownerId, data);
   }
-  constructComponentFromData(
+  public constructComponentFromData(
     componentKindId: ComponentKindId,
     id: ComponentId,
     ownerId: EntityId,
@@ -156,14 +149,16 @@ export class ComponentReflection {
 
   private componentKindIdToComponentKind: Map<ComponentKindId, ComponentKind> = new Map();
   // Following pair are each others inverse
-  private componentKindIdToComponentDataConstructor: Map<ComponentKindId, {new():Serializable}> = new Map();
+  private componentKindIdToComponentDataConstructor: Map<ComponentKindId, {new(): Serializable}> = new Map();
+  // Allow the use of Function. It's truly the type of constructors in TS...
+  // tslint:disable-next-line:ban-types
   private componentDataConstructorToComponentKindId: Map<Function, ComponentKindId> = new Map();
   private componentKindIdToComponentFactory: Map<ComponentKindId, GenericComponentFactory> = new Map();
 }
 
 export class EntityComponentStateImpl implements EntityComponentState {
   constructor(private componentReflection: ComponentReflection) {
-    for(let componentKindId of this.componentReflection.getComponentKindIds()) {
+    for (let componentKindId of this.componentReflection.getComponentKindIds()) {
       this.componentKindIdToComponents.set(componentKindId, new Map());
     }
   }
@@ -178,25 +173,25 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return ++this.lastComponentId;
   }
 
-  entityIds: Set<EntityId> = new Set();
-  componentKindIdToComponents: Map<ComponentKindId, Map<ComponentId, GenericComponent>> = new Map();
+  public entityIds: Set<EntityId> = new Set();
+  public componentKindIdToComponents: Map<ComponentKindId, Map<ComponentId, GenericComponent>> = new Map();
   // redundant state for fast Entity-to-Components lookup
-  entityIdToComponents: Map<EntityId, Map<ComponentKindId, ComponentId>> = new Map();
+  public entityIdToComponents: Map<EntityId, Map<ComponentKindId, ComponentId>> = new Map();
 
-  createEntity(components?: Serializable[], entityId?: EntityId): Entity {
+  public createEntity(components?: Serializable[], entityId?: EntityId): Entity {
     // TODO This function probably needs to be more transactional
     let newEntityId = entityId !== undefined ? entityId : this.getNextEntityId();
     this.entityIds.add(newEntityId);
     this.entityIdToComponents.set(newEntityId, new Map());
-    if(components !== undefined) {
-      for(let component of components) {
+    if (components !== undefined) {
+      for (let component of components) {
         this.createGenericComponent(newEntityId, component);
       }
     }
     return new EntityImpl(newEntityId, this);
   }
 
-  createGenericComponent(ownerId: EntityId, data: Serializable): GenericComponent {
+  public createGenericComponent(ownerId: EntityId, data: Serializable): GenericComponent {
     let newComponentId = this.getNextComponentId();
     let componentKindId = this.componentReflection.getComponentKindIdFromConstructor(data.constructor)!;
     let componentHandle = this.componentReflection.constructComponentFromData(
@@ -208,39 +203,39 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return componentHandle;
   }
 
-  createComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> {
+  public createComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> {
     return this.createGenericComponent(ownerId, data) as Component<T>;
   }
 
-  removeEntity(entityId: EntityId): void {
-    throw new Error("Unimplemented");
+  public removeEntity(entityId: EntityId): void {
+    throw new Error('Unimplemented');
   }
 
-  removeComponent(componentId: ComponentId): void {
-    throw new Error("Unimplemented");
+  public removeComponent(componentId: ComponentId): void {
+    throw new Error('Unimplemented');
   }
 
-  *getAllComponents(): Iterable<GenericComponent> {
-    for(let componentMap of this.componentKindIdToComponents.values()) {
+  public *getAllComponents(): Iterable<GenericComponent> {
+    for (let componentMap of this.componentKindIdToComponents.values()) {
       yield* componentMap.values();
     }
   }
 
-  private _getComponents<T extends Serializable>(componentType: {new():T}): Map<ComponentId, Component<T>> | undefined {
+  private _getComponents<T extends Serializable>(componentType: {new(): T}): Map<ComponentId, Component<T>> | undefined {
     return this.componentKindIdToComponents.get(
-      this.componentReflection.getComponentKindIdFromConstructor(componentType)!
+      this.componentReflection.getComponentKindIdFromConstructor(componentType)!,
     ) as Map<ComponentId, Component<T>> | undefined;
   }
 
-  getComponents<T extends Serializable>(componentType: {new():T}): Iterable<Component<T>> {
+  public getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>> {
     return this._getComponents(componentType)!.values();
   }
 
-  getGenericComponent(componentKind: ComponentKind, componentId: ComponentId): GenericComponent | undefined {
+  public getGenericComponent(componentKind: ComponentKind, componentId: ComponentId): GenericComponent | undefined {
     return this.getComponentsByKindId(this.componentReflection.getComponentKindId(componentKind)).get(componentId);
   }
 
-  getComponent<T extends Serializable>(componentType: {new():T}, componentId: ComponentId): Component<T> | undefined {
+  public getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined {
     let componentsOfKind = this._getComponents(componentType);
     if (componentsOfKind === undefined) {
       return undefined;
@@ -248,7 +243,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return componentsOfKind.get(componentId);
   }
 
-  getComponentOfEntity<T extends Serializable>(componentType: {new():T}, entityId: EntityId): Component<T> | undefined {
+  public getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined {
     let maybeEntityComponents = this.entityIdToComponents.get(entityId);
     if (maybeEntityComponents === undefined) {
       return undefined;
@@ -260,12 +255,12 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return this.getComponent(componentType, maybeComponentId);
   }
 
-  *getComponentsOfEntity(entityId: EntityId): Iterable<GenericComponent> | undefined {
+  public *getComponentsOfEntity(entityId: EntityId): Iterable<GenericComponent> | undefined {
     let maybeEntityComponents = this.entityIdToComponents.get(entityId);
     if (maybeEntityComponents === undefined) {
       return undefined;
     }
-    for(let [kindId, id] of maybeEntityComponents.entries()) {
+    for (let [kindId, id] of maybeEntityComponents.entries()) {
       let componentsOfKind = this.getComponentsByKindId(kindId);
       yield componentsOfKind.get(id)!;
     }
@@ -273,9 +268,9 @@ export class EntityComponentStateImpl implements EntityComponentState {
 
   // TODO !!!! this relies on insertion order and might break down on the client
   // when we change networking
-  *getAspect<T extends Serializable, U extends Serializable>(
-    componentTypeT: {new():T},
-    componentTypeU: {new():U}): Iterable<[Component<T>, Component<U>]> | undefined {
+  public *getAspect<T extends Serializable, U extends Serializable>(
+    componentTypeT: {new(): T},
+    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]> | undefined {
     let componentTypeIdT = this.componentReflection.getComponentKindIdFromConstructor(componentTypeT)!;
     let componentTypeIdU = this.componentReflection.getComponentKindIdFromConstructor(componentTypeU)!;
     let componentsOfKindT = this.getComponents<T>(componentTypeT);
@@ -287,32 +282,32 @@ export class EntityComponentStateImpl implements EntityComponentState {
     let generatorU = componentsOfKindU[Symbol.iterator]();
     let iteratorT = generatorT.next();
     let iteratorU = generatorU.next();
-    for(let entityComponents of this.entityIdToComponents.values()) {
+    for (let entityComponents of this.entityIdToComponents.values()) {
       let hasT = entityComponents.has(componentTypeIdT);
       let hasU = entityComponents.has(componentTypeIdU);
-      if(hasT && hasU) {
+      if (hasT && hasU) {
         yield [iteratorT.value, iteratorU.value];
       }
-      if(hasT) {
+      if (hasT) {
         iteratorT = generatorT.next();
       }
-      if(hasU) {
+      if (hasU) {
         iteratorU = generatorU.next();
       }
     }
   }
 
-  getEntity(entityId: EntityId): Entity | undefined {
-    if(this.entityIds.has(entityId)) {
+  public getEntity(entityId: EntityId): Entity | undefined {
+    if (this.entityIds.has(entityId)) {
       return new EntityImpl(entityId, this);
     }
     return undefined;
   }
 
   // Will get existing or new entry
-  getComponentsByKindId(componentKindId: ComponentKindId): Map<ComponentId, GenericComponent> {
+  public getComponentsByKindId(componentKindId: ComponentKindId): Map<ComponentId, GenericComponent> {
     let maybeComponents = this.componentKindIdToComponents.get(componentKindId);
-    if(maybeComponents !== undefined) {
+    if (maybeComponents !== undefined) {
       return maybeComponents;
     }
     let newComponents: Map<ComponentId, GenericComponent> = new Map();
@@ -320,32 +315,32 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return newComponents;
   }
 
-  addComponent(component: GenericComponent) {
+  public addComponent(component: GenericComponent) {
     this.entityIdToComponents.get(component.getOwnerId())!.set(component.getKindId(), component.getId());
     this.getComponentsByKindId(component.getKindId()).set(component.getId(), component);
   }
 
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeUint32(this, 'lastEntityId');
     stream.serializeUint32(this, 'lastComponentId');
     let entityIdsLengthObj = {val: this.entityIds.size};
     stream.serializeUint32(entityIdsLengthObj, 'val');
     let ids8Buffer = {val: new Uint8Array(0)};
-    if(stream.isWriting) {
+    if (stream.isWriting) {
       let ids32Buffer = Uint32Array.from(this.entityIds);
       ids8Buffer = {val: new Uint8Array(ids32Buffer.buffer)};
     }
     stream.serializeUint8Array(ids8Buffer, 'val');
-    if(stream.isReading) {
+    if (stream.isReading) {
       let ids32Buffer = new Uint32Array(ids8Buffer.val);
       this.entityIds = new Set(ids32Buffer);
-      for(let entityId of this.entityIds) {
+      for (let entityId of this.entityIds) {
         this.entityIdToComponents.set(entityId, new Map());
       }
     }
 
-    let componentsLengthObj = {val:0};
-    if(stream.isWriting) {
+    let componentsLengthObj = {val: 0};
+    if (stream.isWriting) {
       componentsLengthObj.val = Array.from(this.componentKindIdToComponents.values()).reduce(
         (acc: number, item) => {
           return acc + item.size;
@@ -353,17 +348,17 @@ export class EntityComponentStateImpl implements EntityComponentState {
         0);
     }
     stream.serializeUint32(componentsLengthObj, 'val');
-    if(stream.isWriting) {
-      for(let componentIdToComponent of this.componentKindIdToComponents.values()) {
-        for(let component of componentIdToComponent.values()) {
-          let kindId = {val:component.getKindId()};
+    if (stream.isWriting) {
+      for (let componentIdToComponent of this.componentKindIdToComponents.values()) {
+        for (let component of componentIdToComponent.values()) {
+          let kindId = {val: component.getKindId()};
           stream.serializeUint32(kindId, 'val');
           component.serialize(stream);
         }
       }
     } else {
-      for(let i = 0; i < componentsLengthObj.val; ++i) {
-        let kindId = {val:0};
+      for (let i = 0; i < componentsLengthObj.val; ++i) {
+        let kindId = {val: 0};
         stream.serializeUint32(kindId, 'val');
         // TODO revisit the need to provide id params up front to the component constructor.
         let component = this.componentReflection.constructComponent(kindId.val, 0, 0);
@@ -379,10 +374,10 @@ class EntityImpl implements Entity {
     private readonly id: EntityId,
     private readonly ecState: EntityComponentState) {
   }
-  getId(): EntityId {
+  public getId(): EntityId {
     return this.id;
   }
-  getComponent<T extends Serializable>(componentType: {new():T}): Component<T> | undefined {
+  public getComponent<T extends Serializable>(componentType: {new(): T}): Component<T> | undefined {
     return this.ecState.getComponentOfEntity<T>(componentType, this.id);
   }
 }

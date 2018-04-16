@@ -11,17 +11,17 @@ const networkServer = new lk.NetworkServer(lk.INSECURE_AuthCallback);
 let serverEngine = new lk.ServerEngine(
   networkServer,
   {
-    simFPS: demo.simFPS
-  }
+    simFPS: demo.simFPS,
+  },
 );
 
 enum DemoType {
   BALLS,
-  PONG
+  PONG,
 }
 let demoType = DemoType.BALLS as DemoType;
 
-switch(demoType) {
+switch (demoType) {
   case DemoType.BALLS:
     ballsDemo.initialiseServer(serverEngine);
     break;
@@ -34,6 +34,6 @@ serverEngine.registerContinuousInputType(demo.GameButtonsInput, 'GameButtonsInpu
 
 serverEngine.start();
 networkServer.listen(demo.gameServerWsPort)
-.then(function(){
-  console.log('networkServer is listening.')
+.then(() => {
+  console.log('networkServer is listening.');
 });
