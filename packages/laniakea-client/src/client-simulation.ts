@@ -74,6 +74,13 @@ export class ClientSimulation {
   }
 
   /**
+   * Get the playerId for this client. undefined until connection is established to server.
+   */
+  public getOwnPlayerId(): PlayerId|undefined {
+    return this.playerId;
+  }
+
+  /**
    * This is the estimate of the current simulation time on the server.
    * undefined is returned when we are not synchronised with the server.
    */
