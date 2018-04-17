@@ -28,7 +28,7 @@ enum DemoType {
   BALLS,
   PONG,
 }
-let demoType = DemoType.BALLS as DemoType;
+let demoType = DemoType.PONG as DemoType;
 
 let renderingSystem: lk.RenderingSystem;
 

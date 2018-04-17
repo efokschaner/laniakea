@@ -12,13 +12,14 @@ class ThreeRenderer implements lk.RenderingSystem {
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
-  // Translate these?
-  // private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
-  // private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
+  private lineMaterial = new THREE.LineBasicMaterial( { color: 0xbbbbbb } );
+  private rendererWalls: Map<lk.ComponentId, THREE.Line> = new Map();
+  private rendererPaddles: Map<lk.ComponentId, THREE.Mesh> = new Map();
+
 
   // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
-    this.camera.translateZ(10);
+    this.camera.translateZ(20);
     let axes = new THREE.AxisHelper(1000);
     this.scene.add(axes);
     let ambientLight = new THREE.AmbientLight(0x202020);
@@ -39,37 +40,66 @@ class ThreeRenderer implements lk.RenderingSystem {
       // Nothing to render yet
       return;
     }
-    // tslint:disable-next-line:no-unused-variable
+
     let state = nearestFrames.current.state;
 
     /*
-    for(let ball of state.getComponents(demo.ballsDemo.BallShape)!) {
-      let maybeObj = this.rendererSpheres.get(ball.getId());
-      if(maybeObj === undefined) {
-        let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
-        let material = new THREE.MeshLambertMaterial( { color: 0x0055ff, wireframe: false } );
-        maybeObj = new THREE.Mesh( geometry, material );
-        maybeObj.castShadow = true;
-        this.rendererSpheres.set(ball.getId(), maybeObj);
-        this.scene.add(maybeObj);
-      }
-      maybeObj.position.copy(ball.getData().center);
-    }
-
-    for(let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
+    for(let wall of state.getComponents(demo.pongDemo.WallPosition)!) {
+      let wallData = wall.getData();
       let maybeObj = this.rendererWalls.get(wall.getId());
+      let wallGeometry = new THREE.Geometry();
       if(maybeObj === undefined) {
-        let geometry = new THREE.PlaneBufferGeometry(200, 200, 4, 4);
-        let material = new THREE.MeshLambertMaterial( { color: 0xdddddd, wireframe: false } );
-        maybeObj = new THREE.Mesh( geometry, material );
-        maybeObj.receiveShadow = true;
+        maybeObj = new THREE.Line(undefined, this.lineMaterial);
         this.rendererWalls.set(wall.getId(), maybeObj);
         this.scene.add(maybeObj);
       }
-      wall.getData().projectPoint(new THREE.Vector3(0,0,0), maybeObj.position);
-      maybeObj.lookAt(wall.getData().normal);
+      wallGeometry.vertices.push(new THREE.Vector3(wallData.endA.x, wallData.endA.y, 0));
+      wallGeometry.vertices.push(new THREE.Vector3(wallData.endB.x, wallData.endB.y, 0));
+      maybeObj.geometry = wallGeometry;
     }
     */
+
+    let sortedVertices = Array.from(state.getComponents(demo.pongDemo.WallVertex)!).sort((a, b) => {
+      return a.getData().visualIndex - b.getData().visualIndex;
+    });
+
+    for(let i = 0; i < sortedVertices.length; ++i) {
+      let vertex = sortedVertices[i];
+      let vertexData = vertex.getData();
+      let nextVertIndex = (i + 1) % sortedVertices.length;
+      let nextVertexData = sortedVertices[nextVertIndex].getData();
+      let maybeObj = this.rendererWalls.get(vertex.getId());
+      let wallGeometry = new THREE.Geometry();
+      if(maybeObj === undefined) {
+        maybeObj = new THREE.Line(undefined, this.lineMaterial);
+        this.rendererWalls.set(vertex.getId(), maybeObj);
+        this.scene.add(maybeObj);
+      }
+      wallGeometry.vertices.push(new THREE.Vector3(vertexData.position.x, vertexData.position.y, 0));
+      wallGeometry.vertices.push(new THREE.Vector3(nextVertexData.position.x, nextVertexData.position.y, 0));
+      maybeObj.geometry = wallGeometry;
+    }
+
+    for (let paddle of state.getComponents(demo.pongDemo.Paddle)!) {
+      let maybeObj = this.rendererPaddles.get(paddle.getId());
+      if (maybeObj === undefined) {
+        let geometry = new THREE.SphereBufferGeometry(1, 32, 24);
+        let material = new THREE.MeshLambertMaterial( { color: 0x0055ff, wireframe: false } );
+        maybeObj = new THREE.Mesh( geometry, material );
+        this.rendererPaddles.set(paddle.getId(), maybeObj);
+        this.scene.add(maybeObj);
+      }
+
+      let wallData = state.getComponent(demo.pongDemo.WallPosition, paddle.getData().wallId)!.getData();
+      // TODO account for width of paddle here
+      let paddlePositionWallSpace = paddle.getData().positionInWallSpace;
+      let paddlePositionWorldSpace = new THREE.Vector2();
+      paddlePositionWorldSpace.lerpVectors(wallData.endA, wallData.endB, paddle.getData().positionInWallSpace);
+      maybeObj.position.set(paddlePositionWorldSpace.x, paddlePositionWorldSpace.y, 0);
+
+      // TODO if this paddle is ours, set our camera on it.
+    }
+
     this.renderer.render(this.scene, this.camera);
   }
 }

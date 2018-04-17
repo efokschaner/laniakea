@@ -3,6 +3,15 @@ import * as THREE from 'three';
 import * as lk from 'laniakea-server';
 
 import { pongDemo } from 'lk-demo-shared';
+// TODO, fix this atrocity
+import { WallVertex } from '../../lk-demo-shared/dist/pong-demo';
+
+// Because JS's % operator returns negative values
+// for modulus of negative numbers,
+// which we don't want.
+function mod(n: number, m: number) {
+  return ((n % m) + m) % m;
+}
 
 // Draft Strategy for pong AI
 // Find nearest ball with net velocity in direction of ai, intersect ball velocity with base line,
@@ -23,18 +32,31 @@ class DeterministicPRNG {
   }
 }
 
-function calculatePlayersOrdering(numPlayers: number): number[] {
-  // default with 2 players in fixed clockwise order to prevent them experiencing
-  // a swapping as the shape grows / contracts from the non-random regime to this one
-  let playerAtVertIndex = [0, 1];
-  let prng = new DeterministicPRNG(1);
-  for (let i = 2; i < numPlayers; ++i) {
-    // Insert the players in a scrambled but deterministic order that
-    // ensures existing players are not reordered
-    let targetIndex = prng.getRandomInt(playerAtVertIndex.length);
-    playerAtVertIndex.splice(targetIndex, 0, i);
+function playerIndexToPersistentVertexIndex(playerIndex: number): number {
+  if(playerIndex === 0) {
+    return 0;
   }
-  return playerAtVertIndex;
+  if(playerIndex === 1) {
+    return 2;
+  }
+  if(playerIndex === 2) {
+    return 1;
+  }
+  return playerIndex;
+}
+
+function calculatePersistentVertexIndices(numPlayers: number): number[] {
+  // default with 4 sides in fixed clockwise order to prevent them experiencing
+  // a swapping as the shape grows / contracts between the random regime and this one
+  let persistentIndices = [0, 1, 2, 3];
+  let prng = new DeterministicPRNG(1);
+  for (let i = 4; i < numPlayers; ++i) {
+    // Insert the sides in a scrambled but deterministic order that
+    // ensures existing sides are not reordered
+    let targetIndex = prng.getRandomInt(persistentIndices.length);
+    persistentIndices.splice(targetIndex, 0, i);
+  }
+  return persistentIndices;
 }
 
 function calculateShapeForNumPlayers(numPlayers: number) {
@@ -46,60 +68,156 @@ function calculateShapeForNumPlayers(numPlayers: number) {
       boxMax.clone().multiplyScalar(-1),
       boxMax,
     );
-    return {
-      vertIndicesOfPlayers: [0, 2],
-      vertices: [
-        // Order matters here, we start in the top right so its not far
-        // from the top vertex that is usually the start off wall 0 in the polygon
-        new THREE.Vector2(box.max.x, box.max.y),
-        new THREE.Vector2(box.max.x, box.min.y),
-        new THREE.Vector2(box.min.x, box.min.y),
-        new THREE.Vector2(box.min.x, box.max.y),
-      ],
-    };
+    return [
+      // Order matters here, we start in the top right so its not far
+      // from the top vertex that is usually the start off wall 0 in the polygon
+      new THREE.Vector2(box.max.x, box.max.y),
+      new THREE.Vector2(box.max.x, box.min.y),
+      new THREE.Vector2(box.min.x, box.min.y),
+      new THREE.Vector2(box.min.x, box.max.y),
+    ];
   }
-
   // Arrange players around a circle to create a polygon
-  let result = {
-    vertIndicesOfPlayers: new Array<number>(numPlayers),
-    vertices: new Array<THREE.Vector2>(numPlayers),
-  };
-  let playerAtVertIndex = calculatePlayersOrdering(numPlayers);
-  for (let i = 0; i < playerAtVertIndex.length; ++i) {
+  let vertices = new Array<THREE.Vector2>(numPlayers);
+  for (let i = 0; i < vertices.length; ++i) {
     let angle = 2 * Math.PI * i / numPlayers;
     let vert = new THREE.Vector2(Math.sin(angle), Math.cos(angle));
     vert.multiplyScalar(scaleFactor);
-    result.vertices[i] = vert;
-    result.vertIndicesOfPlayers[playerAtVertIndex[i]] = i;
+    vertices[i] = vert;
   }
-  return result;
+  return vertices;
+}
+
+interface Vertex {
+  visualIndex: number;
+  persistentIndex: number;
+  location: THREE.Vector2;
 }
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
   pongDemo.registerSharedComponents(serverEngine.engine);
-  serverEngine.onPlayerConnected.attach(() => {
-    let paddles = Array.from(serverEngine.currentFrame.state.getComponents(pongDemo.Paddle));
-    let numPlayersPriorToAddition = paddles.length;
-    let { vertices, vertIndicesOfPlayers } = calculateShapeForNumPlayers(numPlayersPriorToAddition + 1);
 
-    // Remove any unneeded walls
-    let wallIndices = serverEngine.currentFrame.state.getComponents(pongDemo.WallIndex);
-    for (let wallIndex of wallIndices) {
-      if (wallIndex.getData().index > vertices.length) {
-        // TODO Implement removal // serverEngine.engine.removeEntity(wallIndex.getOwnerId());
+  serverEngine.onPlayerConnected.attach((playerId) => {
+    let state = serverEngine.currentFrame.state;
+    let players = Array.from(state.getComponents(pongDemo.PlayerInfo));
+    let newPlayerInfo = new pongDemo.PlayerInfo();
+    newPlayerInfo.playerIndex = players.length;
+    newPlayerInfo.playerId = playerId;
+    let newPlayerInfoEntity = state.createEntity([newPlayerInfo]);
+    players.push(newPlayerInfoEntity.getComponent(pongDemo.PlayerInfo)!);
+
+    let numPlayersEverAlive = players.length;
+    let alivePlayers = players.filter((pi) => pi.getData().alive);
+    let numPlayersAlive = alivePlayers.length;
+
+    // This is a multi phase process, we add required new vertices, we start lerping the vertices to where they need to go, then we delete unneeded vertices.
+    // Added vertices originate from whichever existing persistentIndex comes after them.
+    // All vertices lerp towards the target position of their persistentIndex or the target position of the next existing persistentIndex
+    // On completion of lerps we delete persistentIndices which are not meant to exist any more and we re-assign visualIndices.
+
+    let targetShape = calculateShapeForNumPlayers(numPlayersAlive);
+    let persistentIndices = calculatePersistentVertexIndices(numPlayersEverAlive);
+    // Represents all the persistent indices that shouldn't exist.
+    let alivePersistentIndicesSet = new Set<number>(alivePlayers.map((pi) => playerIndexToPersistentVertexIndex(pi.getData().playerIndex)));
+    if(numPlayersAlive <= 2) {
+      // These should exist regardless
+      alivePersistentIndicesSet.add(0);
+      alivePersistentIndicesSet.add(1);
+      alivePersistentIndicesSet.add(2);
+      alivePersistentIndicesSet.add(3);
+    }
+    for(let player of players) {
+      let playerData = player.getData();
+      if(playerData.alive) {
+        alivePersistentIndicesSet.add(playerIndexToPersistentVertexIndex(playerData.playerIndex));
       }
     }
 
-    // Insert new player + wall, its vertices start at its adjacent walls' verts
-    let indexOfNewPlayer = vertIndicesOfPlayers.length - 1;
-    let vertIndexOfNewPlayer = vertIndicesOfPlayers[indexOfNewPlayer];
+    // Remove indices of dead vertices, building interpolation targets as we go.
+    let alivePersistentIndices: number[] = [];
+    // Describes the index in the target shape to which each persistentvertex should interpolate to.
+    let interpolationTargetIndex = new Array<number>(persistentIndices.length);
+    let numAliveIndicesPassed = 0;
+    for(let i = 0; i < persistentIndices.length; ++i) {
+      let persistentIndex = persistentIndices[i];
+      interpolationTargetIndex[i] = numAliveIndicesPassed % targetShape.length;
+      if(alivePersistentIndicesSet.has(persistentIndex)) {
+        // Effectively "consumes" this vertex on the shape and we start sending vertices to the next one.
+        numAliveIndicesPassed += 1;
+        alivePersistentIndices.push(persistentIndex);
+      }
+    }
 
-    // let maybePrevPlayer = vertices[];
+    let existingVertices = Array.from(state.getComponents(pongDemo.WallVertex)!);
+    let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.getData().persistentIndex));
+    let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
 
-    // tslint:disable-next-line:no-unused-variable
-    let vertOfNewPlayer = vertices[vertIndexOfNewPlayer];
+    for(let persistentIndex of persistentIndicesToCreate) {
+      let vertexToInsert = new pongDemo.WallVertex();
+      vertexToInsert.persistentIndex = persistentIndex;
+      serverEngine.currentFrame.state.createEntity([
+        vertexToInsert,
+      ]);
+    }
 
-    // Begin Lerp all walls to new positions
+    // After insertions, fix the visual indices of all the vertices and fix the positions of the ones we've just created.
+    // refetch this collection
+    existingVertices = Array.from(state.getComponents(pongDemo.WallVertex)!);
+    let existingVerticesMap = new Map(existingVertices.map((value) => [value.getData().persistentIndex, value] as [number, lk.Component<WallVertex>]));
+    // Sort them by the order of their appearance in the total ordering.
+    let sortedExistingVertices = new Array<lk.Component<WallVertex>>();
+    for(let persistentIndex of persistentIndices) {
+      let maybeObj = existingVerticesMap.get(persistentIndex);
+      if(maybeObj !== undefined) {
+        sortedExistingVertices.push(maybeObj);
+      }
+    }
 
+    // Run through them in reverse order because the the origination positions apply from the successive
+    // vertex that exists (the prior in reverse order).
+    // We need to iterate a bit more than once because we can't start setting positions until we've encountered
+    // one that isn't new.
+    let lastExistingPos = {x: 0, y: 0};
+    let firstPriorlyExistingIndex: number|undefined = undefined;
+    for(let i = sortedExistingVertices.length - 1; i !== firstPriorlyExistingIndex; i = mod(i - 1, sortedExistingVertices.length)) {
+      let vertexData = sortedExistingVertices[i].getData();
+      vertexData.visualIndex = i;
+      let alreadyExisted = existingPersistentIndices.has(vertexData.persistentIndex);
+      if(firstPriorlyExistingIndex === undefined) {
+        // existingPersistentIndices.size === 0 handles case where we havent created any at all yet
+        // and we'd never set the firstPriorlyExistingIndex otherwise.
+        if(alreadyExisted || existingPersistentIndices.size === 0) {
+          firstPriorlyExistingIndex = i;
+        }
+      }
+      if(alreadyExisted) {
+        // This one is not new, the next new one gets its position
+        lastExistingPos = {x: vertexData.position.x, y: vertexData.position.y};
+      } else {
+        vertexData.position.x = lastExistingPos.x;
+        vertexData.position.y = lastExistingPos.y;
+      }
+    }
+
+    // Begin Lerps
+    // for now we just set new position for testing so far
+    for(let i = 0; i < persistentIndices.length; ++i) {
+      let persistentIndex = persistentIndices[i];
+      let maybeObj = existingVerticesMap.get(persistentIndex);
+      if(maybeObj !== undefined) {
+        let pos = maybeObj.getData().position;
+        pos.x = targetShape[interpolationTargetIndex[i]].x;
+        pos.y = targetShape[interpolationTargetIndex[i]].y;
+      }
+    }
+
+    // TODO Fixup Paddles!
+    /*
+    if(numPlayersPriorToAddition < 1) {
+      // not enough players to start yet
+      return;
+    }
+    let paddles = Array.from(serverEngine.currentFrame.state.getComponents(pongDemo.Paddle));
+    */
   });
 }
