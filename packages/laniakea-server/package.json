@@ -32,6 +32,6 @@
     "typescript-collections": "^1.3.2",
     "websocket": "^1.0.24",
     "winston": "^2.3.1",
-    "wrtc": "0.0.62"
+    "wrtc": "^0.1.2"
   }
 }
