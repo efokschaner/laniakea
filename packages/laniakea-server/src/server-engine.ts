@@ -148,6 +148,8 @@ export class ServerEngine {
       let maybeInputs = this.currentFrame.inputs.get(pi.id);
       if (maybeInputs !== undefined) {
         framePacket.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
+      } else {
+        framePacket.inputUsedForPlayerThisFrame = new Uint8Array(0);
       }
       framePacket.componentData = componentDataBuffer;
       this.networkServer.sendPacket(pi.id, framePacket, () => {

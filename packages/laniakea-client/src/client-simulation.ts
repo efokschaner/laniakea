@@ -159,12 +159,13 @@ export class ClientSimulation {
     targetFrame.receivedAuthoritativeSimulationTimeS = framePacket.simulationTimeS;
 
     targetFrame.receivedAuthoritativeInput = this.engine.createInputFrame();
-    let inputFrameDataView = new DataView(
-      framePacket.inputUsedForPlayerThisFrame.buffer,
-      framePacket.inputUsedForPlayerThisFrame.byteOffset,
-      framePacket.inputUsedForPlayerThisFrame.byteLength);
-    targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
-
+    if(framePacket.inputUsedForPlayerThisFrame.byteLength > 0) {
+      let inputFrameDataView = new DataView(
+        framePacket.inputUsedForPlayerThisFrame.buffer,
+        framePacket.inputUsedForPlayerThisFrame.byteOffset,
+        framePacket.inputUsedForPlayerThisFrame.byteLength);
+      targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
+    }
     targetFrame.receivedAuthoritativeState = this.engine.createState();
     let componentDataDataView = new DataView(framePacket.componentData.buffer, framePacket.componentData.byteOffset, framePacket.componentData.byteLength);
     targetFrame.receivedAuthoritativeState.serialize(new ReadStream(componentDataDataView));
