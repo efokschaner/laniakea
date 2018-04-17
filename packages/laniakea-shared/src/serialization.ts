@@ -23,6 +23,8 @@ export interface SerializationStream {
   readonly isReading: boolean;
   readonly isWriting: boolean;
 
+  serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+
   serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
   serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
   serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
@@ -46,6 +48,11 @@ export class ReadStream implements SerializationStream {
 
   private curOffset = 0;
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.dataView.getUint8(this.curOffset) > 0;
+    this.curOffset += 1;
   }
 
   public serializeUint8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
@@ -117,6 +124,11 @@ export class WriteStream implements SerializationStream {
   private curOffset = 0;
   // classRegistry is optional, only required for serialisation of non-builtin types.
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.dataView.setUint8(this.curOffset, obj[key] ? 1 : 0);
+    this.curOffset += 1;
   }
 
   public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
@@ -201,6 +213,10 @@ export class MeasureStream implements SerializationStream {
 
   public getNumBytesWritten(): number {
     return this.curOffset;
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.curOffset += 1;
   }
 
   public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
