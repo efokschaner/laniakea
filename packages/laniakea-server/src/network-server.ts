@@ -35,12 +35,12 @@ function isAuthFailureResult(x: any): x is AuthFailureResult {
 export type AuthResult = AuthSuccessResult | AuthFailureResult;
 
 // An AuthCallback should authenticate the player making the incoming
-// WebSocket connection (by inspecting the http.ClientRequest).
+// WebSocket connection (by inspecting the http.IncomingMessage).
 // If the WebSocket authenticates, the negotiation of webRTC can begin.
-export type AuthCallback = (req: http.ClientRequest) => AuthResult;
+export type AuthCallback = (req: http.IncomingMessage) => AuthResult;
 
 // For demo purposes only, do not use in production
-export function INSECURE_AuthCallback(httpRequest: http.ClientRequest): AuthResult {
+export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthResult {
   let creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
   if (!creds) {

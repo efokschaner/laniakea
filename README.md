@@ -39,7 +39,7 @@ Games will be able to control networking where it intersects with things like "v
 
 ### Demo/Development
 This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
-We'll assume you have `node` and `yarn` installed. I'm using `node v8.9.3` and `yarn v1.3.2` in case it matters.
+We'll assume you have `node` and `yarn` installed. I'm using `node v8.9.3` and `yarn v1.6.0` in case it matters.
 
 To get started:
 ```
@@ -49,9 +49,3 @@ yarn run build
 yarn run demo
 ```
 While it's running open <http://127.0.0.1:8080> to see the demo. Try opening 2 browser tabs!
-
-#### VS Code Development Notes
-Note that tasks defined in tasks.json assume bash. You can have VS evaluate them in bash using the user setting:
-```
-"terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
-```

@@ -184,7 +184,7 @@ export class BallMovementSystem implements lk.System {
             new THREE.Vector3(wallData.wallPoint.x, wallData.wallPoint.y),
             new THREE.Vector3(wallData.wallUnitVec.x, wallData.wallUnitVec.y));
           let ballPos3D = new THREE.Vector3(nextPos.x, nextPos.y);
-          let wallPointClosestToBall = wallRay.closestPointToPoint(ballPos3D);
+          let wallPointClosestToBall = wallRay.closestPointToPoint(ballPos3D, new THREE.Vector3());
           let ballToWall = new THREE.Vector2();
           ballToWall.copy(wallPointClosestToBall.sub(ballPos3D) as any);
           nextPos.addScaledVector(ballToWall, 2);

@@ -16,10 +16,10 @@
   "dependencies": {
     "box-intersect": "^1.0.1",
     "laniakea-shared": "^0.0.1",
-    "three": "^0.85.2"
+    "three": "^0.92.0"
   },
   "devDependencies": {
-    "@types/three": "^0.84.11",
+    "@types/three": "^0.91.10",
     "@types/webvr-api": "^0.0.34",
     "typescript": "^2.7.2"
   }

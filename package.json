@@ -5,11 +5,11 @@
   "private": true,
   "scripts": {
     "bootstrap": "yarn install && lerna bootstrap",
-    "build": "lerna run --sort build",
+    "build": "lerna run build",
     "demo": "$(cd packages/lk-demo-server && yarn run start) & $(cd packages/lk-demo-client && yarn run start) && fg",
     "lerna": "./node_modules/.bin/lerna",
-    "tslint": "lerna run --sort tslint",
-    "tslint:fix": "lerna run --sort tslint:fix"
+    "tslint": "lerna run tslint",
+    "tslint:fix": "lerna run tslint:fix"
   },
   "devDependencies": {
     "lerna": "^2.1.0",

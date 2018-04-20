@@ -12,7 +12,7 @@
     {
       "label": "Build",
       "type": "shell",
-      "command": "yarn run build 2>&1 | ./rewrite-build-stderr.sh",
+      "command": "yarn run build 2>&1 | node rewrite-build-stderr.js",
       "options": {
         "cwd": "${workspaceRoot}"
       },

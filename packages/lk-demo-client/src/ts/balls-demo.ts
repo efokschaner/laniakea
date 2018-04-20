@@ -1,4 +1,4 @@
-import * as datGui from 'dat-gui';
+import dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
@@ -12,7 +12,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     currentSimTimeS: 0,
     inputTravelTimeMS: 0,
   };
-  private guiView = new datGui.GUI();
+  private guiView = new dat.GUI();
 
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
@@ -36,7 +36,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
         lerpFactor = 1;
         this.activeCameraLerp = undefined;
       }
-      let targetPosition = object.getWorldPosition();
+      let targetPosition = object.getWorldPosition(new THREE.Vector3());
       this.cameraController.target = originalTargetPos.clone().lerp(targetPosition, lerpFactor);
       this.cameraController.object.position.copy(this.cameraController.target.clone().add(targetPosToCameraPos));
     };
@@ -79,7 +79,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       }
     });
 
-    let axes = new THREE.AxisHelper(1000);
+    let axes = new THREE.AxesHelper(1000);
     this.scene.add(axes);
     let pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(160, 120, 140);

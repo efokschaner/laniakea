@@ -1,6 +1,6 @@
 var path = require('path');
+
 var webpack = require('webpack');
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var cssnext = require('postcss-cssnext');
 var nested = require('postcss-nested');
@@ -67,7 +67,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new ExtractTextPlugin('styles.css'),
   ],
   resolve: {
     extensions: ['.js', '.ts']

@@ -1,4 +1,4 @@
-import * as datGui from 'dat-gui';
+import dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
@@ -186,7 +186,7 @@ export class GuiRenderer implements lk.RenderingSystem {
   private guiViewModel = {
     currentSimTime: 0,
   };
-  private guiView = new datGui.GUI();
+  private guiView = new dat.GUI();
 
   constructor() {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();

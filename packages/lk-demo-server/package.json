@@ -19,7 +19,7 @@
     "lk-demo-shared": "^0.0.1"
   },
   "devDependencies": {
-    "@types/three": "^0.84.11",
+    "@types/three": "^0.91.10",
     "@types/webvr-api": "^0.0.34",
     "source-map-support": "^0.5.0",
     "typescript": "^2.7.2"

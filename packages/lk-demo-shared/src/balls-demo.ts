@@ -98,7 +98,7 @@ export function initialiseGame(engine: lk.Engine) {
           let wallPlane = wall.getData();
           let ballCenter = ball.getData().center;
           let vel = ballvelocitycomp.getData();
-          let projectedPoint = wallPlane.projectPoint(ballCenter);
+          let projectedPoint = wallPlane.projectPoint(ballCenter, new THREE.Vector3());
           let planeToBall = ballCenter.clone().sub(projectedPoint);
           if (planeToBall.dot(wallPlane.normal) < ball.getData().radius && vel.dot(wallPlane.normal) < 0) {
             ballCenter.copy(projectedPoint.add(wallPlane.normal.clone().multiplyScalar(ball.getData().radius)));

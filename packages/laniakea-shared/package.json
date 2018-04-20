@@ -14,9 +14,9 @@
   "author": "efokschaner",
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^7.0.8",
+    "@types/node": "^9.6.6",
     "present": "^1.0.0",
-    "three": "^0.85.2",
+    "three": "^0.92.0",
     "ts-events": "^3.2.0",
     "typescript": "^2.7.2",
     "xxhashjs": "^0.2.1"
