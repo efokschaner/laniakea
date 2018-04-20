@@ -1,7 +1,5 @@
 import * as datGui from 'dat-gui';
 import * as THREE from 'three';
-// tslint:disable-next-line:no-var-requires
-require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
 import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';

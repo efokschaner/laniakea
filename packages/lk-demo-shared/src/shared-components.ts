@@ -28,10 +28,16 @@ export class SerializableVector2 extends THREE.Vector2 implements lk.Serializabl
 export class Position extends SerializableVector3 implements lk.Serializable {
 }
 
+export class Position2 extends SerializableVector2 implements lk.Serializable {
+}
+
 export class Velocity extends SerializableVector3 implements lk.Serializable {
 }
 
+
+
 export function registerSharedComponents(engine: lk.Engine) {
   engine.registerComponentType(Position, 'Position' as lk.ComponentKind);
+  engine.registerComponentType(Position2, 'Position2' as lk.ComponentKind);
   engine.registerComponentType(Velocity, 'Velocity' as lk.ComponentKind);
 }

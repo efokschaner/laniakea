@@ -1,3 +1,5 @@
+export * from './shared-components';
+
 import * as ballsDemoImport from './balls-demo';
 export const ballsDemo = ballsDemoImport;
 

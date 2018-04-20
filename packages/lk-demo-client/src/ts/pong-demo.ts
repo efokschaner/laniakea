@@ -5,79 +5,139 @@ import * as lk from 'laniakea-client';
 import * as demo from 'lk-demo-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
+import { Component } from 'laniakea-client';
 
 class ThreeRenderer implements lk.RenderingSystem {
+  private graphicalWorldRadius = 20;
+  private backgroundColor = 0xffffff;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
-  private lineMaterial = new THREE.LineBasicMaterial( { color: 0xbbbbbb } );
-  private rendererWalls: Map<lk.ComponentId, THREE.Line> = new Map();
-  private rendererPaddles: Map<lk.ComponentId, THREE.Mesh> = new Map();
+  private floorGeometry = new THREE.PlaneBufferGeometry(this.graphicalWorldRadius*2, this.graphicalWorldRadius*2, 8, 8);
+  private floorMaterial = new THREE.MeshLambertMaterial( { color: this.backgroundColor, wireframe: false } );
+  private floorMesh = new THREE.Mesh(this.floorGeometry, this.floorMaterial);
+
+  private lineMaterial = new THREE.LineBasicMaterial( { color: 0x080808, linewidth: 0.4 } );
+  private rendererWalls = new Map<lk.ComponentId, THREE.Line>();
+  private rendererPaddles = new Map<lk.ComponentId, THREE.Mesh>();
+
+  private foregroundThickness = 0.2;
+  private ballGeometry = new THREE.CubeGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
+  private ballMaterial = new THREE.MeshLambertMaterial( { color: 0x080808 } );
+  private rendererBalls = new Map<lk.EntityId, THREE.Mesh>();
+
+  private dayLight = new THREE.DirectionalLight();
+
+
+  // ORBITAL CAMERA JUST FOR DEBUG.
+  private cameraController: THREE.OrbitControls;
 
 
   // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
+    this.renderer.shadowMapEnabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.scene.background = new THREE.Color(this.backgroundColor);
+
     this.camera.translateZ(20);
-    let axes = new THREE.AxisHelper(1000);
-    this.scene.add(axes);
+
+    this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.cameraController.enablePan = true;
+    this.cameraController.mouseButtons = {
+      ORBIT: THREE.MOUSE.RIGHT,
+      ZOOM: THREE.MOUSE.MIDDLE,
+      PAN: THREE.MOUSE.LEFT,
+    };
+
     let ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
+
+    this.dayLight.position.set(0,0,2);
+    this.dayLight.castShadow = true;
+    this.dayLight.shadow.camera.far = 3;
+    this.dayLight.shadow.camera.top = this.graphicalWorldRadius;
+    this.dayLight.shadow.camera.right = this.graphicalWorldRadius;
+    this.dayLight.shadow.camera.bottom = -this.graphicalWorldRadius;
+    this.dayLight.shadow.camera.left = -this.graphicalWorldRadius;
+    this.dayLight.shadow.mapSize.x = 2048;
+    this.dayLight.shadow.mapSize.y = 2048;
+
+    this.scene.add(this.dayLight);
+
+    this.floorMesh.translateZ(-this.foregroundThickness);
+    this.floorMesh.receiveShadow = true;
+    this.scene.add(this.floorMesh);
+
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
   public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+    // TODO, on the client we need to handle "entity deletion" so we release resources
+    // For the renderer this is not on the frame its deleted but when none of our frame history contains
+    // any live copies of the entity any more.
+    // For now we just set the visibility of the component at the moment we're rendering which is still
+    // needed but doesnt handle permament cleanup.
+
     this.rendererSizeUpdater.update();
+
+    this.cameraController.update();
 
     let simTimeS = simulation.getCurrentSimulationTimeS();
     if (simTimeS === undefined) {
       // Nothing to render yet
       return;
     }
-    let nearestFrames = simulation.getSimulationFrames(simTimeS);
+    let targetSimTimeS = simTimeS - simulation.getInputTravelTimeS()!;
+    let nearestFrames = simulation.getSimulationFrames(targetSimTimeS);
     if (nearestFrames === undefined) {
       // Nothing to render yet
       return;
     }
 
-    let state = nearestFrames.current.state;
-
-    /*
-    for(let wall of state.getComponents(demo.pongDemo.WallPosition)!) {
-      let wallData = wall.getData();
-      let maybeObj = this.rendererWalls.get(wall.getId());
-      let wallGeometry = new THREE.Geometry();
-      if(maybeObj === undefined) {
-        maybeObj = new THREE.Line(undefined, this.lineMaterial);
-        this.rendererWalls.set(wall.getId(), maybeObj);
-        this.scene.add(maybeObj);
+    let midFrameLerpFactor = (targetSimTimeS - nearestFrames.current.simulationTimeS) / (nearestFrames.next.simulationTimeS - nearestFrames.current.simulationTimeS)
+    let interpolatedPositions = new Map<lk.ComponentId, demo.Position2>();
+    // Loop through the current frame for positions, if there are positions in the next frame that are not in the current
+    // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
+    // their current pos as the value.
+    for(let currentFramePos of nearestFrames.current.state.getComponents(demo.Position2)) {
+      let interpolatedPosition = currentFramePos.getData().clone();
+      let maybeNextFramePos = nearestFrames.next.state.getComponent(demo.Position2, currentFramePos.getId());
+      if(maybeNextFramePos !== undefined) {
+        interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);
       }
-      wallGeometry.vertices.push(new THREE.Vector3(wallData.endA.x, wallData.endA.y, 0));
-      wallGeometry.vertices.push(new THREE.Vector3(wallData.endB.x, wallData.endB.y, 0));
-      maybeObj.geometry = wallGeometry;
+      interpolatedPositions.set(currentFramePos.getId(), interpolatedPosition);
     }
-    */
+
+    let state = nearestFrames.current.state;
 
     let sortedVertices = Array.from(state.getComponents(demo.pongDemo.WallVertex)!).sort((a, b) => {
       return a.getData().visualIndex - b.getData().visualIndex;
     });
+
+    for(let [componentId, line] of this.rendererWalls) {
+      // We set everything to NOT visible, and if the object still exists we'll set it visible when updating properties.
+      line.visible = false;
+    }
 
     for(let i = 0; i < sortedVertices.length; ++i) {
       let vertex = sortedVertices[i];
       let vertexData = vertex.getData();
       let nextVertIndex = (i + 1) % sortedVertices.length;
       let nextVertexData = sortedVertices[nextVertIndex].getData();
-      let maybeObj = this.rendererWalls.get(vertex.getId());
+      let maybeLine = this.rendererWalls.get(vertex.getId());
       let wallGeometry = new THREE.Geometry();
-      if(maybeObj === undefined) {
-        maybeObj = new THREE.Line(undefined, this.lineMaterial);
-        this.rendererWalls.set(vertex.getId(), maybeObj);
-        this.scene.add(maybeObj);
+      if(maybeLine === undefined) {
+        maybeLine = new THREE.Line(undefined, this.lineMaterial);
+        this.rendererWalls.set(vertex.getId(), maybeLine);
+        this.scene.add(maybeLine);
       }
       wallGeometry.vertices.push(new THREE.Vector3(vertexData.position.x, vertexData.position.y, 0));
       wallGeometry.vertices.push(new THREE.Vector3(nextVertexData.position.x, nextVertexData.position.y, 0));
-      maybeObj.geometry = wallGeometry;
+      maybeLine.geometry = wallGeometry;
+      maybeLine.visible = true;
     }
 
     for (let paddle of state.getComponents(demo.pongDemo.Paddle)!) {
@@ -90,14 +150,32 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.scene.add(maybeObj);
       }
 
+      /*
       let wallData = state.getComponent(demo.pongDemo.WallPosition, paddle.getData().wallId)!.getData();
       // TODO account for width of paddle here
       let paddlePositionWallSpace = paddle.getData().positionInWallSpace;
       let paddlePositionWorldSpace = new THREE.Vector2();
       paddlePositionWorldSpace.lerpVectors(wallData.endA, wallData.endB, paddle.getData().positionInWallSpace);
       maybeObj.position.set(paddlePositionWorldSpace.x, paddlePositionWorldSpace.y, 0);
-
+      */
       // TODO if this paddle is ours, set our camera on it.
+    }
+
+    for(let [componentId, ball] of this.rendererBalls) {
+      ball.visible = false;
+    }
+    for(let [ballPosition, ballMovement] of state.getAspect(demo.Position2, demo.pongDemo.BallMovement)!) {
+      let maybeBall = this.rendererBalls.get(ballPosition.getOwnerId());
+      if (maybeBall === undefined) {
+        maybeBall = new THREE.Mesh(this.ballGeometry, this.ballMaterial);
+        maybeBall.castShadow = true;
+        this.rendererBalls.set(ballPosition.getOwnerId(), maybeBall);
+        this.scene.add(maybeBall);
+      }
+      let ballPosData = interpolatedPositions.get(ballPosition.getId())!;
+      maybeBall.position.x = ballPosData.x;
+      maybeBall.position.y = ballPosData.y;
+      maybeBall.visible = true;
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -175,4 +253,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
 
 export function initialiseClient(clientEngine: lk.ClientEngine) {
   demo.pongDemo.registerSharedComponents(clientEngine.engine);
+  clientEngine.engine.addSystem(new demo.pongDemo.Lerp2DProcessor());
+  clientEngine.engine.addSystem(new demo.pongDemo.EntityScheduledDeletionProcessor());
+  clientEngine.engine.addSystem(new demo.pongDemo.BallMovementSystem());
 }
