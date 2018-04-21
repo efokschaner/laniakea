@@ -10,6 +10,7 @@ import {
   Lerp2D,
   Lerp2DProcessor,
   PlayerInfo,
+  Position2,
   registerComponents,
   SerializableVector2,
   WallVertex,
@@ -142,23 +143,42 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     }
   }
 
-  let existingVertices = Array.from(state.getComponents(WallVertex)!);
-  let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.getData().persistentIndex));
+  interface VertAspect {
+    wallVertex: lk.Component<WallVertex>;
+    position: lk.Component<Position2>;
+  }
+  let fetchVerts: () => VertAspect[] = () => {
+    return Array.from(state.getAspect(WallVertex, Position2)).map((aspect) => {
+      return {
+        wallVertex: aspect[0],
+        position: aspect[1],
+      };
+    });
+  };
+
+  let existingVertices = fetchVerts();
+  let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.wallVertex.getData().persistentIndex));
   let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
   let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter((i) => !alivePersistentIndicesSet.has(i));
 
   for (let persistentIndex of persistentIndicesToCreate) {
     let vertexToInsert = new WallVertex();
     vertexToInsert.persistentIndex = persistentIndex;
+    let vertPos = new Position2();
     state.createEntity([
       vertexToInsert,
+      vertPos,
     ]);
   }
 
   // After insertions, fix the visual indices of all the vertices and fix the positions of the ones we've just created.
   // refetch this collection
-  existingVertices = Array.from(state.getComponents(WallVertex)!);
-  let existingVerticesMap = new Map(existingVertices.map((value) => [value.getData().persistentIndex, value] as [number, lk.Component<WallVertex>]));
+  existingVertices = fetchVerts();
+  let existingVerticesMap = new Map(
+    existingVertices.map(
+      (value) => [value.wallVertex.getData().persistentIndex, value] as [number, VertAspect],
+    ),
+  );
 
   // In lieu of a "generalised" approach for sequencing / scheduling work, we'll just do the lerp and the deletion on the same timeout.
   // TODO we need to fixup visual indices when these are deleted.
@@ -170,11 +190,11 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     let vert = existingVerticesMap.get(persistentIndex)!;
     let scheduledDeletion = new EntityScheduledDeletion();
     scheduledDeletion.deletionTimeS = entityDeletionTime;
-    state.addComponent(vert.getOwnerId(), scheduledDeletion);
+    state.addComponent(vert.wallVertex.getOwnerId(), scheduledDeletion);
   }
 
   // Sort them by the order of their appearance in the total ordering.
-  let sortedExistingVertices = new Array<lk.Component<WallVertex>>();
+  let sortedExistingVertices = new Array<VertAspect>();
   for (let persistentIndex of persistentIndices) {
     let maybeObj = existingVerticesMap.get(persistentIndex);
     if (maybeObj !== undefined) {
@@ -189,7 +209,8 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   let lastExistingPos = {x: 0, y: 0};
   let firstPriorlyExistingIndex: number|undefined;
   for (let i = sortedExistingVertices.length - 1; i !== firstPriorlyExistingIndex; i = mod(i - 1, sortedExistingVertices.length)) {
-    let vertexData = sortedExistingVertices[i].getData();
+    let vertexData = sortedExistingVertices[i].wallVertex.getData();
+    let posData = sortedExistingVertices[i].position.getData();
     vertexData.visualIndex = i;
     let alreadyExisted = existingPersistentIndices.has(vertexData.persistentIndex);
     if (firstPriorlyExistingIndex === undefined) {
@@ -201,10 +222,10 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     }
     if (alreadyExisted) {
       // This one is not new, the next new one gets its position
-      lastExistingPos = {x: vertexData.position.x, y: vertexData.position.y};
+      lastExistingPos = {x: posData.x, y: posData.y};
     } else {
-      vertexData.position.x = lastExistingPos.x;
-      vertexData.position.y = lastExistingPos.y;
+      posData.x = lastExistingPos.x;
+      posData.y = lastExistingPos.y;
     }
   }
 
@@ -213,14 +234,14 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     let persistentIndex = persistentIndices[i];
     let maybeObj = existingVerticesMap.get(persistentIndex);
     if (maybeObj !== undefined) {
-      let currentPos = maybeObj.getData().position;
+      let currentPos = maybeObj.position.getData();
       let lerp = new Lerp2D();
       lerp.originalPosition.copy(currentPos);
       // Note the typecast on the next line is just to get around the quirks of threejs' "this" typings limitations.
       lerp.targetPosition.copy(targetShape[interpolationTargetIndex[i]] as SerializableVector2);
       lerp.startTimeS = currentFrame.simulationTimeS + lerpStartDelayS;
       lerp.durationS = lerpDurationS;
-      state.addComponent(maybeObj.getOwnerId(), lerp);
+      state.addComponent(maybeObj.position.getOwnerId(), lerp);
     }
   }
 

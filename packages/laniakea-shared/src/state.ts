@@ -69,9 +69,15 @@ export interface EntityComponentState extends Serializable {
   getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>>;
   getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined;
   getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined;
+
   getAspect<T extends Serializable, U extends Serializable>(
     componentTypeT: {new(): T},
-    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]> | undefined;
+    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]>;
+  getAspect<T extends Serializable, U extends Serializable, V extends Serializable>(
+      componentTypeT: {new(): T},
+      componentTypeU: {new(): U},
+      componentTypeV: {new(): V}): Iterable<[Component<T>, Component<U>, Component<V>]>;
+
   getEntity(entityId: EntityId): Entity | undefined;
 
   deleteEntity(entityId: EntityId): void;
@@ -315,34 +321,48 @@ export class EntityComponentStateImpl implements EntityComponentState {
   }
 
   // TODO maybe create a caching-y optimiser-y thing for aspect queries.
-  public *getAspect<T extends Serializable, U extends Serializable>(
+  public getAspect<T extends Serializable, U extends Serializable>(
     componentTypeT: {new(): T},
-    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]> | undefined {
-    let componentTypeIdT = this.componentReflection.getComponentKindIdFromConstructor(componentTypeT);
-    let componentTypeIdU = this.componentReflection.getComponentKindIdFromConstructor(componentTypeU);
-    if (componentTypeIdT === undefined || componentTypeIdU === undefined) {
-      return undefined;
+    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]>;
+  public getAspect<T extends Serializable, U extends Serializable, V extends Serializable>(
+    componentTypeT: {new(): T},
+    componentTypeU: {new(): U},
+    componentTypeV: {new(): V}): Iterable<[Component<T>, Component<U>, Component<V>]>;
+  public *getAspect(...componentTypes: Array<{new(): Serializable}>): Iterable<GenericComponent[]> {
+    let componentTypeIdList = componentTypes.map((c) => this.componentReflection.getComponentKindIdFromConstructor(c));
+    let anyUndefined = componentTypeIdList.indexOf(undefined) !== -1;
+    if (anyUndefined) {
+      return;
     }
-    let typeTComponents = this.getComponentsByKindId(componentTypeIdT);
-    let typeUComponents = this.getComponentsByKindId(componentTypeIdU);
+    let componentsOfTypeList = (componentTypeIdList as ComponentKindId[]).map((id, index) => {
+      return {
+        kindId: id,
+        components: this.getComponentsByKindId(id),
+        originalIndex: index,
+      };
+    });
+    // As an optimisation, sort the list by components types with the fewest members first so we early out faster when matching.
+    componentsOfTypeList.sort((a, b) => a.components.size - b.components.size);
     for (let entityComponents of this.entityIdToComponents.values()) {
-      let maybeTId = entityComponents.get(componentTypeIdT);
-      if (maybeTId === undefined) {
-        continue;
+      let aspectToYield = new Array<GenericComponent>();
+      let foundAll = true;
+      for (let componentTypeToFind of componentsOfTypeList) {
+        let maybeId = entityComponents.get(componentTypeToFind.kindId);
+        if (maybeId === undefined) {
+          foundAll = false;
+          break;
+        }
+        let c = componentTypeToFind.components.get(maybeId)!;
+        if (c.isDeleted()) {
+          foundAll = false;
+          break;
+        }
+        aspectToYield[componentTypeToFind.originalIndex] = c;
       }
-      let maybeUId = entityComponents.get(componentTypeIdU);
-      if (maybeUId === undefined) {
-        continue;
+      // Did we find all components?
+      if (foundAll) {
+        yield aspectToYield;
       }
-      let t = typeTComponents.get(maybeTId)! as Component<T>;
-      if (t.isDeleted()) {
-        continue;
-      }
-      let u = typeUComponents.get(maybeUId)! as Component<U>;
-      if (u.isDeleted()) {
-        continue;
-      }
-      yield [t, u];
     }
   }
 

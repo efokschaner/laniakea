@@ -182,7 +182,7 @@ export function initialiseEngine(engine: lk.Engine) {
   // integrate velocity
   engine.addSystem(new class implements lk.System {
     public Step({state, timeDeltaS}: lk.StepParams) {
-      for (let [position, velocity] of state.getAspect(Position, Velocity)!) {
+      for (let [position, velocity] of state.getAspect(Position, Velocity)) {
         position.getData().add(velocity.getData().clone().multiplyScalar(timeDeltaS));
       }
     }
@@ -190,7 +190,7 @@ export function initialiseEngine(engine: lk.Engine) {
   // Update geometry from position
   engine.addSystem(new class implements lk.System {
     public Step({state, timeDeltaS}: lk.StepParams) {
-      for (let [ballposition, ballshape] of state.getAspect(Position, BallShape)!) {
+      for (let [ballposition, ballshape] of state.getAspect(Position, BallShape)) {
         ballshape.getData().center.copy(ballposition.getData());
       }
     }
@@ -199,7 +199,7 @@ export function initialiseEngine(engine: lk.Engine) {
   engine.addSystem(new class implements lk.System {
     private readonly coefficientOfRestitution = 1;
     public Step({state, timeDeltaS}: lk.StepParams) {
-      for (let [ball, ballvelocitycomp] of state.getAspect(BallShape, Velocity)!) {
+      for (let [ball, ballvelocitycomp] of state.getAspect(BallShape, Velocity)) {
         for (let wall of state.getComponents(WallPlane)!) {
           let wallPlane = wall.getData();
           let ballCenter = ball.getData().center;
@@ -217,7 +217,7 @@ export function initialiseEngine(engine: lk.Engine) {
   // Collisions between balls and balls
   engine.addSystem(new class implements lk.System {
     public Step({state, timeDeltaS}: lk.StepParams) {
-      let balls = Array.from(state.getAspect(BallShape, Velocity)!);
+      let balls = Array.from(state.getAspect(BallShape, Velocity));
       let curBoundingBox = new THREE.Box3();
       let aabbs = balls.map(([ball, ballvelocitycomp]) => {
         ball.getData().getBoundingBox(curBoundingBox);

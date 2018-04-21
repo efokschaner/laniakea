@@ -155,11 +155,9 @@ export class PaddleAiTag implements lk.Serializable {
 export class WallVertex implements lk.Serializable {
   public visualIndex = 0;
   public persistentIndex = 0;
-  public position = new SerializableVector2();
   public serialize(stream: lk.SerializationStream): void {
     stream.serializeUint32(this, 'visualIndex');
     stream.serializeUint32(this, 'persistentIndex');
-    this.position.serialize(stream);
   }
 }
 
@@ -179,7 +177,7 @@ export class Lerp2D implements lk.Serializable {
 
 export class Lerp2DProcessor implements lk.System {
   public Step({simulationTimeS, state}: lk.StepParams): void {
-    for (let [vertex, lerp] of state.getAspect(WallVertex, Lerp2D)!) {
+    for (let [_, position, lerp] of state.getAspect(WallVertex, Position2, Lerp2D)) {
       let lerpData = lerp.getData();
       let lerpFactor = (simulationTimeS - lerpData.startTimeS) / lerpData.durationS;
       if (lerpFactor < 0) {
@@ -191,7 +189,7 @@ export class Lerp2DProcessor implements lk.System {
       }
       // Just for a bit of fun this is technically not a L(inear int)erp-olation anymore but whatever
       let smoothLerpFactor = THREE.Math.smoothstep(lerpFactor, 0, 1);
-      vertex.getData().position.lerpVectors(lerpData.originalPosition, lerpData.targetPosition, smoothLerpFactor);
+      position.getData().lerpVectors(lerpData.originalPosition, lerpData.targetPosition, smoothLerpFactor);
     }
   }
 }
@@ -245,14 +243,14 @@ function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vect
 export class BallMovementSystem implements lk.System {
   public Step({timeDeltaS, state, previousFrameState}: lk.StepParams): void {
     // For calculating collisions we want all wall vertices that existed on previous frame and this frame.
-    let vertsToConsider = new Array<{prev: lk.Component<WallVertex>, next: lk.Component<WallVertex>}>();
-    for (let prevVert of previousFrameState.getComponents(WallVertex)) {
-      let maybeNextVert = state.getComponent(WallVertex, prevVert.getId());
-      if (maybeNextVert !== undefined) {
-        vertsToConsider.push({prev: prevVert, next: maybeNextVert});
+    let vertsToConsider = new Array<{prev: lk.Component<Position2>, next: lk.Component<Position2>, visualIndex: number}>();
+    for (let [prevVert, prevPos] of previousFrameState.getAspect(WallVertex, Position2)) {
+      let maybeNextPos = state.getComponent(Position2, prevPos.getId());
+      if (maybeNextPos !== undefined) {
+        vertsToConsider.push({prev: prevPos, next: maybeNextPos, visualIndex: prevVert.getData().visualIndex });
       }
     }
-    let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a.prev.getData().visualIndex - b.prev.getData().visualIndex);
+    let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a.visualIndex - b.visualIndex);
     let walls = new Array<{prev: WallData, next: WallData}>();
     for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
       let startIndex = i;
@@ -260,12 +258,12 @@ export class BallMovementSystem implements lk.System {
       let startVerts = vertsToConsiderSorted[startIndex];
       let endVerts = vertsToConsiderSorted[endIndex];
       walls.push({
-        prev: wallPointsToWallData(startVerts.prev.getData().position, endVerts.prev.getData().position),
-        next: wallPointsToWallData(startVerts.next.getData().position, endVerts.next.getData().position),
+        prev: wallPointsToWallData(startVerts.prev.getData(), endVerts.prev.getData()),
+        next: wallPointsToWallData(startVerts.next.getData(), endVerts.next.getData()),
       });
     }
 
-    for (let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)!) {
+    for (let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)) {
       let ballMovementData = ballMovement.getData();
       let prevPos = ballPosition.getData().clone();
       let nextPos = ballPosition.getData().addScaledVector(ballMovementData.velocity, timeDeltaS);

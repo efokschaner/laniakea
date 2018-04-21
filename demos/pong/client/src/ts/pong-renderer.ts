@@ -112,20 +112,20 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     let state = nearestFrames.current.state;
 
-    let sortedVertices = Array.from(state.getComponents(WallVertex)!).sort((a, b) => {
-      return a.getData().visualIndex - b.getData().visualIndex;
-    });
+    let sortedVertexPositions = Array.from(state.getAspect(WallVertex, Position2)).sort((a, b) => {
+      return a[0].getData().visualIndex - b[0].getData().visualIndex;
+    }).map((i) => i[1]);
 
     for (let line of this.rendererWalls.values()) {
       // We set everything to NOT visible, and if the object still exists we'll set it visible when updating properties.
       line.visible = false;
     }
 
-    for (let i = 0; i < sortedVertices.length; ++i) {
-      let vertex = sortedVertices[i];
-      let vertexData = vertex.getData();
-      let nextVertIndex = (i + 1) % sortedVertices.length;
-      let nextVertexData = sortedVertices[nextVertIndex].getData();
+    for (let i = 0; i < sortedVertexPositions.length; ++i) {
+      let vertex = sortedVertexPositions[i];
+      let vertexPos = interpolatedPositions.get(vertex.getId())!;
+      let nextVertIndex = (i + 1) % sortedVertexPositions.length;
+      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex].getId())!;
       let maybeLine = this.rendererWalls.get(vertex.getId());
       let wallGeometry = new THREE.Geometry();
       if (maybeLine === undefined) {
@@ -133,8 +133,8 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.rendererWalls.set(vertex.getId(), maybeLine);
         this.scene.add(maybeLine);
       }
-      wallGeometry.vertices.push(new THREE.Vector3(vertexData.position.x, vertexData.position.y, 0));
-      wallGeometry.vertices.push(new THREE.Vector3(nextVertexData.position.x, nextVertexData.position.y, 0));
+      wallGeometry.vertices.push(new THREE.Vector3(vertexPos.x, vertexPos.y, 0));
+      wallGeometry.vertices.push(new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, 0));
       maybeLine.geometry = wallGeometry;
       maybeLine.visible = true;
     }
@@ -163,7 +163,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     for (let ball of this.rendererBalls.values()) {
       ball.visible = false;
     }
-    for (let [ballPosition, _] of state.getAspect(Position2, BallMovement)!) {
+    for (let [ballPosition, _] of state.getAspect(Position2, BallMovement)) {
       let maybeBall = this.rendererBalls.get(ballPosition.getOwnerId());
       if (maybeBall === undefined) {
         maybeBall = new THREE.Mesh(this.ballGeometry, this.ballMaterial);
