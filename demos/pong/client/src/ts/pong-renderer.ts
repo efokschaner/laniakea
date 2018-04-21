@@ -2,10 +2,10 @@ import dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
-import * as demo from 'lk-demo-pong-shared';
+
+import {Position2, WallVertex, BallMovement, Paddle} from 'lk-demo-pong-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
-import { Component } from 'laniakea-client';
 
 class ThreeRenderer implements lk.RenderingSystem {
   private graphicalWorldRadius = 20;
@@ -98,13 +98,13 @@ class ThreeRenderer implements lk.RenderingSystem {
     }
 
     let midFrameLerpFactor = (targetSimTimeS - nearestFrames.current.simulationTimeS) / (nearestFrames.next.simulationTimeS - nearestFrames.current.simulationTimeS)
-    let interpolatedPositions = new Map<lk.ComponentId, demo.Position2>();
+    let interpolatedPositions = new Map<lk.ComponentId, Position2>();
     // Loop through the current frame for positions, if there are positions in the next frame that are not in the current
     // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
     // their current pos as the value.
-    for(let currentFramePos of nearestFrames.current.state.getComponents(demo.Position2)) {
+    for(let currentFramePos of nearestFrames.current.state.getComponents(Position2)) {
       let interpolatedPosition = currentFramePos.getData().clone();
-      let maybeNextFramePos = nearestFrames.next.state.getComponent(demo.Position2, currentFramePos.getId());
+      let maybeNextFramePos = nearestFrames.next.state.getComponent(Position2, currentFramePos.getId());
       if(maybeNextFramePos !== undefined) {
         interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);
       }
@@ -113,7 +113,7 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     let state = nearestFrames.current.state;
 
-    let sortedVertices = Array.from(state.getComponents(demo.pongDemo.WallVertex)!).sort((a, b) => {
+    let sortedVertices = Array.from(state.getComponents(WallVertex)!).sort((a, b) => {
       return a.getData().visualIndex - b.getData().visualIndex;
     });
 
@@ -140,7 +140,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeLine.visible = true;
     }
 
-    for (let paddle of state.getComponents(demo.pongDemo.Paddle)!) {
+    for (let paddle of state.getComponents(Paddle)!) {
       let maybeObj = this.rendererPaddles.get(paddle.getId());
       if (maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(1, 32, 24);
@@ -164,7 +164,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     for(let [componentId, ball] of this.rendererBalls) {
       ball.visible = false;
     }
-    for(let [ballPosition, ballMovement] of state.getAspect(demo.Position2, demo.pongDemo.BallMovement)!) {
+    for(let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)!) {
       let maybeBall = this.rendererBalls.get(ballPosition.getOwnerId());
       if (maybeBall === undefined) {
         maybeBall = new THREE.Mesh(this.ballGeometry, this.ballMaterial);
@@ -249,11 +249,4 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.threeRenderer.render(domHighResTimestampMS, simulation);
     this.guiRenderer.render(domHighResTimestampMS, simulation);
   }
-}
-
-export function initialiseClient(clientEngine: lk.ClientEngine) {
-  demo.pongDemo.registerSharedComponents(clientEngine.engine);
-  clientEngine.engine.addSystem(new demo.pongDemo.Lerp2DProcessor());
-  clientEngine.engine.addSystem(new demo.pongDemo.EntityScheduledDeletionProcessor());
-  clientEngine.engine.addSystem(new demo.pongDemo.BallMovementSystem());
 }

@@ -1,5 +1,5 @@
 {
-  "name": "lk-demo-pong-server",
+  "name": "lk-demo-balls-server",
   "version": "0.0.1",
   "description": "Server of laniakea engine demo",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "laniakea-server": "^0.0.1",
-    "lk-demo-pong-shared": "^0.0.1"
+    "lk-demo-balls-shared": "^0.0.1"
   },
   "devDependencies": {
     "@types/three": "^0.91.10",

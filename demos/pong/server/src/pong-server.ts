@@ -2,9 +2,18 @@ import * as THREE from 'three';
 
 import * as lk from 'laniakea-server';
 
-import { pongDemo, SerializableVector2 } from 'lk-demo-pong-shared';
-// TODO, fix this atrocity
-import { WallVertex } from '../../shared/dist/pong-demo';
+import {
+  BallMovementSystem,
+  BallSpawnerSystem,
+  EntityScheduledDeletion,
+  EntityScheduledDeletionProcessor,
+  Lerp2D,
+  Lerp2DProcessor,
+  PlayerInfo,
+  registerComponents,
+  SerializableVector2,
+  WallVertex
+} from 'lk-demo-pong-shared';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,
@@ -90,7 +99,7 @@ function calculateShapeForNumPlayers(numPlayers: number) {
 
 function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   let state = currentFrame.state;
-  let players = Array.from(state.getComponents(pongDemo.PlayerInfo));
+  let players = Array.from(state.getComponents(PlayerInfo));
   let numPlayersEverAlive = players.length;
   let alivePlayers = players.filter((pi) => pi.getData().alive);
   let numPlayersAlive = alivePlayers.length;
@@ -133,13 +142,13 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     }
   }
 
-  let existingVertices = Array.from(state.getComponents(pongDemo.WallVertex)!);
+  let existingVertices = Array.from(state.getComponents(WallVertex)!);
   let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.getData().persistentIndex));
   let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
   let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter((i) => !alivePersistentIndicesSet.has(i));
 
   for(let persistentIndex of persistentIndicesToCreate) {
-    let vertexToInsert = new pongDemo.WallVertex();
+    let vertexToInsert = new WallVertex();
     vertexToInsert.persistentIndex = persistentIndex;
     state.createEntity([
       vertexToInsert,
@@ -148,7 +157,7 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
 
   // After insertions, fix the visual indices of all the vertices and fix the positions of the ones we've just created.
   // refetch this collection
-  existingVertices = Array.from(state.getComponents(pongDemo.WallVertex)!);
+  existingVertices = Array.from(state.getComponents(WallVertex)!);
   let existingVerticesMap = new Map(existingVertices.map((value) => [value.getData().persistentIndex, value] as [number, lk.Component<WallVertex>]));
 
   // In lieu of a "generalised" approach for sequencing / scheduling work, we'll just do the lerp and the deletion on the same timeout.
@@ -159,7 +168,7 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   for(let persistentIndex of persistentIndicesToDelete) {
     // It MUST be in here based on prior logic
     let vert = existingVerticesMap.get(persistentIndex)!;
-    let scheduledDeletion = new pongDemo.EntityScheduledDeletion();
+    let scheduledDeletion = new EntityScheduledDeletion();
     scheduledDeletion.deletionTimeS = entityDeletionTime;
     state.addComponent(vert.getOwnerId(), scheduledDeletion);
   }
@@ -205,7 +214,7 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     let maybeObj = existingVerticesMap.get(persistentIndex);
     if(maybeObj !== undefined) {
       let currentPos = maybeObj.getData().position;
-      let lerp = new pongDemo.Lerp2D();
+      let lerp = new Lerp2D();
       lerp.originalPosition.copy(currentPos);
       // Note the typecast on the next line is just to get around the quirks of threejs' "this" typings limitations.
       lerp.targetPosition.copy(targetShape[interpolationTargetIndex[i]] as SerializableVector2);
@@ -226,17 +235,17 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
 }
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
-  pongDemo.registerSharedComponents(serverEngine.engine);
+  registerComponents(serverEngine.engine);
 
-  serverEngine.engine.addSystem(new pongDemo.Lerp2DProcessor());
-  serverEngine.engine.addSystem(new pongDemo.EntityScheduledDeletionProcessor());
-  serverEngine.engine.addSystem(new pongDemo.BallSpawnerSystem());
-  serverEngine.engine.addSystem(new pongDemo.BallMovementSystem());
+  serverEngine.engine.addSystem(new Lerp2DProcessor());
+  serverEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
+  serverEngine.engine.addSystem(new BallSpawnerSystem());
+  serverEngine.engine.addSystem(new BallMovementSystem());
 
   serverEngine.onPlayerConnected.attach((playerId) => {
     let state = serverEngine.currentFrame.state;
-    let players = Array.from(state.getComponents(pongDemo.PlayerInfo));
-    let newPlayerInfo = new pongDemo.PlayerInfo();
+    let players = Array.from(state.getComponents(PlayerInfo));
+    let newPlayerInfo = new PlayerInfo();
     newPlayerInfo.playerIndex = players.length;
     newPlayerInfo.playerId = playerId;
     state.createEntity([newPlayerInfo]);

@@ -3,13 +3,119 @@ import * as THREE from 'three';
 
 import * as lk from 'laniakea-shared';
 
-import { ButtonState, GameButtons, GameButtonsInput } from '.';
-import {
-  Position,
-  registerSharedComponents,
-  serializeVector3,
-  Velocity,
-} from './shared-components';
+export const gameServerWsPort = 9876;
+export function getGameServerWsUrl(hostname: string) { return `ws://${hostname}:${gameServerWsPort}`; }
+export const simFPS = 20;
+
+interface NumericEnum { [key: string]: number; }
+
+function getEnumNames(e: NumericEnum): string[] {
+  return Object.keys(e).filter((key) => isNaN(+key));
+}
+
+function getEnumValues(e: NumericEnum): number[] {
+  return getEnumNames(e).map((name) => e[name]);
+}
+
+export enum ButtonState {
+  UP,
+  DOWN,
+}
+
+function serializeSetOfUint8(stream: lk.SerializationStream, set: Set<number>): void {
+  let numEntries = {val: 0};
+  if (stream.isWriting) {
+    numEntries.val = set.size;
+  }
+  stream.serializeUint8(numEntries, 'val');
+  if (stream.isWriting) {
+    for (let value of set.values()) {
+      let valueObj = { value };
+      stream.serializeUint8(valueObj, 'value');
+    }
+  } else {
+    set.clear();
+    for (let i = 0; i < numEntries.val; ++i) {
+      let valueObj = { value: 0 };
+      stream.serializeUint8(valueObj, 'value');
+      set.add(valueObj.value);
+    }
+  }
+}
+
+/**
+ * Generates a class that provides binary "button"-style inputs as continuous input to the engine.
+ * Knowledge of possible button inputs allows efficient serialization
+ * @param buttonsEnum Either a TypeScript enum or an object of string keys to numeric values
+ *                    that describes the button-style inputs you support in a keyboard-agnostic form.
+ */
+function createButtonsInputType(buttonsEnum: any) {
+  return class implements lk.Serializable {
+    public buttonStates = new Map<number, ButtonState>();
+    constructor() {
+      for (const button of getEnumValues(buttonsEnum)) {
+        this.buttonStates.set(button, ButtonState.UP);
+      }
+    }
+    public serialize(stream: lk.SerializationStream): void {
+      // Buttons in the down state are sent, other buttons are assumed to be in the up state.
+      let downButtons = new Set<number>();
+      if (stream.isWriting) {
+        this.buttonStates.forEach((value, key) => {
+          if (value === ButtonState.DOWN) {
+            downButtons.add(key);
+          }
+        });
+      }
+      serializeSetOfUint8(stream, downButtons);
+      if (stream.isReading) {
+        for (const button of getEnumValues(buttonsEnum)) {
+          if (downButtons.has(button)) {
+            this.buttonStates.set(button, ButtonState.DOWN);
+          } else {
+            this.buttonStates.set(button, ButtonState.UP);
+          }
+        }
+      }
+    }
+  };
+}
+
+export enum GameButtons { UP, DOWN };
+
+// This variable is a dynamic Class
+// tslint:disable-next-line:variable-name
+export let GameButtonsInput = createButtonsInputType(GameButtons);
+
+
+export function serializeVector3(stream: lk.SerializationStream, vector: THREE.Vector3) {
+  stream.serializeFloat32(vector, 'x');
+  stream.serializeFloat32(vector, 'y');
+  stream.serializeFloat32(vector, 'z');
+}
+
+export class SerializableVector3 extends THREE.Vector3 implements lk.Serializable {
+  public serialize(stream: lk.SerializationStream): void {
+    return serializeVector3(stream, this);
+  }
+}
+
+export function serializeVector2(stream: lk.SerializationStream, vector: THREE.Vector2) {
+  stream.serializeFloat32(vector, 'x');
+  stream.serializeFloat32(vector, 'y');
+}
+
+export class SerializableVector2 extends THREE.Vector2 implements lk.Serializable {
+  public serialize(stream: lk.SerializationStream): void {
+    return serializeVector2(stream, this);
+  }
+}
+
+export class Position extends SerializableVector3 implements lk.Serializable {
+}
+
+export class Velocity extends SerializableVector3 implements lk.Serializable {
+}
 
 export class WallPlane extends THREE.Plane implements lk.Serializable {
   public serialize(stream: lk.SerializationStream): void {
@@ -25,8 +131,9 @@ export class BallShape extends THREE.Sphere implements lk.Serializable {
   }
 }
 
-export function initialiseGame(engine: lk.Engine) {
-  registerSharedComponents(engine);
+export function initialiseEngine(engine: lk.Engine) {
+  engine.registerComponentType(Position, 'Position' as lk.ComponentKind);
+  engine.registerComponentType(Velocity, 'Velocity' as lk.ComponentKind);
   engine.registerComponentType(WallPlane, 'WallPlane' as lk.ComponentKind);
   engine.registerComponentType(BallShape, 'BallShape' as lk.ComponentKind);
   // Apply gravity
@@ -139,33 +246,4 @@ export function initialiseGame(engine: lk.Engine) {
       });
     }
   }());
-}
-
-export function initialiseLevel(state: lk.EntityComponentState) {
-  let gridSideLength = 100;
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 1, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, -1, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, 1), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, -1), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(1, 0, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(-1, 0, 0), gridSideLength)]);
-
-  let gridSideNumItems = 4;
-  for (let i = 0; i < gridSideNumItems; ++i) {
-    for (let j = 0; j < gridSideNumItems; ++j) {
-      let x = ((i / gridSideNumItems) - 0.5) * gridSideLength;
-      let z = ((j / gridSideNumItems) - 0.5) * gridSideLength;
-      let velocityVal = 100;
-      let velocity = new THREE.Vector3(
-        THREE.Math.randFloatSpread(velocityVal),
-        THREE.Math.randFloatSpread(velocityVal),
-        THREE.Math.randFloatSpread(velocityVal));
-      let pos = new THREE.Vector3(x, 0, z);
-      state.createEntity([
-        new Position(pos.x, pos.y, pos.z),
-        new Velocity(velocity.x, velocity.y, velocity.z),
-        new BallShape(pos, 16.0),
-      ]);
-    }
-  }
 }

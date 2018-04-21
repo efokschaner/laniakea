@@ -4,18 +4,10 @@ require('../css/main.css');
 require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
 import * as lk from 'laniakea-client';
-import {
-  BallMovementSystem,
-  EntityScheduledDeletionProcessor,
-  getGameServerWsUrl,
-  GameButtons,
-  GameButtonsInput,
-  Lerp2DProcessor,
-  registerComponents,
-  simFPS
-} from 'lk-demo-pong-shared';
 
-import { RenderingSystemImpl } from './pong-renderer';
+import { GameButtons, GameButtonsInput, initialiseEngine, simFPS, getGameServerWsUrl } from 'lk-demo-balls-shared';
+
+import { RenderingSystemImpl } from './balls-renderer';
 import { KeyboardHandler } from './keyboard-handler';
 
 interface HTMLHyperlinkElementUtils {
@@ -34,18 +26,15 @@ interface HTMLHyperlinkElementUtils {
 
 let clientEngine = new lk.ClientEngine({simFPS: simFPS});
 
-clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
-registerComponents(clientEngine.engine);
-clientEngine.engine.addSystem(new Lerp2DProcessor());
-clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
-clientEngine.engine.addSystem(new BallMovementSystem());
+initialiseEngine(clientEngine.engine);
 
+clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 
 // tslint:disable-next-line:no-unused-variable
 let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
   switch (key) {
-    case 'a': return GameButtons.LEFT;
-    case 'd': return GameButtons.RIGHT;
+    case 'w': return GameButtons.UP;
+    case 's': return GameButtons.DOWN;
   }
   return undefined;
 });

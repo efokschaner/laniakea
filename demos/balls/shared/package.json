@@ -1,7 +1,7 @@
 {
-  "name": "laniakea-client",
+  "name": "lk-demo-balls-shared",
   "version": "0.0.1",
-  "description": "Client library component of laniakea engine",
+  "description": "Shared between pong demo client and server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -12,12 +12,14 @@
   },
   "author": "efokschaner",
   "license": "MIT",
-  "devDependencies": {
-    "@types/bluebird": "^3.5.5"
-  },
   "dependencies": {
-    "bluebird": "^3.5.0",
+    "box-intersect": "^1.0.1",
     "laniakea-shared": "^0.0.1",
-    "ts-events": "^3.2.0"
+    "three": "^0.92.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.91.10",
+    "@types/webvr-api": "^0.0.34",
+    "typescript": "^2.7.2"
   }
 }

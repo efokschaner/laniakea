@@ -2,7 +2,8 @@ import dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
-import * as demo from 'lk-demo-pong-shared';
+
+import { BallShape, WallPlane } from 'lk-demo-balls-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
 
@@ -113,7 +114,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     }
     let state = nearestFrames.current.state;
 
-    for (let ball of state.getComponents(demo.ballsDemo.BallShape)!) {
+    for (let ball of state.getComponents(BallShape)!) {
       let maybeObj = this.rendererSpheres.get(ball.getId());
       if (maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
@@ -126,7 +127,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       maybeObj.position.copy(ball.getData().center);
     }
 
-    for (let wall of state.getComponents(demo.ballsDemo.WallPlane)!) {
+    for (let wall of state.getComponents(WallPlane)!) {
       let maybeObj = this.rendererWalls.get(wall.getId());
       let wallData = wall.getData();
       if (maybeObj === undefined) {
