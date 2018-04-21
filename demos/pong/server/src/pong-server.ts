@@ -12,7 +12,7 @@ import {
   PlayerInfo,
   registerComponents,
   SerializableVector2,
-  WallVertex
+  WallVertex,
 } from 'lk-demo-pong-shared';
 
 // Because JS's % operator returns negative values
@@ -42,13 +42,13 @@ class DeterministicPRNG {
 }
 
 function playerIndexToPersistentVertexIndex(playerIndex: number): number {
-  if(playerIndex === 0) {
+  if (playerIndex === 0) {
     return 0;
   }
-  if(playerIndex === 1) {
+  if (playerIndex === 1) {
     return 2;
   }
-  if(playerIndex === 2) {
+  if (playerIndex === 2) {
     return 1;
   }
   return playerIndex;
@@ -113,16 +113,16 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   let persistentIndices = calculatePersistentVertexIndices(numPlayersEverAlive);
   // Represents all the persistent indices that shouldn't exist.
   let alivePersistentIndicesSet = new Set<number>(alivePlayers.map((pi) => playerIndexToPersistentVertexIndex(pi.getData().playerIndex)));
-  if(numPlayersAlive <= 2) {
+  if (numPlayersAlive <= 2) {
     // These should exist regardless
     alivePersistentIndicesSet.add(0);
     alivePersistentIndicesSet.add(1);
     alivePersistentIndicesSet.add(2);
     alivePersistentIndicesSet.add(3);
   }
-  for(let player of players) {
+  for (let player of players) {
     let playerData = player.getData();
-    if(playerData.alive) {
+    if (playerData.alive) {
       alivePersistentIndicesSet.add(playerIndexToPersistentVertexIndex(playerData.playerIndex));
     }
   }
@@ -132,10 +132,10 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   // Describes the index in the target shape to which each persistentvertex should interpolate to.
   let interpolationTargetIndex = new Array<number>(persistentIndices.length);
   let numAliveIndicesPassed = 0;
-  for(let i = 0; i < persistentIndices.length; ++i) {
+  for (let i = 0; i < persistentIndices.length; ++i) {
     let persistentIndex = persistentIndices[i];
     interpolationTargetIndex[i] = numAliveIndicesPassed % targetShape.length;
-    if(alivePersistentIndicesSet.has(persistentIndex)) {
+    if (alivePersistentIndicesSet.has(persistentIndex)) {
       // Effectively "consumes" this vertex on the shape and we start sending vertices to the next one.
       numAliveIndicesPassed += 1;
       alivePersistentIndices.push(persistentIndex);
@@ -147,7 +147,7 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
   let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter((i) => !alivePersistentIndicesSet.has(i));
 
-  for(let persistentIndex of persistentIndicesToCreate) {
+  for (let persistentIndex of persistentIndicesToCreate) {
     let vertexToInsert = new WallVertex();
     vertexToInsert.persistentIndex = persistentIndex;
     state.createEntity([
@@ -165,7 +165,7 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   let lerpStartDelayS = 0.5;
   let lerpDurationS = 1;
   let entityDeletionTime = currentFrame.simulationTimeS + lerpStartDelayS + lerpDurationS;
-  for(let persistentIndex of persistentIndicesToDelete) {
+  for (let persistentIndex of persistentIndicesToDelete) {
     // It MUST be in here based on prior logic
     let vert = existingVerticesMap.get(persistentIndex)!;
     let scheduledDeletion = new EntityScheduledDeletion();
@@ -175,9 +175,9 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
 
   // Sort them by the order of their appearance in the total ordering.
   let sortedExistingVertices = new Array<lk.Component<WallVertex>>();
-  for(let persistentIndex of persistentIndices) {
+  for (let persistentIndex of persistentIndices) {
     let maybeObj = existingVerticesMap.get(persistentIndex);
-    if(maybeObj !== undefined) {
+    if (maybeObj !== undefined) {
       sortedExistingVertices.push(maybeObj);
     }
   }
@@ -187,19 +187,19 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   // We need to iterate a bit more than once because we can't start setting positions until we've encountered
   // one that isn't new.
   let lastExistingPos = {x: 0, y: 0};
-  let firstPriorlyExistingIndex: number|undefined = undefined;
-  for(let i = sortedExistingVertices.length - 1; i !== firstPriorlyExistingIndex; i = mod(i - 1, sortedExistingVertices.length)) {
+  let firstPriorlyExistingIndex: number|undefined;
+  for (let i = sortedExistingVertices.length - 1; i !== firstPriorlyExistingIndex; i = mod(i - 1, sortedExistingVertices.length)) {
     let vertexData = sortedExistingVertices[i].getData();
     vertexData.visualIndex = i;
     let alreadyExisted = existingPersistentIndices.has(vertexData.persistentIndex);
-    if(firstPriorlyExistingIndex === undefined) {
+    if (firstPriorlyExistingIndex === undefined) {
       // existingPersistentIndices.size === 0 handles case where we havent created any at all yet
       // and we'd never set the firstPriorlyExistingIndex otherwise.
-      if(alreadyExisted || existingPersistentIndices.size === 0) {
+      if (alreadyExisted || existingPersistentIndices.size === 0) {
         firstPriorlyExistingIndex = i;
       }
     }
-    if(alreadyExisted) {
+    if (alreadyExisted) {
       // This one is not new, the next new one gets its position
       lastExistingPos = {x: vertexData.position.x, y: vertexData.position.y};
     } else {
@@ -209,10 +209,10 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
   }
 
   // Begin Lerps
-  for(let i = 0; i < persistentIndices.length; ++i) {
+  for (let i = 0; i < persistentIndices.length; ++i) {
     let persistentIndex = persistentIndices[i];
     let maybeObj = existingVerticesMap.get(persistentIndex);
-    if(maybeObj !== undefined) {
+    if (maybeObj !== undefined) {
       let currentPos = maybeObj.getData().position;
       let lerp = new Lerp2D();
       lerp.originalPosition.copy(currentPos);

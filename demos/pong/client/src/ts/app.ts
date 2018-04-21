@@ -7,16 +7,16 @@ import * as lk from 'laniakea-client';
 import {
   BallMovementSystem,
   EntityScheduledDeletionProcessor,
-  getGameServerWsUrl,
   GameButtons,
   GameButtonsInput,
+  getGameServerWsUrl,
   Lerp2DProcessor,
   registerComponents,
-  simFPS
+  simFPS,
 } from 'lk-demo-pong-shared';
 
-import { RenderingSystemImpl } from './pong-renderer';
 import { KeyboardHandler } from './keyboard-handler';
+import { RenderingSystemImpl } from './pong-renderer';
 
 interface HTMLHyperlinkElementUtils {
   href: string;
@@ -32,14 +32,13 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
-let clientEngine = new lk.ClientEngine({simFPS: simFPS});
+let clientEngine = new lk.ClientEngine({simFPS});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine.engine);
 clientEngine.engine.addSystem(new Lerp2DProcessor());
 clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
 clientEngine.engine.addSystem(new BallMovementSystem());
-
 
 // tslint:disable-next-line:no-unused-variable
 let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {

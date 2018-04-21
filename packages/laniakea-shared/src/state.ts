@@ -119,6 +119,7 @@ type GenericComponentFactory = (
  */
 class DeletedTag implements Serializable {
   public serialize(stream: SerializationStream): void {
+    // Nothing to serialize
   }
 }
 
@@ -238,7 +239,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     // For now this "leaks" indefinitely.
 
     // Mark all the components as deleted so we don't return them in queries
-    for(let component of this.getComponentsOfEntity(entityId)!) {
+    for (let component of this.getComponentsOfEntity(entityId)!) {
       component.delete();
     }
     this.addComponent(entityId, new DeletedTag());
@@ -259,15 +260,15 @@ export class EntityComponentStateImpl implements EntityComponentState {
 
   private _getComponents<T extends Serializable>(componentType: {new(): T}): Map<ComponentId, Component<T>> | undefined {
     let componentKindId = this.componentReflection.getComponentKindIdFromConstructor(componentType);
-    if(componentKindId === undefined) {
+    if (componentKindId === undefined) {
       return undefined;
     }
     return this.getComponentsByKindId(componentKindId) as Map<ComponentId, Component<T>> | undefined;
   }
 
   public *getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>> {
-    for(let component of this._getComponents(componentType)!.values()) {
-      if(!component.isDeleted()) {
+    for (let component of this._getComponents(componentType)!.values()) {
+      if (!component.isDeleted()) {
         yield component;
       }
     }
@@ -283,7 +284,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
       return undefined;
     }
     let component = componentsOfKind.get(componentId);
-    if(component !== undefined && component.isDeleted()) {
+    if (component !== undefined && component.isDeleted()) {
       return undefined;
     }
     return component;
@@ -326,19 +327,19 @@ export class EntityComponentStateImpl implements EntityComponentState {
     let typeUComponents = this.getComponentsByKindId(componentTypeIdU);
     for (let entityComponents of this.entityIdToComponents.values()) {
       let maybeTId = entityComponents.get(componentTypeIdT);
-      if(maybeTId === undefined) {
+      if (maybeTId === undefined) {
         continue;
       }
       let maybeUId = entityComponents.get(componentTypeIdU);
-      if(maybeUId === undefined) {
+      if (maybeUId === undefined) {
         continue;
       }
       let t = typeTComponents.get(maybeTId)! as Component<T>;
-      if(t.isDeleted()) {
+      if (t.isDeleted()) {
         continue;
       }
       let u = typeUComponents.get(maybeUId)! as Component<U>;
-      if(u.isDeleted()) {
+      if (u.isDeleted()) {
         continue;
       }
       yield [t, u];
@@ -347,7 +348,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
 
   public getEntity(entityId: EntityId): Entity | undefined {
     if (this.entityIds.has(entityId)) {
-      if(this.getComponentOfEntity(DeletedTag, entityId) === undefined) {
+      if (this.getComponentOfEntity(DeletedTag, entityId) === undefined) {
         return new EntityImpl(entityId, this);
       }
     }

@@ -12,7 +12,7 @@ import {
   Position,
   simFPS,
   Velocity,
-  WallPlane
+  WallPlane,
 } from 'lk-demo-balls-shared';
 
 function initialiseLevel(state: lk.EntityComponentState) {
@@ -48,14 +48,12 @@ const networkServer = new lk.NetworkServer(lk.INSECURE_AuthCallback);
 let serverEngine = new lk.ServerEngine(
   networkServer,
   {
-    simFPS: simFPS,
+    simFPS,
   },
 );
 
-
 initialiseEngine(serverEngine.engine);
 initialiseLevel(serverEngine.currentFrame.state);
-
 
 serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 

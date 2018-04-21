@@ -6,9 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tslint": "tslint --project .",
-    "tslint:fix": "tslint --project . --fix"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "efokschaner",
   "license": "MIT",

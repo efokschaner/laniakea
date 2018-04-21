@@ -5,7 +5,7 @@ require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js'
 
 import * as lk from 'laniakea-client';
 
-import { GameButtons, GameButtonsInput, initialiseEngine, simFPS, getGameServerWsUrl } from 'lk-demo-balls-shared';
+import { GameButtons, GameButtonsInput, getGameServerWsUrl, initialiseEngine, simFPS } from 'lk-demo-balls-shared';
 
 import { RenderingSystemImpl } from './balls-renderer';
 import { KeyboardHandler } from './keyboard-handler';
@@ -24,7 +24,7 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
-let clientEngine = new lk.ClientEngine({simFPS: simFPS});
+let clientEngine = new lk.ClientEngine({simFPS});
 
 initialiseEngine(clientEngine.engine);
 

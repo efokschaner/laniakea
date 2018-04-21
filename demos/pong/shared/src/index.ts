@@ -130,7 +130,7 @@ export class PlayerInfo implements lk.Serializable {
   }
 }
 
-export enum MoveIntent { NONE, NEGATIVE, POSITIVE };
+export enum MoveIntent { NONE, NEGATIVE, POSITIVE }
 
 export class Paddle implements lk.Serializable {
   public serialize(stream: lk.SerializationStream): void {
@@ -148,6 +148,7 @@ export class Paddle implements lk.Serializable {
 
 export class PaddleAiTag implements lk.Serializable {
   public serialize(stream: lk.SerializationStream): void {
+    // Nothing to serialize
   }
 }
 
@@ -177,8 +178,8 @@ export class Lerp2D implements lk.Serializable {
 }
 
 export class Lerp2DProcessor implements lk.System {
-  Step({simulationTimeS, state}: {simulationTimeS: number, state: lk.EntityComponentState}): void {
-    for(let [vertex, lerp] of state.getAspect(WallVertex, Lerp2D)!) {
+  public Step({simulationTimeS, state}: lk.StepParams): void {
+    for (let [vertex, lerp] of state.getAspect(WallVertex, Lerp2D)!) {
       let lerpData = lerp.getData();
       let lerpFactor = (simulationTimeS - lerpData.startTimeS) / lerpData.durationS;
       if (lerpFactor < 0) {
@@ -190,7 +191,7 @@ export class Lerp2DProcessor implements lk.System {
       }
       // Just for a bit of fun this is technically not a L(inear int)erp-olation anymore but whatever
       let smoothLerpFactor = THREE.Math.smoothstep(lerpFactor, 0, 1);
-      vertex.getData().position.lerpVectors(lerpData.originalPosition, lerpData.targetPosition, lerpFactor);
+      vertex.getData().position.lerpVectors(lerpData.originalPosition, lerpData.targetPosition, smoothLerpFactor);
     }
   }
 }
@@ -204,10 +205,10 @@ export class EntityScheduledDeletion implements lk.Serializable {
 }
 
 export class EntityScheduledDeletionProcessor implements lk.System {
-  Step({simulationTimeS, state}: {simulationTimeS: number, state: lk.EntityComponentState}): void {
-    for(let schedule of state.getComponents(EntityScheduledDeletion)!) {
+  public Step({simulationTimeS, state}: lk.StepParams): void {
+    for (let schedule of state.getComponents(EntityScheduledDeletion)!) {
       let scheduleData = schedule.getData();
-      if(scheduleData.deletionTimeS <= simulationTimeS) {
+      if (scheduleData.deletionTimeS <= simulationTimeS) {
         state.deleteEntity(schedule.getOwnerId());
       }
     }
@@ -222,7 +223,6 @@ export class BallMovement implements lk.Serializable {
   }
 }
 
-
 // Side calculation will use the formula d=(x−x1)(y2−y1)−(y−y1)(x2−x1)
 // Where (x1,y1) and (x2,y2) are points on the wall and (x,y) is the point.
 // Here we will pre-calculate (y2−y1) and (x2−x1), i.e vertA - vertB on the wall
@@ -234,7 +234,7 @@ function wallPointsToWallData(pointA: THREE.Vector2, pointB: THREE.Vector2): Wal
   let wallUnitVec = pointB.clone().sub(pointA).normalize();
   return {
     wallPoint: pointA,
-    wallUnitVec: wallUnitVec
+    wallUnitVec,
   };
 }
 function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vector2) {
@@ -243,38 +243,38 @@ function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vect
 }
 
 export class BallMovementSystem implements lk.System {
-  Step({timeDeltaS, state, previousFrameState}: {timeDeltaS: number, state: lk.EntityComponentState, previousFrameState: lk.EntityComponentState}): void {
+  public Step({timeDeltaS, state, previousFrameState}: lk.StepParams): void {
     // For calculating collisions we want all wall vertices that existed on previous frame and this frame.
     let vertsToConsider = new Array<{prev: lk.Component<WallVertex>, next: lk.Component<WallVertex>}>();
-    for(let prevVert of previousFrameState.getComponents(WallVertex)) {
+    for (let prevVert of previousFrameState.getComponents(WallVertex)) {
       let maybeNextVert = state.getComponent(WallVertex, prevVert.getId());
       if (maybeNextVert !== undefined) {
         vertsToConsider.push({prev: prevVert, next: maybeNextVert});
       }
     }
     let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a.prev.getData().visualIndex - b.prev.getData().visualIndex);
-    let walls = new Array<{prev:WallData, next: WallData}>();
-    for(let i = 0; i < vertsToConsiderSorted.length; ++i) {
+    let walls = new Array<{prev: WallData, next: WallData}>();
+    for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
       let startIndex = i;
-      let endIndex = mod(i+1, vertsToConsiderSorted.length)
+      let endIndex = mod(i + 1, vertsToConsiderSorted.length);
       let startVerts = vertsToConsiderSorted[startIndex];
       let endVerts = vertsToConsiderSorted[endIndex];
       walls.push({
         prev: wallPointsToWallData(startVerts.prev.getData().position, endVerts.prev.getData().position),
-        next: wallPointsToWallData(startVerts.next.getData().position, endVerts.next.getData().position)
+        next: wallPointsToWallData(startVerts.next.getData().position, endVerts.next.getData().position),
       });
     }
 
-    for(let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)!) {
+    for (let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)!) {
       let ballMovementData = ballMovement.getData();
       let prevPos = ballPosition.getData().clone();
       let nextPos = ballPosition.getData().addScaledVector(ballMovementData.velocity, timeDeltaS);
       // Calculate collisions by checking sign change in outer product with wall on previous frame and next
-      for(let wall of walls) {
+      for (let wall of walls) {
         let prevProduct = crossProduct2DBetweenWallAndPoint(wall.prev, prevPos);
         let nextProduct = crossProduct2DBetweenWallAndPoint(wall.next, nextPos);
         // We only care about collisions with the ball going outwards (to prevent numerical issue with the ball getting stuck outside the shape)
-        if(prevProduct > 0 && nextProduct <= 0) {
+        if (prevProduct > 0 && nextProduct <= 0) {
           // There's been a sign change, reflect the velocity and position
           let wallNormInwards = new THREE.Vector2(wall.next.wallUnitVec.y, -wall.next.wallUnitVec.x);
           // reflection using the following formula r=d−2(d⋅n)n
@@ -308,7 +308,7 @@ export class BallSpawner implements lk.Serializable {
 function getOrCreateBallSpawner(state: lk.EntityComponentState): lk.Component<BallSpawner> {
   let spawners = Array.from(state.getComponents(BallSpawner));
   let spawner = spawners[0];
-  if(spawner !== undefined) {
+  if (spawner !== undefined) {
     return spawner;
   }
   let spawnerComponent = new BallSpawner();
@@ -317,14 +317,14 @@ function getOrCreateBallSpawner(state: lk.EntityComponentState): lk.Component<Ba
 }
 
 export class BallSpawnerSystem implements lk.System {
-  Step({simulationTimeS, state}: {simulationTimeS: number, state: lk.EntityComponentState}): void {
+  public Step({simulationTimeS, state}: lk.StepParams): void {
     let spawner = getOrCreateBallSpawner(state);
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let balls = Array.from(state.getComponents(BallMovement));
     let desiredNumBalls = Math.floor(alivePlayers.length / 2);
     let hasBeenMoreThanASecondSinceLastSpawn = spawner.getData().lastBallSpawnTimeS <= simulationTimeS - 1;
-    if(hasBeenMoreThanASecondSinceLastSpawn && balls.length < desiredNumBalls) {
+    if (hasBeenMoreThanASecondSinceLastSpawn && balls.length < desiredNumBalls) {
       spawner.getData().lastBallSpawnTimeS = simulationTimeS;
       let initialBallVelocityMagnitude = 2.5;
       let ballPos = new Position2();

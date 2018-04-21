@@ -166,7 +166,7 @@ export class ClientSimulation {
     targetFrame.receivedAuthoritativeSimulationTimeS = framePacket.simulationTimeS;
 
     targetFrame.receivedAuthoritativeInput = this.engine.createInputFrame();
-    if(framePacket.inputUsedForPlayerThisFrame.byteLength > 0) {
+    if (framePacket.inputUsedForPlayerThisFrame.byteLength > 0) {
       let inputFrameDataView = new DataView(
         framePacket.inputUsedForPlayerThisFrame.buffer,
         framePacket.inputUsedForPlayerThisFrame.byteOffset,
