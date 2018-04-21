@@ -1,7 +1,7 @@
 {
-  "name": "lk-demo-shared",
+  "name": "lk-demo-pong-shared",
   "version": "0.0.1",
-  "description": "Shared betweek client and server in laniakea demo",
+  "description": "Shared between pong demo client and server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

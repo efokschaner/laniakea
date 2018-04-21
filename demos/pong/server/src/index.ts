@@ -2,7 +2,7 @@ import 'laniakea-server/dist/logger';
 
 import * as lk from 'laniakea-server';
 
-import * as demo from 'lk-demo-shared';
+import * as demo from 'lk-demo-pong-shared';
 
 import * as ballsDemo from './balls-demo';
 import * as pongDemo from './pong-demo';

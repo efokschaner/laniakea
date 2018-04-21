@@ -2,9 +2,9 @@ import * as THREE from 'three';
 
 import * as lk from 'laniakea-server';
 
-import { pongDemo, SerializableVector2 } from 'lk-demo-shared';
+import { pongDemo, SerializableVector2 } from 'lk-demo-pong-shared';
 // TODO, fix this atrocity
-import { WallVertex } from '../../lk-demo-shared/dist/pong-demo';
+import { WallVertex } from '../../shared/dist/pong-demo';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,

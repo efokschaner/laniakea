@@ -2,7 +2,7 @@ import dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
-import * as demo from 'lk-demo-shared';
+import * as demo from 'lk-demo-pong-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
 

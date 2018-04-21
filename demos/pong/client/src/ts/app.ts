@@ -4,7 +4,7 @@ require('../css/main.css');
 require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
 import * as lk from 'laniakea-client';
-import * as demo from 'lk-demo-shared';
+import * as demo from 'lk-demo-pong-shared';
 
 import * as ballsDemo from './balls-demo';
 import { KeyboardHandler } from './keyboard-handler';
