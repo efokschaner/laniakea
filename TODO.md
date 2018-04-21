@@ -1,14 +1,15 @@
-- [ ] Add TSLint.
-- [ ] Add leading underscores to private members.
+- [ ] Add leading underscores to private members (for JavaScript consumers' sake).
+- [ ] Make Component wrapper class more like Entity wrapper class, the wrapper should not be our storage mechanism. Reduces replication size.
 - [ ] MTU/bandwidth aware replication (currently sends all state every frame).
 - [ ] Use inter-frame times to send more state sync packets. This ties in with above.
 - [ ] Automatic reconnection (as our connection is over UDP this is more about flushing and re-syncing simulation).
-- [ ] Explore capnproto ts as a networking + gamestate option.
+- [ ] Explore capnproto ts as a networking + gamestate option. As evident from Button replication, ideal network format is quite likely not the ideal memory format.
+      Therefore it may still be desirable to have separate representations even if capnproto makes sense for either of them.
 - [ ] Explore use of conventional web frameworks for 2D UI, with databindings to game state.
 - [ ] Maybe eliminate BufferedRTCDataChannel if we just have handlers ready before the connection attempt?
 - [ ] Maybe eliminate reliable RTCDataChannel as reliable can be implemented on top of unreliable with our protocol.
 - [ ] Graphs / stats from network. Maybe expose for use by other systems.
 - [ ] Review and move xxhashjs.d.ts typings to xxhashjs or DefinitelyTyped.
 - [ ] Review and move box-intersect.d.ts typings to box-intersect or DefinitelyTyped.
-- [ ] Figure out which of lk-demo-client's dependencies are actually devDependencies.
+- [ ] Figure out which of demo-client's dependencies are actually devDependencies.
 - Other TODO's still in the source code
