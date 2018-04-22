@@ -10,7 +10,10 @@ import {
   GameButtons,
   GameButtonsInput,
   getGameServerWsUrl,
+  InputHandlerSystem,
   Lerp2DProcessor,
+  PaddleMovementSystem,
+  PaddlePositionSyncSystem,
   registerComponents,
   simFPS,
 } from 'lk-demo-pong-shared';
@@ -36,9 +39,13 @@ let clientEngine = new lk.ClientEngine({simFPS});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine.engine);
+
+clientEngine.engine.addSystem(new InputHandlerSystem());
 clientEngine.engine.addSystem(new Lerp2DProcessor());
 clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
+clientEngine.engine.addSystem(new PaddleMovementSystem());
 clientEngine.engine.addSystem(new BallMovementSystem());
+clientEngine.engine.addSystem(new PaddlePositionSyncSystem());
 
 // tslint:disable-next-line:no-unused-variable
 let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {

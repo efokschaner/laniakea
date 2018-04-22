@@ -5,10 +5,10 @@
       "name": "Launch",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceRoot}/packages/lk-demo-server/dist/index.js",
+      "program": "${workspaceRoot}/demos/pong/server/dist/index.js",
       "stopOnEntry": false,
       "args": [],
-      "cwd": "${workspaceRoot}/packages/lk-demo-server",
+      "cwd": "${workspaceRoot}/demos/pong/server",
       "preLaunchTask": null,
       "runtimeExecutable": null,
       "runtimeArgs": [
@@ -18,7 +18,7 @@
         "NODE_ENV": "development"
       },
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js"]
+      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/demos/**/dist/**/*.js"]
     },
     {
       "name": "Attach",
@@ -28,7 +28,7 @@
       "address": "localhost",
       "restart": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js"],
+      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/demos/**/dist/**/*.js"],
       "localRoot": "${workspaceRoot}",
       "remoteRoot": null
     }

@@ -7,8 +7,14 @@ import {
   BallSpawnerSystem,
   EntityScheduledDeletion,
   EntityScheduledDeletionProcessor,
+  HumanPlayerId,
+  InputHandlerSystem,
   Lerp2D,
   Lerp2DProcessor,
+  Orientation,
+  Paddle,
+  PaddleMovementSystem,
+  PaddlePositionSyncSystem,
   PlayerInfo,
   Position2,
   registerComponents,
@@ -245,31 +251,46 @@ function doUpdateLevelGemoetry(currentFrame: lk.SimluationFrameData) {
     }
   }
 
-  // TODO Fixup Paddles!
-  /*
-  if(numPlayersPriorToAddition < 1) {
-    // not enough players to start yet
-    return;
+  let playerIndexToPaddle = new Map(Array.from(state.getComponents(Paddle)).map((c) => [c.getData().playerIndex, c] as [number, lk.Component<Paddle>]));
+  for (let player of players) {
+    let playerData = player.getData();
+    let maybePaddle = playerIndexToPaddle.get(playerData.playerIndex);
+    if (playerData.alive && maybePaddle === undefined) {
+      // This player needs a paddle created.
+      let newPaddle = new Paddle();
+      newPaddle.playerIndex = playerData.playerIndex;
+      newPaddle.wallPersistentId = playerIndexToPersistentVertexIndex(playerData.playerIndex);
+      // TODO Technically a Paddle's position is entirely slaved to its wallposition stuff and does not need replication
+      // Consider revisiting this once we have controlled replication.
+      let newPosition = new Position2();
+      let newOrientation = new Orientation();
+      state.createEntity([newPaddle, newPosition, newOrientation]);
+    } else if (!playerData.alive && maybePaddle !== undefined) {
+      // This player needs their paddle deleted.
+      state.deleteEntity(maybePaddle.getOwnerId());
+    }
   }
-  let paddles = Array.from(serverEngine.currentFrame.state.getComponents(pongDemo.Paddle));
-  */
 }
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
   registerComponents(serverEngine.engine);
 
+  serverEngine.engine.addSystem(new InputHandlerSystem());
+  serverEngine.engine.addSystem(new BallSpawnerSystem());
   serverEngine.engine.addSystem(new Lerp2DProcessor());
   serverEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
-  serverEngine.engine.addSystem(new BallSpawnerSystem());
+  serverEngine.engine.addSystem(new PaddleMovementSystem());
   serverEngine.engine.addSystem(new BallMovementSystem());
+  serverEngine.engine.addSystem(new PaddlePositionSyncSystem());
 
   serverEngine.onPlayerConnected.attach((playerId) => {
     let state = serverEngine.currentFrame.state;
     let players = Array.from(state.getComponents(PlayerInfo));
     let newPlayerInfo = new PlayerInfo();
     newPlayerInfo.playerIndex = players.length;
-    newPlayerInfo.playerId = playerId;
-    state.createEntity([newPlayerInfo]);
+    let newHumanPlayerId = new HumanPlayerId();
+    newHumanPlayerId.playerId = playerId;
+    state.createEntity([newPlayerInfo, newHumanPlayerId]);
     doUpdateLevelGemoetry(serverEngine.currentFrame);
   });
 }

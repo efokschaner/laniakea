@@ -6,6 +6,13 @@ export const gameServerWsPort = 9876;
 export function getGameServerWsUrl(hostname: string) { return `ws://${hostname}:${gameServerWsPort}`; }
 export const simFPS = 20;
 
+// Because JS's % operator returns negative values
+// for modulus of negative numbers,
+// which we don't want.
+function mod(n: number, m: number) {
+  return ((n % m) + m) % m;
+}
+
 interface NumericEnum { [key: string]: number; }
 
 function getEnumNames(e: NumericEnum): string[] {
@@ -42,49 +49,37 @@ function serializeSetOfUint8(stream: lk.SerializationStream, set: Set<number>): 
   }
 }
 
-/**
- * Generates a class that provides binary "button"-style inputs as continuous input to the engine.
- * Knowledge of possible button inputs allows efficient serialization
- * @param buttonsEnum Either a TypeScript enum or an object of string keys to numeric values
- *                    that describes the button-style inputs you support in a keyboard-agnostic form.
- */
-function createButtonsInputType(buttonsEnum: any) {
-  return class implements lk.Serializable {
-    public buttonStates = new Map<number, ButtonState>();
-    constructor() {
-      for (const button of getEnumValues(buttonsEnum)) {
-        this.buttonStates.set(button, ButtonState.UP);
-      }
+export enum GameButtons { LEFT, RIGHT }
+
+export class GameButtonsInput implements lk.Serializable {
+  public buttonStates = new Map<number, ButtonState>();
+  constructor() {
+    for (const button of getEnumValues(GameButtons as any)) {
+      this.buttonStates.set(button, ButtonState.UP);
     }
-    public serialize(stream: lk.SerializationStream): void {
-      // Buttons in the down state are sent, other buttons are assumed to be in the up state.
-      let downButtons = new Set<number>();
-      if (stream.isWriting) {
-        this.buttonStates.forEach((value, key) => {
-          if (value === ButtonState.DOWN) {
-            downButtons.add(key);
-          }
-        });
-      }
-      serializeSetOfUint8(stream, downButtons);
-      if (stream.isReading) {
-        for (const button of getEnumValues(buttonsEnum)) {
-          if (downButtons.has(button)) {
-            this.buttonStates.set(button, ButtonState.DOWN);
-          } else {
-            this.buttonStates.set(button, ButtonState.UP);
-          }
+  }
+  public serialize(stream: lk.SerializationStream): void {
+    // Buttons in the down state are sent, other buttons are assumed to be in the up state.
+    let downButtons = new Set<number>();
+    if (stream.isWriting) {
+      this.buttonStates.forEach((value, key) => {
+        if (value === ButtonState.DOWN) {
+          downButtons.add(key);
+        }
+      });
+    }
+    serializeSetOfUint8(stream, downButtons);
+    if (stream.isReading) {
+      for (const button of getEnumValues(GameButtons as any)) {
+        if (downButtons.has(button)) {
+          this.buttonStates.set(button, ButtonState.DOWN);
+        } else {
+          this.buttonStates.set(button, ButtonState.UP);
         }
       }
     }
-  };
+  }
 }
-
-export enum GameButtons { UP, LEFT, DOWN, RIGHT }
-
-// This variable is a dynamic Class
-// tslint:disable-next-line:variable-name
-export let GameButtonsInput = createButtonsInputType(GameButtons);
 
 export function serializeVector3(stream: lk.SerializationStream, vector: THREE.Vector3) {
   stream.serializeFloat32(vector, 'x');
@@ -109,24 +104,40 @@ export class SerializableVector2 extends THREE.Vector2 implements lk.Serializabl
   }
 }
 
+// TODO Orientation quaternions have redundancy as they must be length 1 and so we can use this
+// to reduce the data we need to send.
+export function serializeQuaternion(stream: lk.SerializationStream, q: THREE.Quaternion) {
+  stream.serializeFloat32(q, 'x');
+  stream.serializeFloat32(q, 'y');
+  stream.serializeFloat32(q, 'z');
+  stream.serializeFloat32(q, 'w');
+}
+
+export class SerializableQuaternion extends THREE.Quaternion implements lk.Serializable {
+  public serialize(stream: lk.SerializationStream): void {
+    return serializeQuaternion(stream, this);
+  }
+}
+
 export class Position2 extends SerializableVector2 implements lk.Serializable {
 }
 
-// Because JS's % operator returns negative values
-// for modulus of negative numbers,
-// which we don't want.
-function mod(n: number, m: number) {
-  return ((n % m) + m) % m;
+export class Orientation extends SerializableQuaternion implements lk.Serializable {
 }
 
 export class PlayerInfo implements lk.Serializable {
-  public playerId = 0;
   public playerIndex = 0;
   public alive = true;
   public serialize(stream: lk.SerializationStream): void {
-    stream.serializeUint32(this, 'playerId');
     stream.serializeUint32(this, 'playerIndex');
     stream.serializeBoolean(this, 'alive');
+  }
+}
+
+export class HumanPlayerId implements lk.Serializable {
+  public playerId: lk.PlayerId = 0;
+  public serialize(stream: lk.SerializationStream): void {
+    stream.serializeUint32(this, 'playerId');
   }
 }
 
@@ -134,22 +145,18 @@ export enum MoveIntent { NONE, NEGATIVE, POSITIVE }
 
 export class Paddle implements lk.Serializable {
   public serialize(stream: lk.SerializationStream): void {
-    stream.serializeUint32(this, 'wallId');
+    stream.serializeUint32(this, 'playerIndex');
+    stream.serializeUint32(this, 'wallPersistentId');
     stream.serializeFloat32(this, 'positionInWallSpace');
     stream.serializeFloat32(this, 'velocityInWallSpace');
     stream.serializeUint8(this, 'moveIntent');
   }
-  public wallId: lk.ComponentId = 0; // Which wall it's attached to
+  public playerIndex: number = 0;
+  public wallPersistentId: lk.ComponentId = 0; // Which wall it's attached to
   // WallSpace is 1D interval (0 -> 1), from endA to endB of the wall
-  public positionInWallSpace = 0;
+  public positionInWallSpace = 0.5;
   public velocityInWallSpace = 0;
   public moveIntent = MoveIntent.NONE;
-}
-
-export class PaddleAiTag implements lk.Serializable {
-  public serialize(stream: lk.SerializationStream): void {
-    // Nothing to serialize
-  }
 }
 
 export class WallVertex implements lk.Serializable {
@@ -290,6 +297,7 @@ export class BallMovementSystem implements lk.System {
           let ballToWall = new THREE.Vector2();
           ballToWall.copy(wallPointClosestToBall.sub(ballPos3D) as any);
           nextPos.addScaledVector(ballToWall, 2);
+
         }
       }
     }
@@ -335,9 +343,96 @@ export class BallSpawnerSystem implements lk.System {
   }
 }
 
+export class InputHandlerSystem implements lk.System {
+  public Step({inputs, state}: lk.StepParams): void {
+    let playerIdToPlayerInfoMap = new Map(
+      Array.from(
+        state.getAspect(PlayerInfo, HumanPlayerId),
+      ).map(
+        ([info, playerId]) => [playerId.getData().playerId, info.getData()] as [lk.PlayerId, PlayerInfo],
+      ),
+    );
+    let playerIndexToPaddleMap = new Map(
+      Array.from(
+        state.getComponents(Paddle),
+      ).map(
+        (paddle) => [paddle.getData().playerIndex, paddle.getData()] as [number, Paddle],
+      ),
+    );
+    for (let [playerId, input] of inputs) {
+      let maybePlayerInfo = playerIdToPlayerInfoMap.get(playerId);
+      if (maybePlayerInfo === undefined) {
+        continue;
+      }
+      let maybePaddle = playerIndexToPaddleMap.get(maybePlayerInfo.playerIndex);
+      if (maybePaddle === undefined) {
+        continue;
+      }
+      let maybeButtonsInput = input.getContinuousInput(GameButtonsInput);
+      if (maybeButtonsInput === undefined) {
+        continue;
+      }
+      if (maybeButtonsInput.buttonStates.get(GameButtons.LEFT) === ButtonState.DOWN) {
+        maybePaddle.moveIntent = MoveIntent.POSITIVE;
+      } else if (maybeButtonsInput.buttonStates.get(GameButtons.RIGHT) === ButtonState.DOWN) {
+        maybePaddle.moveIntent = MoveIntent.NEGATIVE;
+      } else {
+        maybePaddle.moveIntent = MoveIntent.NONE;
+      }
+    }
+  }
+}
+
+export class PaddleMovementSystem implements lk.System {
+  public Step({state, timeDeltaS}: lk.StepParams): void {
+    for (let paddle of state.getComponents(Paddle)) {
+      let paddleData = paddle.getData();
+      // TODO consider an accelerative approach
+      let maxMoveSpeed = 0.4;
+      switch (paddleData.moveIntent) {
+        case MoveIntent.NONE:
+          paddleData.velocityInWallSpace = 0;
+          break;
+        case MoveIntent.NEGATIVE:
+          paddleData.velocityInWallSpace = - maxMoveSpeed;
+          break;
+        case MoveIntent.POSITIVE:
+          paddleData.velocityInWallSpace = maxMoveSpeed;
+          break;
+      }
+
+      // TODO adjust clamp so paddle width is accounted for
+      paddleData.positionInWallSpace = THREE.Math.clamp(paddleData.positionInWallSpace + paddleData.velocityInWallSpace * timeDeltaS, 0, 1);
+    }
+  }
+}
+
+export class PaddlePositionSyncSystem implements lk.System {
+  public Step({state}: lk.StepParams): void {
+    let vertsSortedByVisualIndex = Array.from(state.getAspect(WallVertex, Position2)).sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
+    for (let [pos, paddle, orientation] of state.getAspect(Position2, Paddle, Orientation)) {
+      let persistentIdToFind = paddle.getData().wallPersistentId;
+      let index = vertsSortedByVisualIndex.findIndex(([vert, _]) => vert.getData().persistentIndex === persistentIdToFind);
+      if (index === -1) {
+        console.warn('Expected to find vertex for paddle');
+        continue;
+      }
+      let nextIndex = mod(index + 1, vertsSortedByVisualIndex.length);
+      let wallStartVertPos = vertsSortedByVisualIndex[index][1].getData();
+      let wallEndVertPos = vertsSortedByVisualIndex[nextIndex][1].getData();
+      let posData = pos.getData();
+      posData.lerpVectors(wallStartVertPos.clone(), wallEndVertPos.clone(), paddle.getData().positionInWallSpace);
+      let wallDirection = wallEndVertPos.clone().sub(wallStartVertPos).normalize();
+      orientation.getData().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
+    }
+  }
+}
+
 export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(Position2, 'Position2' as lk.ComponentKind);
+  engine.registerComponentType(Orientation, 'Orientation' as lk.ComponentKind);
   engine.registerComponentType(PlayerInfo, 'PlayerInfo' as lk.ComponentKind);
+  engine.registerComponentType(HumanPlayerId, 'HumanPlayerId' as lk.ComponentKind);
   engine.registerComponentType(Paddle, 'Paddle' as lk.ComponentKind);
   engine.registerComponentType(WallVertex, 'WallVertex' as lk.ComponentKind);
   engine.registerComponentType(Lerp2D, 'Lerp2D' as lk.ComponentKind);

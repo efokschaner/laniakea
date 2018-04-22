@@ -3,13 +3,15 @@ import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
 
-import {BallMovement, Paddle, Position2, WallVertex} from 'lk-demo-pong-shared';
+import {BallMovement, HumanPlayerId, Orientation, Paddle, PlayerInfo, Position2, WallVertex} from 'lk-demo-pong-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
 
 class ThreeRenderer implements lk.RenderingSystem {
-  private graphicalWorldRadius = 20;
+  private graphicalWorldRadius = 12;
   private backgroundColor = 0xffffff;
+  private foregroundThickness = 0.2;
+
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   private renderer = new THREE.WebGLRenderer({antialias: true});
@@ -21,9 +23,14 @@ class ThreeRenderer implements lk.RenderingSystem {
 
   private lineMaterial = new THREE.LineBasicMaterial( { color: 0x080808, linewidth: 0.4 } );
   private rendererWalls = new Map<lk.ComponentId, THREE.Line>();
+
+  private allyColor = 0x3030ff;
+  private allyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.allyColor, emissive: this.allyColor, emissiveIntensity: 0.6 });
+  private enemyColor = 0xff2b2b;
+  private enemyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.enemyColor, emissive: this.enemyColor, emissiveIntensity: 0.6 });
+  private paddleGeometry = new THREE.BoxBufferGeometry(1, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
   private rendererPaddles = new Map<lk.ComponentId, THREE.Mesh>();
 
-  private foregroundThickness = 0.2;
   private ballGeometry = new THREE.CubeGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
   private ballMaterial = new THREE.MeshLambertMaterial( { color: 0x080808 } );
   private rendererBalls = new Map<lk.EntityId, THREE.Mesh>();
@@ -35,7 +42,7 @@ class ThreeRenderer implements lk.RenderingSystem {
 
   // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
-    this.renderer.shadowMapEnabled = true;
+    this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene.background = new THREE.Color(this.backgroundColor);
@@ -50,7 +57,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       PAN: THREE.MOUSE.LEFT,
     };
 
-    let ambientLight = new THREE.AmbientLight(0x202020);
+    let ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
 
     this.dayLight.position.set(0, 0, 2);
@@ -65,7 +72,11 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     this.scene.add(this.dayLight);
 
-    this.floorMesh.translateZ(-this.foregroundThickness);
+    // HELPERS
+    // this.scene.add(new THREE.CameraHelper(this.dayLight.shadow.camera));
+    // this.scene.add(new THREE.BoxHelper(this.floorMesh));
+
+    this.floorMesh.translateZ(- 0.75 * this.foregroundThickness);
     this.floorMesh.receiveShadow = true;
     this.scene.add(this.floorMesh);
 
@@ -88,7 +99,9 @@ class ThreeRenderer implements lk.RenderingSystem {
       // Nothing to render yet
       return;
     }
-    let targetSimTimeS = simTimeS - simulation.getInputTravelTimeS()!;
+
+    // The -0.025 is a small fudge factor well below perception threshold
+    let targetSimTimeS = simTimeS + simulation.getInputTravelTimeS()! - 0.025;
     let nearestFrames = simulation.getSimulationFrames(targetSimTimeS);
     if (nearestFrames === undefined) {
       // Nothing to render yet
@@ -139,24 +152,41 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeLine.visible = true;
     }
 
-    for (let paddle of state.getComponents(Paddle)!) {
+    for (let paddle of this.rendererPaddles.values()) {
+      // We set everything to NOT visible, and if the object still exists we'll set it visible when updating properties.
+      paddle.visible = false;
+    }
+
+    let ownPlayerId = simulation.getOwnPlayerId()!;
+    let ownPlayerInfo: PlayerInfo|undefined;
+    for (let [playerInfo, humanPlayerId] of state.getAspect(PlayerInfo, HumanPlayerId)) {
+      if (humanPlayerId.getData().playerId === ownPlayerId) {
+        ownPlayerInfo = playerInfo.getData();
+      }
+    }
+
+    let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
+    for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
       let maybeObj = this.rendererPaddles.get(paddle.getId());
       if (maybeObj === undefined) {
-        let geometry = new THREE.SphereBufferGeometry(1, 32, 24);
-        let material = new THREE.MeshLambertMaterial( { color: 0x0055ff, wireframe: false } );
-        maybeObj = new THREE.Mesh( geometry, material );
+        if (paddle.getData().playerIndex === ownPlayerInfo!.playerIndex) {
+          maybeObj = new THREE.Mesh(this.paddleGeometry, this.allyPaddleMaterial);
+        } else {
+          maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
+        }
+        maybeObj.castShadow = true;
         this.rendererPaddles.set(paddle.getId(), maybeObj);
         this.scene.add(maybeObj);
       }
-
-      /*
-      let wallData = state.getComponent(demo.pongDemo.WallPosition, paddle.getData().wallId)!.getData();
-      // TODO account for width of paddle here
-      let paddlePositionWallSpace = paddle.getData().positionInWallSpace;
-      let paddlePositionWorldSpace = new THREE.Vector2();
-      paddlePositionWorldSpace.lerpVectors(wallData.endA, wallData.endB, paddle.getData().positionInWallSpace);
-      maybeObj.position.set(paddlePositionWorldSpace.x, paddlePositionWorldSpace.y, 0);
-      */
+      let pos = interpolatedPositions.get(paddlePos.getId())!;
+      maybeObj.position.x = pos.x;
+      maybeObj.position.y = pos.y;
+      maybeObj.position.z = 0;
+      maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
+      // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
+      // excessively interserct the paddle.
+      maybeObj.translateY(halfPaddleHeight);
+      maybeObj.visible = true;
       // TODO if this paddle is ours, set our camera on it.
     }
 
@@ -184,15 +214,19 @@ class ThreeRenderer implements lk.RenderingSystem {
 export class GuiRenderer implements lk.RenderingSystem {
   private guiViewModel = {
     currentSimTime: 0,
+    inputTravelTimeMS: 0,
   };
-  private guiView = new dat.GUI();
+  private guiView = new dat.GUI({width: 300});
 
   constructor() {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
+    this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
   }
 
   public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
     this.guiViewModel.currentSimTime = simulation.getCurrentSimulationTimeS() || 0;
+    let inputTravelTimeS = simulation.getInputTravelTimeS() || 0;
+    this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
   }
 }
 
