@@ -36,6 +36,16 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
+function getUserId () {
+  let prior = window.localStorage.getItem('user_id');
+  if (prior) {
+    return prior;
+  }
+  let newId = Math.round(Math.random() * 10000).toString();
+  window.localStorage.setItem('user_id', newId);
+  return newId;
+}
+
 let clientEngine = new lk.ClientEngine({simFPS});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
@@ -90,7 +100,8 @@ clientEngine.start();
 
 let gameServerWsUrl = document.createElement('a') as HTMLAnchorElement & HTMLHyperlinkElementUtils;
 gameServerWsUrl.href = getGameServerWsUrl(location.hostname);
-gameServerWsUrl.username = Math.round(Math.random() * 100).toString();
+
+gameServerWsUrl.username = getUserId();
 gameServerWsUrl.password = 'whateverpass';
 
 clientEngine.connectToServer(gameServerWsUrl.href);
