@@ -3,7 +3,16 @@ import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
 
-import {BallMovement, HumanPlayerId, Orientation, Paddle, PlayerInfo, Position2, WallVertex} from 'lk-demo-pong-shared';
+import {
+  BallMovement,
+  HumanPlayerId,
+  Orientation,
+  Paddle,
+  paddleLengthAsProportionOfWallLength,
+  PlayerInfo,
+  Position2,
+  WallVertex,
+} from 'lk-demo-pong-shared';
 
 import {RendererSizeUpdater} from './renderer-size-updater';
 
@@ -38,28 +47,16 @@ class ThreeRenderer implements lk.RenderingSystem {
   private dayLight = new THREE.DirectionalLight();
 
   // ORBITAL CAMERA JUST FOR DEBUG.
-  private cameraController: THREE.OrbitControls;
+  private cameraController?: THREE.OrbitControls;
 
   // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
     this.scene.background = new THREE.Color(this.backgroundColor);
-
-    this.camera.translateZ(20);
-
-    this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-    this.cameraController.enablePan = true;
-    this.cameraController.mouseButtons = {
-      ORBIT: THREE.MOUSE.RIGHT,
-      ZOOM: THREE.MOUSE.MIDDLE,
-      PAN: THREE.MOUSE.LEFT,
-    };
-
+    this.camera.translateZ(14);
     let ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
-
     this.dayLight.position.set(0, 0, 2);
     this.dayLight.castShadow = true;
     this.dayLight.shadow.camera.far = 3;
@@ -69,12 +66,21 @@ class ThreeRenderer implements lk.RenderingSystem {
     this.dayLight.shadow.camera.left = -this.graphicalWorldRadius;
     this.dayLight.shadow.mapSize.x = 2048;
     this.dayLight.shadow.mapSize.y = 2048;
-
     this.scene.add(this.dayLight);
 
-    // HELPERS
+    // HELPERS FOR VISUAL DEBUGGING
     // this.scene.add(new THREE.CameraHelper(this.dayLight.shadow.camera));
     // this.scene.add(new THREE.BoxHelper(this.floorMesh));
+    // CAMERA CONTROLS
+    /*
+    this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.cameraController.enablePan = true;
+    this.cameraController.mouseButtons = {
+      ORBIT: THREE.MOUSE.RIGHT,
+      ZOOM: THREE.MOUSE.MIDDLE,
+      PAN: THREE.MOUSE.LEFT,
+    };
+    */
 
     this.floorMesh.translateZ(- 0.75 * this.foregroundThickness);
     this.floorMesh.receiveShadow = true;
@@ -92,7 +98,19 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     this.rendererSizeUpdater.update();
 
-    this.cameraController.update();
+    // Set camera distance to ensure scene is contained.
+    let verticalFov = this.camera.getEffectiveFOV() * Math.PI / 180;
+    let smallerFov = verticalFov;
+    if (this.camera.aspect < 1) {
+      let horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
+      smallerFov = horizontalFov;
+    }
+    let distanceForCamera = this.graphicalWorldRadius / Math.tan(smallerFov / 2);
+    this.camera.position.z = distanceForCamera;
+
+    if (this.cameraController !== undefined) {
+      this.cameraController.update();
+    }
 
     let simTimeS = simulation.getCurrentSimulationTimeS();
     if (simTimeS === undefined) {
@@ -127,18 +145,21 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     let sortedVertexPositions = Array.from(state.getAspect(WallVertex, Position2)).sort((a, b) => {
       return a[0].getData().visualIndex - b[0].getData().visualIndex;
-    }).map((i) => i[1]);
+    });
 
     for (let line of this.rendererWalls.values()) {
       // We set everything to NOT visible, and if the object still exists we'll set it visible when updating properties.
       line.visible = false;
     }
 
+    // Build this map so we can use it to set paddle sizes later.
+    let wallPersistentIdToLength = new Map<number, number>();
+
     for (let i = 0; i < sortedVertexPositions.length; ++i) {
-      let vertex = sortedVertexPositions[i];
-      let vertexPos = interpolatedPositions.get(vertex.getId())!;
+      let [vertex, pos] = sortedVertexPositions[i];
+      let vertexPos = interpolatedPositions.get(pos.getId())!;
       let nextVertIndex = (i + 1) % sortedVertexPositions.length;
-      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex].getId())!;
+      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex][1].getId())!;
       let maybeLine = this.rendererWalls.get(vertex.getId());
       let wallGeometry = new THREE.Geometry();
       if (maybeLine === undefined) {
@@ -146,10 +167,13 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.rendererWalls.set(vertex.getId(), maybeLine);
         this.scene.add(maybeLine);
       }
-      wallGeometry.vertices.push(new THREE.Vector3(vertexPos.x, vertexPos.y, 0));
-      wallGeometry.vertices.push(new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, 0));
+      let wallStart = new THREE.Vector3(vertexPos.x, vertexPos.y, 0);
+      let wallEnd = new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, 0);
+      wallGeometry.vertices.push(wallStart);
+      wallGeometry.vertices.push(wallEnd);
       maybeLine.geometry = wallGeometry;
       maybeLine.visible = true;
+      wallPersistentIdToLength.set(vertex.getData().persistentIndex, wallStart.distanceTo(wallEnd));
     }
 
     for (let paddle of this.rendererPaddles.values()) {
@@ -165,29 +189,34 @@ class ThreeRenderer implements lk.RenderingSystem {
       }
     }
 
-    let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
-    for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
-      let maybeObj = this.rendererPaddles.get(paddle.getId());
-      if (maybeObj === undefined) {
-        if (paddle.getData().playerIndex === ownPlayerInfo!.playerIndex) {
-          maybeObj = new THREE.Mesh(this.paddleGeometry, this.allyPaddleMaterial);
-        } else {
-          maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
+    // Don't add paddles unless we can tell which is ours.
+    if (ownPlayerInfo !== undefined) {
+      let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
+      for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
+        let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
+        let maybeObj = this.rendererPaddles.get(paddle.getId());
+        if (maybeObj === undefined) {
+          if (paddleIsOurs) {
+            maybeObj = new THREE.Mesh(this.paddleGeometry, this.allyPaddleMaterial);
+          } else {
+            maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
+          }
+          maybeObj.castShadow = true;
+          this.rendererPaddles.set(paddle.getId(), maybeObj);
+          this.scene.add(maybeObj);
         }
-        maybeObj.castShadow = true;
-        this.rendererPaddles.set(paddle.getId(), maybeObj);
-        this.scene.add(maybeObj);
+        let pos = interpolatedPositions.get(paddlePos.getId())!;
+        maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * paddleLengthAsProportionOfWallLength;
+        maybeObj.position.x = pos.x;
+        maybeObj.position.y = pos.y;
+        maybeObj.position.z = 0;
+        maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
+        // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
+        // excessively interserct the paddle.
+        maybeObj.translateY(halfPaddleHeight);
+        maybeObj.visible = true;
+        // TODO if this paddle is ours, set our camera on it.
       }
-      let pos = interpolatedPositions.get(paddlePos.getId())!;
-      maybeObj.position.x = pos.x;
-      maybeObj.position.y = pos.y;
-      maybeObj.position.z = 0;
-      maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
-      // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
-      // excessively interserct the paddle.
-      maybeObj.translateY(halfPaddleHeight);
-      maybeObj.visible = true;
-      // TODO if this paddle is ours, set our camera on it.
     }
 
     for (let ball of this.rendererBalls.values()) {

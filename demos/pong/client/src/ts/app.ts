@@ -6,6 +6,7 @@ require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js'
 import * as lk from 'laniakea-client';
 import {
   BallMovementSystem,
+  ButtonState,
   EntityScheduledDeletionProcessor,
   GameButtons,
   GameButtonsInput,
@@ -56,7 +57,33 @@ let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: 
   return undefined;
 });
 
-let renderingSystem = new RenderingSystemImpl(document.getElementById('scene')!);
+let sceneElement = document.getElementById('scene')!;
+
+// Caution: this touch handling is super scrappy
+function handleTouches(ev: TouchEvent) {
+  let touch = ev.touches[0];
+  let buttonsInput = clientEngine.getCurrentContinuousInput(GameButtonsInput)!;
+  if (touch === undefined) {
+    for (let button of buttonsInput.buttonStates.keys()) {
+      buttonsInput.buttonStates.set(button, ButtonState.UP);
+    }
+    return;
+  }
+  if (touch.clientX < sceneElement.clientWidth / 2) {
+    buttonsInput.buttonStates.set(GameButtons.LEFT, ButtonState.DOWN);
+    buttonsInput.buttonStates.set(GameButtons.RIGHT, ButtonState.UP);
+  } else {
+    buttonsInput.buttonStates.set(GameButtons.LEFT, ButtonState.UP);
+    buttonsInput.buttonStates.set(GameButtons.RIGHT, ButtonState.DOWN);
+  }
+}
+
+sceneElement.addEventListener('touchstart', handleTouches, false);
+sceneElement.addEventListener('touchend', handleTouches, false);
+sceneElement.addEventListener('touchcancel', handleTouches, false);
+sceneElement.addEventListener('touchmove', handleTouches, false);
+
+let renderingSystem = new RenderingSystemImpl(sceneElement);
 clientEngine.setRenderingSystem(renderingSystem);
 
 clientEngine.start();
