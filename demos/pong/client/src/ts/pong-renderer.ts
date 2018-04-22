@@ -31,7 +31,7 @@ class ThreeRenderer implements lk.RenderingSystem {
   private paddleGeometry = new THREE.BoxBufferGeometry(1, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
   private rendererPaddles = new Map<lk.ComponentId, THREE.Mesh>();
 
-  private ballGeometry = new THREE.CubeGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
+  private ballGeometry = new THREE.BoxBufferGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
   private ballMaterial = new THREE.MeshLambertMaterial( { color: 0x080808 } );
   private rendererBalls = new Map<lk.EntityId, THREE.Mesh>();
 
