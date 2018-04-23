@@ -1,5 +1,9 @@
+- [ ] Strategy for pong AI:
+      Find nearest ball with net velocity in direction of ai, intersect ball velocity with base line,
+      move in direction of intersect. If no balls match, move to centre.
+- [ ] Add paddle acceleration so that shorter movement taps produce less movement.
 - [ ] Add leading underscores to private members (for JavaScript consumers' sake).
-- [ ] Make Component wrapper class more like Entity wrapper class, the wrapper should not be our storage mechanism. Reduces replication size.
+- [ ] Make Component wrapper class more like Entity wrapper class, the wrapper should not be our wire format, and possibly not our storage format. Reduces replication size.
 - [ ] MTU/bandwidth aware replication (currently sends all state every frame).
 - [ ] Use inter-frame times to send more state sync packets. This ties in with above.
 - [ ] Automatic reconnection (as our connection is over UDP this is more about flushing and re-syncing simulation).
