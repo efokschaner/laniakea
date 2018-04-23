@@ -55,6 +55,8 @@ function periodicCallback(callback: () => void, periodMS: number, cosmeticName: 
 
 export interface ClientEngineOptions {
   simFPS: number;
+  // TODO drive this value from server
+  globalSimulationRateMultiplier: number;
   secondsOfSimulationFramesToRetain: number;
 }
 
@@ -64,12 +66,15 @@ export interface ClientEngineOptions {
 export class ClientEngine {
   public static defaultOptions: ClientEngineOptions = {
     simFPS: 30,
+    globalSimulationRateMultiplier: 1.0,
     secondsOfSimulationFramesToRetain: 2,
   };
   public options: ClientEngineOptions;
 
   constructor(options: Partial<ClientEngineOptions>) {
     this.options = Object.assign({}, ClientEngine.defaultOptions, options);
+    this.networkClient = new NetworkClient();
+    this.serverTimeEstimator = new ServerTimeEstimator(this.networkClient, this.options.globalSimulationRateMultiplier);
     this.clientSimulation = new ClientSimulation(
       this.options.secondsOfSimulationFramesToRetain,
       this.options.simFPS,
@@ -133,8 +138,8 @@ export class ClientEngine {
   // TODO make private
   public readonly engine: Engine = createEngine();
 
-  private networkClient = new NetworkClient();
-  private serverTimeEstimator = new ServerTimeEstimator(this.networkClient);
+  private networkClient: NetworkClient;
+  private serverTimeEstimator: ServerTimeEstimator;
   private clientSimulation: ClientSimulation;
   private currentInputFrame?: InputFrame;
   private renderingSystem?: RenderingSystem;

@@ -18,7 +18,7 @@ interface TimeSyncSample {
  * Any smoothing, such as that needed to avoid time going backwards etc. should be applied at a higher level.
  */
 export class ServerTimeEstimator {
-  constructor(private networkClient: NetworkClient) {
+  constructor(private networkClient: NetworkClient, private globalSimulationRateMultiplier: number) {
     networkClient.registerPacketHandler(S2C_TimeSyncResponsePacket, (response) => this.onTimeSyncResponse(response));
   }
 
@@ -61,7 +61,7 @@ export class ServerTimeEstimator {
   }
 
   private getPresentTimeS() {
-    return present() / 1000;
+    return this.globalSimulationRateMultiplier * present() / 1000;
   }
 
   private onTimeSyncResponse(response: S2C_TimeSyncResponsePacket) {

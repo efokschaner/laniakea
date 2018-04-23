@@ -25,6 +25,7 @@ export interface PlayerInfo {
 
 export interface ServerEngineOptions {
   simFPS: number;
+  globalSimulationRateMultiplier: number;
 }
 
 export class ServerEngine {
@@ -32,6 +33,8 @@ export class ServerEngine {
 
   public static defaultOptions: ServerEngineOptions = {
     simFPS: 30,
+    // TODO network this value and make the client handle it changing between frames.
+    globalSimulationRateMultiplier: 1.0,
   };
   public options: ServerEngineOptions;
   public onPlayerConnected: tsEvents.BaseEvent<PlayerId> = new tsEvents.QueuedEvent<PlayerId>();
@@ -83,11 +86,11 @@ export class ServerEngine {
    * Not quantised to the frame timestamps, see frame time for that value.
    */
   public getSimulationTimeS() {
-    return (present() / 1000) + this.presentTimeToSimulationTimeDeltaS;
+    return (this.options.globalSimulationRateMultiplier * present() / 1000) + this.presentTimeToSimulationTimeDeltaS;
   }
 
   public start() {
-    this.presentTimeToSimulationTimeDeltaS = - (present() / 1000);
+    this.presentTimeToSimulationTimeDeltaS = - this.getSimulationTimeS();
     this.currentFrame.simulationTimeS = this.getSimulationTimeS();
     this.updateLoop();
   }
