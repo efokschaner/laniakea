@@ -197,38 +197,36 @@ class ThreeRenderer implements lk.RenderingSystem {
       this.camera.quaternion.set(0, 0, 0, 1);
     }
 
-    // Don't add paddles unless we can tell which is ours.
-    if (ownPlayerInfo !== undefined) {
-      let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
-      for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
-        let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
-        let maybeObj = this.rendererPaddles.get(paddle.getId());
-        if (maybeObj === undefined) {
-          if (paddleIsOurs) {
-            maybeObj = new THREE.Mesh(this.paddleGeometry, this.allyPaddleMaterial);
-          } else {
-            maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
-          }
-          maybeObj.castShadow = true;
-          this.rendererPaddles.set(paddle.getId(), maybeObj);
-          this.scene.add(maybeObj);
-        }
-        let pos = interpolatedPositions.get(paddlePos.getId())!;
-        maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * paddleLengthAsProportionOfWallLength;
-        maybeObj.position.x = pos.x;
-        maybeObj.position.y = pos.y;
-        maybeObj.position.z = 0;
-        maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
-        // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
-        // excessively interserct the paddle.
-        maybeObj.translateY(halfPaddleHeight);
-        maybeObj.visible = true;
 
-        if(paddleIsOurs && !cameraOrientationIsFixed) {
-          this.camera.quaternion.copy(paddleOrientation.getData());
-          // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
-          // rotate by another 180 degrees to put it at the bottom
-          this.camera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
+    let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
+    for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
+      let maybeObj = this.rendererPaddles.get(paddle.getId());
+      if (maybeObj === undefined) {
+        maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
+        maybeObj.castShadow = true;
+        this.rendererPaddles.set(paddle.getId(), maybeObj);
+        this.scene.add(maybeObj);
+      }
+      let pos = interpolatedPositions.get(paddlePos.getId())!;
+      maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * paddleLengthAsProportionOfWallLength;
+      maybeObj.position.x = pos.x;
+      maybeObj.position.y = pos.y;
+      maybeObj.position.z = 0;
+      maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
+      // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
+      // excessively interserct the paddle.
+      maybeObj.translateY(halfPaddleHeight);
+      maybeObj.visible = true;
+      if (ownPlayerInfo !== undefined) {
+        let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
+        if(paddleIsOurs) {
+          maybeObj.material = this.allyPaddleMaterial;
+          if(!cameraOrientationIsFixed) {
+            this.camera.quaternion.copy(paddleOrientation.getData());
+            // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
+            // rotate by another 180 degrees to put it at the bottom
+            this.camera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
+          }
         }
       }
     }
