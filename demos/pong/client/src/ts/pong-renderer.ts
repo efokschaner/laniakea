@@ -23,6 +23,13 @@ class ThreeRenderer implements lk.RenderingSystem {
 
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+  private currentCameraLerp? : {
+    startOrientation: THREE.Quaternion,
+    startTimestampMS: number,
+    endOrientation: THREE.Quaternion,
+    endTimestampMS: number} = undefined;
+  private cameraIsLockedToPlayer = false;
+
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
@@ -88,13 +95,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
-  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
-    // TODO, on the client we need to handle "entity deletion" so we release resources
-    // For the renderer this is not on the frame its deleted but when none of our frame history contains
-    // any live copies of the entity any more.
-    // For now we just set the visibility of the component at the moment we're rendering which is still
-    // needed but doesnt handle permament cleanup.
-
+  private updateCamera(domHighResTimestampMS: number) {
     this.rendererSizeUpdater.update();
 
     // Set camera distance to ensure scene is contained.
@@ -110,6 +111,38 @@ class ThreeRenderer implements lk.RenderingSystem {
     if (this.cameraController !== undefined) {
       this.cameraController.update();
     }
+    if (this.currentCameraLerp !== undefined) {
+      let lerpFactor = THREE.Math.clamp((domHighResTimestampMS - this.currentCameraLerp.startTimestampMS) / (this.currentCameraLerp.endTimestampMS - this.currentCameraLerp.startTimestampMS), 0, 1);
+      this.camera.quaternion.copy(this.currentCameraLerp.startOrientation).slerp(this.currentCameraLerp.endOrientation, lerpFactor);
+      if(lerpFactor >= 1) {
+        this.currentCameraLerp = undefined;
+      }
+    }
+  }
+
+  private startCameraLerp(currentDomHighResTimestampMS: number, targetOrientation: THREE.Quaternion, durationMS: number) {
+    // If we're already in that orientation do nothing.
+    if(this.camera.quaternion.equals(targetOrientation)) {
+      return;
+    }
+    // If we're already lerping to that orientation do nothing.
+    if(this.currentCameraLerp !== undefined && this.currentCameraLerp.endOrientation.equals(targetOrientation)) {
+      return;
+    }
+    this.currentCameraLerp = {
+      startOrientation: this.camera.quaternion.clone(),
+      startTimestampMS: currentDomHighResTimestampMS,
+      endOrientation: targetOrientation,
+      endTimestampMS: currentDomHighResTimestampMS + durationMS
+    };
+  }
+
+  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+    // TODO, on the client we need to handle "entity deletion" so we release resources
+    // For the renderer this is not on the frame its deleted but when none of our frame history contains
+    // any live copies of the entity any more.
+    // For now we just set the visibility of the component at the moment we're rendering which is still
+    // needed but doesnt handle permament cleanup.
 
     let simTimeS = simulation.getCurrentSimulationTimeS();
     if (simTimeS === undefined) {
@@ -138,6 +171,22 @@ class ThreeRenderer implements lk.RenderingSystem {
         interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);
       }
       interpolatedPositions.set(currentFramePos.getId(), interpolatedPosition);
+    }
+    // Now do the same for orientations.
+    // Note we use lerp not slerp as we expect sub-frame quaternion differences to be small / less in need of a more expensive slerp.
+    let interpolatedOrientations = new Map<lk.ComponentId, Orientation>();
+    let scratchOrientation = new THREE.Vector4();
+    let scratchNextFrameOrientation = new THREE.Vector4();
+    for (let currentFrameOrientation of nearestFrames.current.state.getComponents(Orientation)) {
+      let currentData = currentFrameOrientation.getData();
+      scratchOrientation.set(currentData.x, currentData.y, currentData.z, currentData.w);
+      let maybeNextFrameOrientation = nearestFrames.next.state.getComponent(Orientation, currentFrameOrientation.getId());
+      if (maybeNextFrameOrientation !== undefined) {
+        let nextFrameOrientation = maybeNextFrameOrientation.getData();
+        scratchNextFrameOrientation.set(nextFrameOrientation.x, nextFrameOrientation.y, nextFrameOrientation.z, nextFrameOrientation.w);
+        scratchOrientation.lerp(scratchNextFrameOrientation, midFrameLerpFactor);
+      }
+      interpolatedOrientations.set(currentFrameOrientation.getId(), new Orientation(scratchOrientation.x, scratchOrientation.y, scratchOrientation.z, scratchOrientation.w));
     }
 
     let state = nearestFrames.current.state;
@@ -191,15 +240,14 @@ class ThreeRenderer implements lk.RenderingSystem {
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let numPlayersAlive = alivePlayers.length;
-    let cameraOrientationIsFixed = false;
     if(numPlayersAlive < 3) {
-      cameraOrientationIsFixed = true;
-      this.camera.quaternion.set(0, 0, 0, 1);
+      this.cameraIsLockedToPlayer = false;
+      this.startCameraLerp(domHighResTimestampMS, new THREE.Quaternion(0, 0, 0, 1), 2000);
     }
-
 
     let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
     for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
+      let paddleOrientationData = interpolatedOrientations.get(paddleOrientation.getId())!;
       let maybeObj = this.rendererPaddles.get(paddle.getId());
       if (maybeObj === undefined) {
         maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
@@ -212,7 +260,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeObj.position.x = pos.x;
       maybeObj.position.y = pos.y;
       maybeObj.position.z = 0;
-      maybeObj.setRotationFromQuaternion(paddleOrientation.getData());
+      maybeObj.setRotationFromQuaternion(paddleOrientationData);
       // Translate by half the height of the paddle so that the ball hitting the edge of the space does not
       // excessively interserct the paddle.
       maybeObj.translateY(halfPaddleHeight);
@@ -221,11 +269,18 @@ class ThreeRenderer implements lk.RenderingSystem {
         let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
         if(paddleIsOurs) {
           maybeObj.material = this.allyPaddleMaterial;
-          if(!cameraOrientationIsFixed) {
-            this.camera.quaternion.copy(paddleOrientation.getData());
+          if(numPlayersAlive >= 3) {
+            let targetOrientation = paddleOrientationData.clone();
             // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
             // rotate by another 180 degrees to put it at the bottom
-            this.camera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
+            targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
+            if(!this.cameraIsLockedToPlayer) {
+              this.startCameraLerp(domHighResTimestampMS, targetOrientation, 1000);
+            }
+            if(this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
+              this.cameraIsLockedToPlayer = true;
+              this.camera.quaternion.copy(targetOrientation);
+            }
           }
         }
       }
@@ -248,6 +303,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeBall.visible = true;
     }
 
+    this.updateCamera(domHighResTimestampMS);
     this.renderer.render(this.scene, this.camera);
   }
 }
