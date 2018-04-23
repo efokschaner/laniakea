@@ -215,8 +215,9 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.rendererWalls.set(vertex.getId(), maybeLine);
         this.scene.add(maybeLine);
       }
-      let wallStart = new THREE.Vector3(vertexPos.x, vertexPos.y, 0);
-      let wallEnd = new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, 0);
+      let floorZ = this.floorMesh.position.z;
+      let wallStart = new THREE.Vector3(vertexPos.x, vertexPos.y, floorZ);
+      let wallEnd = new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, floorZ);
       wallGeometry.vertices.push(wallStart);
       wallGeometry.vertices.push(wallEnd);
       maybeLine.geometry = wallGeometry;
