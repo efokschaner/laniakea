@@ -37,7 +37,7 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
-function getUserId () {
+function getUserId() {
   let prior = window.localStorage.getItem('user_id');
   if (prior) {
     return prior;

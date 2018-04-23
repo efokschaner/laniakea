@@ -23,7 +23,7 @@ class ThreeRenderer implements lk.RenderingSystem {
 
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-  private currentCameraLerp? : {
+  private currentCameraLerp?: {
     startOrientation: THREE.Quaternion,
     startTimestampMS: number,
     endOrientation: THREE.Quaternion,
@@ -112,9 +112,11 @@ class ThreeRenderer implements lk.RenderingSystem {
       this.cameraController.update();
     }
     if (this.currentCameraLerp !== undefined) {
-      let lerpFactor = THREE.Math.clamp((domHighResTimestampMS - this.currentCameraLerp.startTimestampMS) / (this.currentCameraLerp.endTimestampMS - this.currentCameraLerp.startTimestampMS), 0, 1);
+      let lerpFactor = (domHighResTimestampMS - this.currentCameraLerp.startTimestampMS) /
+                       (this.currentCameraLerp.endTimestampMS - this.currentCameraLerp.startTimestampMS);
+      let clampedLerpFactor = THREE.Math.clamp(lerpFactor, 0, 1);
       this.camera.quaternion.copy(this.currentCameraLerp.startOrientation).slerp(this.currentCameraLerp.endOrientation, lerpFactor);
-      if(lerpFactor >= 1) {
+      if (clampedLerpFactor >= 1) {
         this.currentCameraLerp = undefined;
       }
     }
@@ -122,18 +124,18 @@ class ThreeRenderer implements lk.RenderingSystem {
 
   private startCameraLerp(currentDomHighResTimestampMS: number, targetOrientation: THREE.Quaternion, durationMS: number) {
     // If we're already in that orientation do nothing.
-    if(this.camera.quaternion.equals(targetOrientation)) {
+    if (this.camera.quaternion.equals(targetOrientation)) {
       return;
     }
     // If we're already lerping to that orientation do nothing.
-    if(this.currentCameraLerp !== undefined && this.currentCameraLerp.endOrientation.equals(targetOrientation)) {
+    if (this.currentCameraLerp !== undefined && this.currentCameraLerp.endOrientation.equals(targetOrientation)) {
       return;
     }
     this.currentCameraLerp = {
       startOrientation: this.camera.quaternion.clone(),
       startTimestampMS: currentDomHighResTimestampMS,
       endOrientation: targetOrientation,
-      endTimestampMS: currentDomHighResTimestampMS + durationMS
+      endTimestampMS: currentDomHighResTimestampMS + durationMS,
     };
   }
 
@@ -186,7 +188,10 @@ class ThreeRenderer implements lk.RenderingSystem {
         scratchNextFrameOrientation.set(nextFrameOrientation.x, nextFrameOrientation.y, nextFrameOrientation.z, nextFrameOrientation.w);
         scratchOrientation.lerp(scratchNextFrameOrientation, midFrameLerpFactor);
       }
-      interpolatedOrientations.set(currentFrameOrientation.getId(), new Orientation(scratchOrientation.x, scratchOrientation.y, scratchOrientation.z, scratchOrientation.w));
+      interpolatedOrientations.set(
+        currentFrameOrientation.getId(),
+        new Orientation(scratchOrientation.x, scratchOrientation.y, scratchOrientation.z, scratchOrientation.w),
+      );
     }
 
     let state = nearestFrames.current.state;
@@ -241,7 +246,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let numPlayersAlive = alivePlayers.length;
-    if(numPlayersAlive < 3) {
+    if (numPlayersAlive < 3) {
       this.cameraIsLockedToPlayer = false;
       this.startCameraLerp(domHighResTimestampMS, new THREE.Quaternion(0, 0, 0, 1), 2000);
     }
@@ -268,17 +273,17 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeObj.visible = true;
       if (ownPlayerInfo !== undefined) {
         let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
-        if(paddleIsOurs) {
+        if (paddleIsOurs) {
           maybeObj.material = this.allyPaddleMaterial;
-          if(numPlayersAlive >= 3) {
+          if (numPlayersAlive >= 3) {
             let targetOrientation = paddleOrientationData.clone();
             // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
             // rotate by another 180 degrees to put it at the bottom
-            targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
-            if(!this.cameraIsLockedToPlayer) {
+            targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
+            if (!this.cameraIsLockedToPlayer) {
               this.startCameraLerp(domHighResTimestampMS, targetOrientation, 1000);
             }
-            if(this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
+            if (this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
               this.cameraIsLockedToPlayer = true;
               this.camera.quaternion.copy(targetOrientation);
             }

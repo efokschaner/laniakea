@@ -286,7 +286,7 @@ export function initialiseServer(serverEngine: lk.ServerEngine) {
   serverEngine.onPlayerConnected.attach((playerId) => {
     let state = serverEngine.currentFrame.state;
     let humanPlayers = Array.from(state.getComponents(HumanPlayerId));
-    if(humanPlayers.findIndex((hp) => hp.getData().playerId === playerId) !== -1) {
+    if (humanPlayers.findIndex((hp) => hp.getData().playerId === playerId) !== -1) {
       // This human is already in the game, do nothing.
       return;
     }
