@@ -210,7 +210,7 @@ export class PaddleMovementSystem implements lk.System {
     for (let paddle of state.getComponents(Paddle)) {
       let paddleData = paddle.getData();
       // TODO consider an accelerative approach
-      let maxMoveSpeed = 0.6;
+      let maxMoveSpeed = 1.0;
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
           paddleData.velocityInWallSpace = 0;
