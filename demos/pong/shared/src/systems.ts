@@ -152,7 +152,7 @@ export class BallSpawnerSystem implements lk.System {
     let hasBeenMoreThanASecondSinceLastSpawn = spawner.getData().lastBallSpawnTimeS <= simulationTimeS - 1;
     if (hasBeenMoreThanASecondSinceLastSpawn && balls.length < desiredNumBalls) {
       spawner.getData().lastBallSpawnTimeS = simulationTimeS;
-      let initialBallVelocityMagnitude = 2.5;
+      let initialBallVelocityMagnitude = 4;
       let ballPos = new Position2();
       let ballMovement = new BallMovement();
       ballMovement.velocity.x = 1;
