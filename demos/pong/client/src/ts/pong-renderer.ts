@@ -54,7 +54,6 @@ class ThreeRenderer implements lk.RenderingSystem {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene.background = new THREE.Color(this.backgroundColor);
-    this.camera.translateZ(14);
     let ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
     this.dayLight.position.set(0, 0, 2);
@@ -189,6 +188,15 @@ class ThreeRenderer implements lk.RenderingSystem {
       }
     }
 
+    let players = Array.from(state.getComponents(PlayerInfo));
+    let alivePlayers = players.filter((pi) => pi.getData().alive);
+    let numPlayersAlive = alivePlayers.length;
+    let cameraOrientationIsFixed = false;
+    if(numPlayersAlive < 3) {
+      cameraOrientationIsFixed = true;
+      this.camera.quaternion.set(0, 0, 0, 1);
+    }
+
     // Don't add paddles unless we can tell which is ours.
     if (ownPlayerInfo !== undefined) {
       let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
@@ -215,7 +223,13 @@ class ThreeRenderer implements lk.RenderingSystem {
         // excessively interserct the paddle.
         maybeObj.translateY(halfPaddleHeight);
         maybeObj.visible = true;
-        // TODO if this paddle is ours, set our camera on it.
+
+        if(paddleIsOurs && !cameraOrientationIsFixed) {
+          this.camera.quaternion.copy(paddleOrientation.getData());
+          // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
+          // rotate by another 180 degrees to put it at the bottom
+          this.camera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI));
+        }
       }
     }
 
