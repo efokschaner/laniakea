@@ -115,7 +115,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       let lerpFactor = (domHighResTimestampMS - this.currentCameraLerp.startTimestampMS) /
                        (this.currentCameraLerp.endTimestampMS - this.currentCameraLerp.startTimestampMS);
       let clampedLerpFactor = THREE.Math.clamp(lerpFactor, 0, 1);
-      this.camera.quaternion.copy(this.currentCameraLerp.startOrientation).slerp(this.currentCameraLerp.endOrientation, lerpFactor);
+      this.camera.quaternion.copy(this.currentCameraLerp.startOrientation).slerp(this.currentCameraLerp.endOrientation, clampedLerpFactor);
       if (clampedLerpFactor >= 1) {
         this.currentCameraLerp = undefined;
       }
