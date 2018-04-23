@@ -5,6 +5,7 @@ import * as lk from 'laniakea-server';
 import {
   GameButtonsInput,
   gameServerWsPort,
+  globalSimulationRateMultiplier,
   simFPS,
 } from 'lk-demo-pong-shared';
 
@@ -15,6 +16,7 @@ let serverEngine = new lk.ServerEngine(
   networkServer,
   {
     simFPS,
+    globalSimulationRateMultiplier,
   },
 );
 

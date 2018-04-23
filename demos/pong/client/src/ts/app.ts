@@ -11,6 +11,7 @@ import {
   GameButtons,
   GameButtonsInput,
   getGameServerWsUrl,
+  globalSimulationRateMultiplier,
   InputHandlerSystem,
   Lerp2DProcessor,
   PaddleMovementSystem,
@@ -46,7 +47,7 @@ function getUserId () {
   return newId;
 }
 
-let clientEngine = new lk.ClientEngine({simFPS});
+let clientEngine = new lk.ClientEngine({simFPS, globalSimulationRateMultiplier});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine.engine);
