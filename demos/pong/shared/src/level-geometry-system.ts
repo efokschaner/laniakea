@@ -4,6 +4,7 @@ import * as lk from 'laniakea-shared';
 
 import {
   EntityScheduledDeletion,
+  Final2Players,
   Lerp2D,
   Orientation,
   Paddle,
@@ -11,7 +12,6 @@ import {
   Position2,
   SerializableVector2,
   WallVertex,
-  Final2Players,
 } from './components';
 
 // Because JS's % operator returns negative values
@@ -111,14 +111,14 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // unneccessarily when below 3 players
   let final2Players = getOrCreateFinal2Players(state);
   let final2Data = final2Players.getData();
-  if(numPlayersAlive == 1) {
+  if (numPlayersAlive === 1) {
     let newLastPlayerIndex = alivePlayers[0].getData().playerIndex;
-    if(final2Data.lastPlayerIndex !== newLastPlayerIndex) {
+    if (final2Data.lastPlayerIndex !== newLastPlayerIndex) {
       final2Data.secondLastPlayerIndex = final2Data.lastPlayerIndex;
       final2Data.lastPlayerIndex = newLastPlayerIndex;
     }
   }
-  if(numPlayersAlive == 2) {
+  if (numPlayersAlive === 2) {
     final2Data.lastPlayerIndex = alivePlayers[0].getData().playerIndex;
     final2Data.secondLastPlayerIndex = alivePlayers[1].getData().playerIndex;
   }
@@ -192,9 +192,9 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
 
   // Remove scheduled deletion of vertices that are alive but scheduled for deletion.
   for (let existingVertex of existingVertices) {
-    if(alivePersistentIndicesSet.has(existingVertex.wallVertex.getData().persistentIndex)) {
+    if (alivePersistentIndicesSet.has(existingVertex.wallVertex.getData().persistentIndex)) {
       let maybeScheduledDeletion = state.getComponentOfEntity(EntityScheduledDeletion, existingVertex.wallVertex.getOwnerId());
-      if(maybeScheduledDeletion !== undefined) {
+      if (maybeScheduledDeletion !== undefined) {
         maybeScheduledDeletion.delete();
       }
     }
