@@ -5,6 +5,7 @@ import * as lk from 'laniakea-shared';
 import {
   BallMovement,
   BallSpawner,
+  BotSpawner,
   EntityScheduledDeletion,
   HumanPlayerId,
   Lerp2D,
@@ -14,11 +15,9 @@ import {
   PlayerInfo,
   Position2,
   WallVertex,
-  BotSpawner,
 } from './components';
 
 import { ButtonState, GameButtons, GameButtonsInput } from './inputs';
-import { Vector2 } from 'three';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,
@@ -269,7 +268,7 @@ export class PaddleMovementSystem implements lk.System {
       let maxMoveSpeed = 1.0;
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
-          if(paddleData.velocityInWallSpace > 0) {
+          if (paddleData.velocityInWallSpace > 0) {
             paddleData.velocityInWallSpace -= paddleAcceleration * timeDeltaS;
             paddleData.velocityInWallSpace = Math.max(paddleData.velocityInWallSpace, 0);
           } else if (paddleData.velocityInWallSpace < 0) {
@@ -334,22 +333,22 @@ export class BotLogic implements lk.System {
       let endVert = vertsToConsiderSorted[endIndex];
       persistentIndexToWallData.set(
         startVert[0].getData().persistentIndex,
-        wallPointsToWallData(startVert[1].getData(), endVert[1].getData())
+        wallPointsToWallData(startVert[1].getData(), endVert[1].getData()),
       );
     }
 
     let balls = Array.from(state.getAspect(BallMovement, Position2));
 
     // All players with no human player ID are implicitly bots.
-    for(let playerInfo of state.getComponents(PlayerInfo)) {
+    for (let playerInfo of state.getComponents(PlayerInfo)) {
       let playerInfoData = playerInfo.getData();
-      if(!playerInfoData.alive) {
+      if (!playerInfoData.alive) {
         // Dead, ignore
         continue;
       }
       let maybeHumanId = state.getComponentOfEntity(HumanPlayerId, playerInfo.getOwnerId());
-      if(maybeHumanId !== undefined) {
-        //Not a bot
+      if (maybeHumanId !== undefined) {
+        // Not a bot
         continue;
       }
       let paddle = playerIndexToPaddleMap.get(playerInfoData.playerIndex)!;
@@ -362,33 +361,33 @@ export class BotLogic implements lk.System {
       let desiredWallPosInWallSpace = 0.5;
       let wallLine = new THREE.Line3(
         new THREE.Vector3(ourWall.wallPoint.x, ourWall.wallPoint.y),
-        new THREE.Vector3(ourWall.wallEndPoint.x, ourWall.wallEndPoint.y)
+        new THREE.Vector3(ourWall.wallEndPoint.x, ourWall.wallEndPoint.y),
       );
       let nearestBallDistance: number = Infinity;
-      for(let ballComponents of balls) {
+      for (let ballComponents of balls) {
         let ballPosition = ballComponents[1].getData();
         let ballVelocity = ballComponents[0].getData().velocity;
         let ballPos3D = new THREE.Vector3(ballPosition.x, ballPosition.y);
         let closestPointOnWall = wallLine.closestPointToPoint(
           new THREE.Vector3(ballPosition.x, ballPosition.y),
           true,
-          new THREE.Vector3()
+          new THREE.Vector3(),
         );
         // is ball moving in direction of nearest point?
         let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
-        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0
-        if(!isMovingTowardsWall) {
+        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
+        if (!isMovingTowardsWall) {
           // Ignore this ball
           continue;
         }
         let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
-        if(nearestBallDistance > distanceToWall) {
+        if (nearestBallDistance > distanceToWall) {
           nearestBallDistance = distanceToWall;
           desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(ballPos3D, true);
         }
       }
       let deadZoneProportion = paddleLengthAsProportionOfWallLength / 4;
-      if(paddle.positionInWallSpace > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
+      if (paddle.positionInWallSpace > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
         paddle.moveIntent = MoveIntent.NEGATIVE;
       } else if (paddle.positionInWallSpace < (1 - deadZoneProportion) * desiredWallPosInWallSpace) {
         paddle.moveIntent = MoveIntent.POSITIVE;
