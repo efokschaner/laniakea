@@ -353,10 +353,8 @@ export class BotLogic implements lk.System {
       }
       let paddle = playerIndexToPaddleMap.get(playerInfoData.playerIndex)!;
       let ourWall = persistentIndexToWallData.get(paddle.wallPersistentId)!;
-      let centerOfWall = ourWall.wallPoint.clone().addScaledVector(ourWall.wallUnitVec, ourWall.wallLength / 2);
       // Find nearest ball with net velocity in direction of our wall
-      // Better approach would be to intersect ball velocity with base line
-      // For now we just find nearest point on wall and use that as target point.
+      // Intersect ball velocity with wall line, move to that point.
       // If no balls match, move to centre.
       let desiredWallPosInWallSpace = 0.5;
       let wallLine = new THREE.Line3(
@@ -383,7 +381,13 @@ export class BotLogic implements lk.System {
         let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
         if (nearestBallDistance > distanceToWall) {
           nearestBallDistance = distanceToWall;
-          desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(ballPos3D, true);
+          let normalizedBallVelocity = ballVelocity.clone().normalize();
+          let ballRay = new THREE.Ray(
+            new THREE.Vector3(ballPosition.x, ballPosition.y),
+            new THREE.Vector3(normalizedBallVelocity.x, normalizedBallVelocity.y));
+          let intersectOfWallWithBall = new THREE.Vector3();
+          ballRay.distanceSqToSegment(wallLine.start, wallLine.end, intersectOfWallWithBall);
+          desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(intersectOfWallWithBall, true);
         }
       }
       let deadZoneProportion = paddleLengthAsProportionOfWallLength / 4;
