@@ -3,6 +3,8 @@ import * as lk from 'laniakea-server';
 import {
   BallMovementSystem,
   BallSpawnerSystem,
+  BotLogic,
+  BotSpawnerSystem,
   EntityScheduledDeletionProcessor,
   HumanPlayerId,
   InputHandlerSystem,
@@ -12,8 +14,6 @@ import {
   PaddlePositionSyncSystem,
   PlayerInfo,
   registerComponents,
-  BotLogic,
-  BotSpawnerSystem,
 } from 'lk-demo-pong-shared';
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
@@ -29,7 +29,6 @@ export function initialiseServer(serverEngine: lk.ServerEngine) {
   serverEngine.engine.addSystem(new PaddleMovementSystem());
   serverEngine.engine.addSystem(new PaddlePositionSyncSystem());
   serverEngine.engine.addSystem(new BallMovementSystem(true));
-
 
   serverEngine.onPlayerConnected.attach((playerId) => {
     let state = serverEngine.currentFrame.state;

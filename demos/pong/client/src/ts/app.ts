@@ -59,7 +59,6 @@ clientEngine.engine.addSystem(new PaddleMovementSystem());
 clientEngine.engine.addSystem(new PaddlePositionSyncSystem());
 clientEngine.engine.addSystem(new BallMovementSystem(false));
 
-
 // tslint:disable-next-line:no-unused-variable
 let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
   switch (key) {
