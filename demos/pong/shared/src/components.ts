@@ -127,11 +127,11 @@ export class BallSpawner implements lk.Serializable {
 }
 
 export class Final2Players implements lk.Serializable {
-  public lastPlayerIndex = -1;
-  public secondLastPlayerIndex = -1;
+  public finalPlayerIndexA = -1;
+  public finalPlayerIndexB = -1;
   public serialize(stream: lk.SerializationStream): void {
-    stream.serializeInt32(this, 'lastPlayerIndex');
-    stream.serializeInt32(this, 'secondLastPlayerIndex');
+    stream.serializeInt32(this, 'finalPlayerIndexA');
+    stream.serializeInt32(this, 'finalPlayerIndexB');
   }
 }
 

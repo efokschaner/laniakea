@@ -111,16 +111,9 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // unneccessarily when below 3 players
   let final2Players = getOrCreateFinal2Players(state);
   let final2Data = final2Players.getData();
-  if (numPlayersAlive === 1) {
-    let newLastPlayerIndex = alivePlayers[0].getData().playerIndex;
-    if (final2Data.lastPlayerIndex !== newLastPlayerIndex) {
-      final2Data.secondLastPlayerIndex = final2Data.lastPlayerIndex;
-      final2Data.lastPlayerIndex = newLastPlayerIndex;
-    }
-  }
   if (numPlayersAlive === 2) {
-    final2Data.lastPlayerIndex = alivePlayers[0].getData().playerIndex;
-    final2Data.secondLastPlayerIndex = alivePlayers[1].getData().playerIndex;
+    final2Data.finalPlayerIndexA = alivePlayers[0].getData().playerIndex;
+    final2Data.finalPlayerIndexB = alivePlayers[1].getData().playerIndex;
   }
 
   // This is a multi phase process where we:
@@ -139,22 +132,26 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
 
   // Insert 2 walls that are either the final 2 players or ready for the first 2
   // And position the playerless sidewalls
-  let lastPlayerIndex = final2Data.lastPlayerIndex !== -1 ? final2Data.lastPlayerIndex : 0;
-  let lastPlayerPersistentIndex = playerIndexToPersistentVertexIndex(lastPlayerIndex);
-  let targetIndexForWall1 = persistentIndices.indexOf(lastPlayerPersistentIndex) + 1;
-  persistentIndices.splice(targetIndexForWall1, 0, 1);
+  let playerIndexA = final2Data.finalPlayerIndexA !== -1 ? final2Data.finalPlayerIndexA : 0;
+  let playerPersistentIndexA = playerIndexToPersistentVertexIndex(playerIndexA);
+  let playerIndexB = final2Data.finalPlayerIndexB !== -1 ? final2Data.finalPlayerIndexB : 1;
+  let playerPersistentIndexB = playerIndexToPersistentVertexIndex(playerIndexB);
 
-  let secondLastPlayerIndex = final2Data.secondLastPlayerIndex !== -1 ? final2Data.secondLastPlayerIndex : 1;
-  let secondLastPlayerPersistentIndex = playerIndexToPersistentVertexIndex(secondLastPlayerIndex);
-  let targetIndexForWall3 = persistentIndices.indexOf(secondLastPlayerPersistentIndex) + 1;
+  let indexInPersistentListOfA = persistentIndices.indexOf(playerPersistentIndexA);
+  let indexInPersistentListOfB = persistentIndices.indexOf(playerPersistentIndexB);
+
+  // Always put wall1 at the lower of the indices versus wall 3 to prevent reordering
+  let targetIndexForWall1 = Math.min(indexInPersistentListOfA, indexInPersistentListOfB) + 1;
+  persistentIndices.splice(targetIndexForWall1, 0, 1);
+  let targetIndexForWall3 = Math.max(indexInPersistentListOfA, indexInPersistentListOfB) + 2; // + 2 because we just inserted wall 1 at the lower index.
   persistentIndices.splice(targetIndexForWall3, 0, 3);
 
   if (numPlayersAlive <= 2) {
     // Guarantee these 4 walls
     alivePersistentIndicesSet.add(1);
     alivePersistentIndicesSet.add(3);
-    alivePersistentIndicesSet.add(lastPlayerPersistentIndex);
-    alivePersistentIndicesSet.add(secondLastPlayerPersistentIndex);
+    alivePersistentIndicesSet.add(playerPersistentIndexA);
+    alivePersistentIndicesSet.add(playerPersistentIndexB);
   }
 
   // Remove indices of dead vertices, building interpolation targets as we go.
