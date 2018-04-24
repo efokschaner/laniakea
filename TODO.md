@@ -1,3 +1,6 @@
+- [ ] Fix component additions to replace / delete / generally handle a component already existing.
+- [ ] Finish up implementation of entity and component deletion so we can release resources and
+      make state packets stop growing indefinitely.
 - [ ] Add leading underscores to private members (for JavaScript consumers' sake).
 - [ ] Make Component wrapper class more like Entity wrapper class, the wrapper should not be our wire format, and possibly not our storage format. Reduces replication size.
 - [ ] MTU/bandwidth aware replication (currently sends all state every frame).
