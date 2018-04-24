@@ -259,12 +259,11 @@ export class InputHandlerSystem implements lk.System {
 }
 
 export let paddleLengthAsProportionOfWallLength = 0.1;
-
+let paddleAcceleration = 5.0;
 export class PaddleMovementSystem implements lk.System {
   public Step({state, timeDeltaS}: lk.StepParams): void {
     for (let paddle of state.getComponents(Paddle)) {
       let paddleData = paddle.getData();
-      let paddleAcceleration = 5.0;
       let maxMoveSpeed = 1.0;
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
@@ -390,10 +389,17 @@ export class BotLogic implements lk.System {
           desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(intersectOfWallWithBall, true);
         }
       }
+      // Bot's prediction of where it will be if it stops moving now
+      let predictedPositionOfRest = paddle.positionInWallSpace;
+      if (paddle.velocityInWallSpace !== 0) {
+        let paddleAccelerationIfWeStopMoving = - Math.sign(paddle.velocityInWallSpace) * paddleAcceleration;
+        let timeToRest = - paddle.velocityInWallSpace / paddleAccelerationIfWeStopMoving;
+        predictedPositionOfRest += paddle.velocityInWallSpace * timeToRest + 0.5 * paddleAccelerationIfWeStopMoving * (timeToRest ** 2);
+      }
       let deadZoneProportion = paddleLengthAsProportionOfWallLength / 4;
-      if (paddle.positionInWallSpace > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
+      if (predictedPositionOfRest > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
         paddle.moveIntent = MoveIntent.NEGATIVE;
-      } else if (paddle.positionInWallSpace < (1 - deadZoneProportion) * desiredWallPosInWallSpace) {
+      } else if (predictedPositionOfRest < (1 - deadZoneProportion) * desiredWallPosInWallSpace) {
         paddle.moveIntent = MoveIntent.POSITIVE;
       } else {
         paddle.moveIntent = MoveIntent.NONE;
