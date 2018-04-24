@@ -1,5 +1,6 @@
 export * from './components';
 export * from './inputs';
+export * from './level-geometry-system';
 export * from './systems';
 
 export const gameServerWsPort = 9876;

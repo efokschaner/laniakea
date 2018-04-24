@@ -126,6 +126,22 @@ export class BallSpawner implements lk.Serializable {
   }
 }
 
+export class Final2Players implements lk.Serializable {
+  public lastPlayerIndex = -1;
+  public secondLastPlayerIndex = -1;
+  public serialize(stream: lk.SerializationStream): void {
+    stream.serializeInt32(this, 'lastPlayerIndex');
+    stream.serializeInt32(this, 'secondLastPlayerIndex');
+  }
+}
+
+export class BotSpawner implements lk.Serializable {
+  public lastBotSpawnTimeS = 0;
+  public serialize(stream: lk.SerializationStream): void {
+    stream.serializeFloat64(this, 'lastBotSpawnTimeS');
+  }
+}
+
 export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(Position2, 'Position2' as lk.ComponentKind);
   engine.registerComponentType(Orientation, 'Orientation' as lk.ComponentKind);
@@ -137,4 +153,6 @@ export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(EntityScheduledDeletion, 'EntityScheduledDeletion' as lk.ComponentKind);
   engine.registerComponentType(BallMovement, 'BallMovement' as lk.ComponentKind);
   engine.registerComponentType(BallSpawner, 'BallSpawner' as lk.ComponentKind);
+  engine.registerComponentType(Final2Players, 'Final2Players' as lk.ComponentKind);
+  engine.registerComponentType(BotSpawner, 'BotSpawner' as lk.ComponentKind);
 }

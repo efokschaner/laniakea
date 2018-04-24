@@ -56,8 +56,9 @@ clientEngine.engine.addSystem(new InputHandlerSystem());
 clientEngine.engine.addSystem(new Lerp2DProcessor());
 clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
 clientEngine.engine.addSystem(new PaddleMovementSystem());
-clientEngine.engine.addSystem(new BallMovementSystem());
 clientEngine.engine.addSystem(new PaddlePositionSyncSystem());
+clientEngine.engine.addSystem(new BallMovementSystem(false));
+
 
 // tslint:disable-next-line:no-unused-variable
 let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {

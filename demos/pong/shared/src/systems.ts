@@ -14,9 +14,11 @@ import {
   PlayerInfo,
   Position2,
   WallVertex,
+  BotSpawner,
 } from './components';
 
 import { ButtonState, GameButtons, GameButtonsInput } from './inputs';
+import { Vector2 } from 'three';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,
@@ -60,42 +62,71 @@ export class EntityScheduledDeletionProcessor implements lk.System {
 // Here we will pre-calculate (y2−y1) and (x2−x1), i.e vertA - vertB on the wall
 interface WallData {
   wallPoint: THREE.Vector2;
+  wallEndPoint: THREE.Vector2;
   wallUnitVec: THREE.Vector2;
+  wallLength: number;
 }
+
 function wallPointsToWallData(pointA: THREE.Vector2, pointB: THREE.Vector2): WallData {
-  let wallUnitVec = pointB.clone().sub(pointA).normalize();
+  let wallVec = pointB.clone().sub(pointA);
+  let wallLength = wallVec.length();
+  let wallUnitVec = wallVec.normalize();
   return {
     wallPoint: pointA,
+    wallEndPoint: pointB,
     wallUnitVec,
+    wallLength,
   };
 }
+
 function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vector2) {
   let wallPointToPoint = point.clone().sub(wallData.wallPoint);
   return (wallPointToPoint.x * wallData.wallUnitVec.y) - (wallPointToPoint.y * wallData.wallUnitVec.x);
 }
 
 export class BallMovementSystem implements lk.System {
+
+  // I'm not sure if allowing systems to know "isServer" would be considered "good practice",
+  // but this approach doesn't impact the architecture so lets see how it works out here.
+  constructor(private isServer: boolean) {
+  }
+
   public Step({timeDeltaS, state, previousFrameState}: lk.StepParams): void {
     // For calculating collisions we want all wall vertices that existed on previous frame and this frame.
-    let vertsToConsider = new Array<{prev: lk.Component<Position2>, next: lk.Component<Position2>, visualIndex: number}>();
+    let vertsToConsider = new Array<{prev: lk.Component<Position2>, next: lk.Component<Position2>, visualIndex: number, persistentIndex: number}>();
     for (let [prevVert, prevPos] of previousFrameState.getAspect(WallVertex, Position2)) {
       let maybeNextPos = state.getComponent(Position2, prevPos.getId());
       if (maybeNextPos !== undefined) {
-        vertsToConsider.push({prev: prevPos, next: maybeNextPos, visualIndex: prevVert.getData().visualIndex });
+        vertsToConsider.push({
+          prev: prevPos,
+          next: maybeNextPos,
+          visualIndex: prevVert.getData().visualIndex,
+          persistentIndex: prevVert.getData().persistentIndex,
+        });
       }
     }
     let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a.visualIndex - b.visualIndex);
-    let walls = new Array<{prev: WallData, next: WallData}>();
+    let walls = new Array<{prev: WallData, next: WallData, persistentIndex: number}>();
     for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
       let startIndex = i;
       let endIndex = mod(i + 1, vertsToConsiderSorted.length);
       let startVerts = vertsToConsiderSorted[startIndex];
       let endVerts = vertsToConsiderSorted[endIndex];
+
       walls.push({
         prev: wallPointsToWallData(startVerts.prev.getData(), endVerts.prev.getData()),
         next: wallPointsToWallData(startVerts.next.getData(), endVerts.next.getData()),
+        persistentIndex: startVerts.persistentIndex,
       });
     }
+
+    let persistentIndexToPaddle = new Map(
+      Array.from(
+        state.getComponents(Paddle),
+      ).map(
+        (p) => [p.getData().wallPersistentId, p] as [number, lk.Component<Paddle>],
+      ),
+    );
 
     for (let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)) {
       let ballMovementData = ballMovement.getData();
@@ -107,24 +138,49 @@ export class BallMovementSystem implements lk.System {
         let nextProduct = crossProduct2DBetweenWallAndPoint(wall.next, nextPos);
         // We only care about collisions with the ball going outwards (to prevent numerical issue with the ball getting stuck outside the shape)
         if (prevProduct > 0 && nextProduct <= 0) {
-          // There's been a sign change, reflect the velocity and position
-          let wallNormInwards = new THREE.Vector2(wall.next.wallUnitVec.y, -wall.next.wallUnitVec.x);
-          // reflection using the following formula r=d−2(d⋅n)n
-          // where d is the vector to reflect, r is the reflected result, and n is the unit normal
-          let minusTwoDdotN = - 2 * ballMovementData.velocity.dot(wallNormInwards);
-          ballMovementData.velocity.addScaledVector(wallNormInwards, minusTwoDdotN);
+          // There's been a sign change, thus a collision to deal with
+          let shouldReflect = true;
+          // Determine if the paddle covered the point of intersection.
+          // We wont interpolate to get the exact point of intersection as that's relatively brutal computationally.
+          // We'll just use the latest frame as an approximation.
+          let maybePaddle = persistentIndexToPaddle.get(wall.persistentIndex);
+          // If there's no paddle theres no player to kill
+          if (maybePaddle !== undefined) {
+            let paddleData = maybePaddle.getData();
+            let positionOfBallInWallspace = nextPos.clone().sub(wall.next.wallPoint).dot(wall.next.wallUnitVec) / wall.next.wallLength;
+            let distanceBetweenPaddleAndBallInWallspace = Math.abs(paddleData.positionInWallSpace - positionOfBallInWallspace);
+            // Paddle radius is half its length, plus a fudge factor to make the game a little more visually forgiving.
+            let paddleRadiusInWallSpace = 0.55 * paddleLengthAsProportionOfWallLength;
+            if (distanceBetweenPaddleAndBallInWallspace > paddleRadiusInWallSpace) {
+              // Paddle did not intercept ball
+              shouldReflect = false;
+              // On server only, kill player and delete ball
+              // Currently nothing we've done here is actually unsafe on the client. It seems prudent for if we add death stuff though.
+              if (this.isServer) {
+                let playerInfo = Array.from(state.getComponents(PlayerInfo)).find((pi) => pi.getData().playerIndex === paddleData.playerIndex)!;
+                playerInfo.getData().alive = false;
+                state.deleteEntity(ballMovement.getOwnerId());
+              }
+            }
+          }
+          if (shouldReflect) {
+            let wallNormInwards = new THREE.Vector2(wall.next.wallUnitVec.y, -wall.next.wallUnitVec.x);
+            // reflection using the following formula r=d−2(d⋅n)n
+            // where d is the vector to reflect, r is the reflected result, and n is the unit normal
+            let minusTwoDdotN = - 2 * ballMovementData.velocity.dot(wallNormInwards);
+            ballMovementData.velocity.addScaledVector(wallNormInwards, minusTwoDdotN);
 
-          // Position reflection is done by projecting the ball to the wall and adding twice that vec to pos.
-          let wallData = wall.next;
-          let wallRay = new THREE.Ray(
-            new THREE.Vector3(wallData.wallPoint.x, wallData.wallPoint.y),
-            new THREE.Vector3(wallData.wallUnitVec.x, wallData.wallUnitVec.y));
-          let ballPos3D = new THREE.Vector3(nextPos.x, nextPos.y);
-          let wallPointClosestToBall = wallRay.closestPointToPoint(ballPos3D, new THREE.Vector3());
-          let ballToWall = new THREE.Vector2();
-          ballToWall.copy(wallPointClosestToBall.sub(ballPos3D) as any);
-          nextPos.addScaledVector(ballToWall, 2);
-
+            // Position reflection is done by projecting the ball to the wall and adding twice that vec to pos.
+            let wallData = wall.next;
+            let wallRay = new THREE.Ray(
+              new THREE.Vector3(wallData.wallPoint.x, wallData.wallPoint.y),
+              new THREE.Vector3(wallData.wallUnitVec.x, wallData.wallUnitVec.y));
+            let ballPos3D = new THREE.Vector3(nextPos.x, nextPos.y);
+            let wallPointClosestToBall = wallRay.closestPointToPoint(ballPos3D, new THREE.Vector3());
+            let ballToWall = new THREE.Vector2();
+            ballToWall.copy(wallPointClosestToBall.sub(ballPos3D) as any);
+            nextPos.addScaledVector(ballToWall, 2);
+          }
         }
       }
     }
@@ -209,21 +265,26 @@ export class PaddleMovementSystem implements lk.System {
   public Step({state, timeDeltaS}: lk.StepParams): void {
     for (let paddle of state.getComponents(Paddle)) {
       let paddleData = paddle.getData();
-      // TODO consider an accelerative approach
+      let paddleAcceleration = 5.0;
       let maxMoveSpeed = 1.0;
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
-          paddleData.velocityInWallSpace = 0;
+          if(paddleData.velocityInWallSpace > 0) {
+            paddleData.velocityInWallSpace -= paddleAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace = Math.max(paddleData.velocityInWallSpace, 0);
+          } else if (paddleData.velocityInWallSpace < 0) {
+            paddleData.velocityInWallSpace += paddleAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace = Math.min(paddleData.velocityInWallSpace, 0);
+          }
           break;
         case MoveIntent.NEGATIVE:
-          paddleData.velocityInWallSpace = - maxMoveSpeed;
+          paddleData.velocityInWallSpace -= paddleAcceleration * timeDeltaS;
           break;
         case MoveIntent.POSITIVE:
-          paddleData.velocityInWallSpace = maxMoveSpeed;
+          paddleData.velocityInWallSpace += paddleAcceleration * timeDeltaS;
           break;
       }
-
-      // TODO adjust clamp so paddle width is accounted for
+      paddleData.velocityInWallSpace = THREE.Math.clamp(paddleData.velocityInWallSpace, -maxMoveSpeed, maxMoveSpeed);
       paddleData.positionInWallSpace = THREE.Math.clamp(
         paddleData.positionInWallSpace + paddleData.velocityInWallSpace * timeDeltaS,
         0.5 * paddleLengthAsProportionOfWallLength,
@@ -249,6 +310,118 @@ export class PaddlePositionSyncSystem implements lk.System {
       posData.lerpVectors(wallStartVertPos.clone(), wallEndVertPos.clone(), paddle.getData().positionInWallSpace);
       let wallDirection = wallEndVertPos.clone().sub(wallStartVertPos).normalize();
       orientation.getData().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
+    }
+  }
+}
+
+export class BotLogic implements lk.System {
+  public Step({state}: lk.StepParams): void {
+    let playerIndexToPaddleMap = new Map(
+      Array.from(
+        state.getComponents(Paddle),
+      ).map(
+        (paddle) => [paddle.getData().playerIndex, paddle.getData()] as [number, Paddle],
+      ),
+    );
+
+    let vertsToConsider = Array.from(state.getAspect(WallVertex, Position2));
+    let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
+    let persistentIndexToWallData = new Map<number, WallData>();
+    for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
+      let startIndex = i;
+      let endIndex = mod(i + 1, vertsToConsiderSorted.length);
+      let startVert = vertsToConsiderSorted[startIndex];
+      let endVert = vertsToConsiderSorted[endIndex];
+      persistentIndexToWallData.set(
+        startVert[0].getData().persistentIndex,
+        wallPointsToWallData(startVert[1].getData(), endVert[1].getData())
+      );
+    }
+
+    let balls = Array.from(state.getAspect(BallMovement, Position2));
+
+    // All players with no human player ID are implicitly bots.
+    for(let playerInfo of state.getComponents(PlayerInfo)) {
+      let playerInfoData = playerInfo.getData();
+      if(!playerInfoData.alive) {
+        // Dead, ignore
+        continue;
+      }
+      let maybeHumanId = state.getComponentOfEntity(HumanPlayerId, playerInfo.getOwnerId());
+      if(maybeHumanId !== undefined) {
+        //Not a bot
+        continue;
+      }
+      let paddle = playerIndexToPaddleMap.get(playerInfoData.playerIndex)!;
+      let ourWall = persistentIndexToWallData.get(paddle.wallPersistentId)!;
+      let centerOfWall = ourWall.wallPoint.clone().addScaledVector(ourWall.wallUnitVec, ourWall.wallLength / 2);
+      // Find nearest ball with net velocity in direction of our wall
+      // Better approach would be to intersect ball velocity with base line
+      // For now we just find nearest point on wall and use that as target point.
+      // If no balls match, move to centre.
+      let desiredWallPosInWallSpace = 0.5;
+      let wallLine = new THREE.Line3(
+        new THREE.Vector3(ourWall.wallPoint.x, ourWall.wallPoint.y),
+        new THREE.Vector3(ourWall.wallEndPoint.x, ourWall.wallEndPoint.y)
+      );
+      let nearestBallDistance: number = Infinity;
+      for(let ballComponents of balls) {
+        let ballPosition = ballComponents[1].getData();
+        let ballVelocity = ballComponents[0].getData().velocity;
+        let ballPos3D = new THREE.Vector3(ballPosition.x, ballPosition.y);
+        let closestPointOnWall = wallLine.closestPointToPoint(
+          new THREE.Vector3(ballPosition.x, ballPosition.y),
+          true,
+          new THREE.Vector3()
+        );
+        // is ball moving in direction of nearest point?
+        let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
+        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0
+        if(!isMovingTowardsWall) {
+          // Ignore this ball
+          continue;
+        }
+        let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
+        if(nearestBallDistance > distanceToWall) {
+          nearestBallDistance = distanceToWall;
+          desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(ballPos3D, true);
+        }
+      }
+      let deadZoneProportion = paddleLengthAsProportionOfWallLength / 4;
+      if(paddle.positionInWallSpace > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
+        paddle.moveIntent = MoveIntent.NEGATIVE;
+      } else if (paddle.positionInWallSpace < (1 - deadZoneProportion) * desiredWallPosInWallSpace) {
+        paddle.moveIntent = MoveIntent.POSITIVE;
+      } else {
+        paddle.moveIntent = MoveIntent.NONE;
+      }
+    }
+  }
+}
+
+function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<BotSpawner> {
+  let spawners = Array.from(state.getComponents(BotSpawner));
+  let spawner = spawners[0];
+  if (spawner !== undefined) {
+    return spawner;
+  }
+  let spawnerComponent = new BotSpawner();
+  let newEntity = state.createEntity([spawnerComponent]);
+  return newEntity.getComponent(BotSpawner)!;
+}
+
+export class BotSpawnerSystem implements lk.System {
+  public Step({simulationTimeS, state}: lk.StepParams): void {
+    let spawner = getOrCreateBotSpawner(state);
+    let players = Array.from(state.getComponents(PlayerInfo));
+    let alivePlayers = players.filter((pi) => pi.getData().alive);
+    let numPlayersAlive = alivePlayers.length;
+    let isTimeToSpawn = spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 10;
+    if (isTimeToSpawn && numPlayersAlive <= 4) {
+      spawner.getData().lastBotSpawnTimeS = simulationTimeS;
+      let newPlayerInfo = new PlayerInfo();
+      newPlayerInfo.playerIndex = players.length;
+      state.createEntity([newPlayerInfo]);
     }
   }
 }
