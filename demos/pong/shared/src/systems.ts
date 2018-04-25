@@ -351,6 +351,10 @@ export class BotLogic implements lk.System {
         continue;
       }
       let paddle = playerIndexToPaddleMap.get(playerInfoData.playerIndex)!;
+      if (paddle === undefined) {
+        // player does not have paddle yet, or maybe just got deleted
+        continue;
+      }
       let ourWall = persistentIndexToWallData.get(paddle.wallPersistentId)!;
       // Find nearest ball with net velocity in direction of our wall
       // Intersect ball velocity with wall line, move to that point.
