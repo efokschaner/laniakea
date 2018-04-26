@@ -292,6 +292,10 @@ class ThreeRenderer implements lk.RenderingSystem {
       }
     }
 
+    // Note we do this before balls because balls want the camera's orientation.
+    // The data dependency is not super ideal but not too egregious yet.
+    this.updateCamera(domHighResTimestampMS);
+
     for (let ball of this.rendererBalls.values()) {
       ball.visible = false;
     }
@@ -307,9 +311,10 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeBall.position.x = ballPosData.x;
       maybeBall.position.y = ballPosData.y;
       maybeBall.visible = true;
+      // Balls do not have an orientation, rotate them into the same orientation as the camera.
+      maybeBall.quaternion.copy(this.camera.quaternion);
     }
 
-    this.updateCamera(domHighResTimestampMS);
     this.renderer.render(this.scene, this.camera);
   }
 }
