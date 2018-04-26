@@ -59,7 +59,7 @@ function calculatePersistentVertexIndices(numPlayers: number): number[] {
   }
   // Now insert holes for playerless walls
   let persistentIndicesWithHoles = new Array<number>();
-  for(let i of persistentIndices) {
+  for (let i of persistentIndices) {
     persistentIndicesWithHoles.push(i, -i);
 }
   return persistentIndicesWithHoles;
@@ -113,13 +113,13 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     // The goal is to make entries in to this object "sticky". To not reorder them unnecessarily.
     // Start by looking for one of the players already being in the list, if they exist we just set
     // the remaining entry to the other player.
-    if (final2Data.finalPlayerIndexA == playerIndexA) {
+    if (final2Data.finalPlayerIndexA === playerIndexA) {
       final2Data.finalPlayerIndexB = playerIndexB;
-    } else if (final2Data.finalPlayerIndexA == playerIndexB) {
+    } else if (final2Data.finalPlayerIndexA === playerIndexB) {
       final2Data.finalPlayerIndexB = playerIndexA;
-    } else if (final2Data.finalPlayerIndexB == playerIndexA) {
+    } else if (final2Data.finalPlayerIndexB === playerIndexA) {
       final2Data.finalPlayerIndexA = playerIndexB;
-    } else if (final2Data.finalPlayerIndexB == playerIndexB) {
+    } else if (final2Data.finalPlayerIndexB === playerIndexB) {
       final2Data.finalPlayerIndexA = playerIndexA;
     } else {
       // We insert them in the order as they would be in the natural geometry
@@ -133,7 +133,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       } else {
         final2Data.finalPlayerIndexA = playerIndexB;
         final2Data.finalPlayerIndexB = playerIndexA;
-  }
+      }
     }
   }
 
@@ -187,11 +187,11 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     let existingPlayerlessVertsFromAtoB = new Set<number>();
     let existingPlayerlessVertsFromBtoA = new Set<number>();
 
-    for(let vert of existingVertices) {
+    for (let vert of existingVertices) {
       let persistentIndex = vert.wallVertex.getData().persistentIndex;
       // We only care about playerless verts
-      if(persistentIndex < 0) {
-        if(positiveIndicesFromAtoB.has(-persistentIndex)) {
+      if (persistentIndex < 0) {
+        if (positiveIndicesFromAtoB.has(-persistentIndex)) {
           existingPlayerlessVertsFromAtoB.add(persistentIndex);
         } else {
           existingPlayerlessVertsFromBtoA.add(persistentIndex);
@@ -200,10 +200,10 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     }
 
     // If theres already a playerless wall in here, recycle it
-    if(existingPlayerlessVertsFromAtoB.size > 0) {
+    if (existingPlayerlessVertsFromAtoB.size > 0) {
       persistentIndexOfPlayerlessWallA = existingPlayerlessVertsFromAtoB.values().next().value;
     }
-    if(existingPlayerlessVertsFromBtoA.size > 0) {
+    if (existingPlayerlessVertsFromBtoA.size > 0) {
       persistentIndexOfPlayerlessWallB = existingPlayerlessVertsFromBtoA.values().next().value;
     }
 
@@ -216,13 +216,12 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     // Finally.....
     // The vertices in the 2 player shape are hardcoded to have playerlessWallA at index 1, we need to rotate it to match.
     // To do this we need to know the order in which our 4 walls have appeared in the persistent indices.
-  let alivePersistentIndices: number[] = [];
-  for (let i = 0; i < persistentIndices.length; ++i) {
-    let persistentIndex = persistentIndices[i];
-    if (alivePersistentIndicesSet.has(persistentIndex)) {
-      alivePersistentIndices.push(persistentIndex);
+    let alivePersistentIndices: number[] = [];
+    for (let persistentIndex of persistentIndices) {
+      if (alivePersistentIndicesSet.has(persistentIndex)) {
+        alivePersistentIndices.push(persistentIndex);
+      }
     }
-  }
 
     let indexOfPlayerlessWallA = alivePersistentIndices.indexOf(persistentIndexOfPlayerlessWallA);
     let shapeOffset = indexOfPlayerlessWallA - 1;
