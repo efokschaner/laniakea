@@ -64,7 +64,10 @@ export interface Entity {
  */
 export interface EntityComponentState extends Serializable {
   createEntity(components?: Serializable[], entityId?: EntityId): Entity;
-  addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T>;
+  /**
+   * If entity already has component of this type, it overwrites existing component's data
+   */
+  addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> | undefined;
 
   getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>>;
   getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined;
@@ -235,7 +238,17 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return componentHandle;
   }
 
-  public addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> {
+  public addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> | undefined {
+    let maybeEntity = this.getEntity(ownerId);
+    if (maybeEntity === undefined) {
+      return undefined;
+    }
+    let componentConstructor = data.constructor as { new(): T };
+    let maybeComponent = maybeEntity.getComponent(componentConstructor);
+    if (maybeComponent) {
+      maybeComponent.setData(data);
+      return maybeComponent;
+    }
     return this.createGenericComponent(ownerId, data) as Component<T>;
   }
 
