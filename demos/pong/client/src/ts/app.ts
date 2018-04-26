@@ -13,9 +13,9 @@ import {
   getGameServerWsUrl,
   globalSimulationRateMultiplier,
   InputHandlerSystem,
-  Lerp2DProcessor,
   PaddleMovementSystem,
   PaddlePositionSyncSystem,
+  PolarLerp2DProcessor,
   registerComponents,
   simFPS,
 } from 'lk-demo-pong-shared';
@@ -53,7 +53,7 @@ clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine.engine);
 
 clientEngine.engine.addSystem(new InputHandlerSystem());
-clientEngine.engine.addSystem(new Lerp2DProcessor());
+clientEngine.engine.addSystem(new PolarLerp2DProcessor());
 clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
 clientEngine.engine.addSystem(new PaddleMovementSystem());
 clientEngine.engine.addSystem(new PaddlePositionSyncSystem());

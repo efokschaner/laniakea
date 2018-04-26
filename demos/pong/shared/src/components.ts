@@ -85,11 +85,11 @@ export class WallVertex implements lk.Serializable {
   public persistentIndex = 0;
   public serialize(stream: lk.SerializationStream): void {
     stream.serializeUint32(this, 'visualIndex');
-    stream.serializeUint32(this, 'persistentIndex');
+    stream.serializeInt32(this, 'persistentIndex');
   }
 }
 
-export class Lerp2D implements lk.Serializable {
+export class PolarLerp2D implements lk.Serializable {
   public originalPosition = new SerializableVector2();
   public targetPosition = new SerializableVector2();
   public startTimeS = 0;
@@ -127,11 +127,12 @@ export class BallSpawner implements lk.Serializable {
 }
 
 export class Final2Players implements lk.Serializable {
-  public finalPlayerIndexA = -1;
-  public finalPlayerIndexB = -1;
+  public finalPlayerIndexA = 1;
+  public finalPlayerIndexB = 2;
+
   public serialize(stream: lk.SerializationStream): void {
-    stream.serializeInt32(this, 'finalPlayerIndexA');
-    stream.serializeInt32(this, 'finalPlayerIndexB');
+    stream.serializeUint32(this, 'finalPlayerIndexA');
+    stream.serializeUint32(this, 'finalPlayerIndexB');
   }
 }
 
@@ -149,7 +150,7 @@ export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(HumanPlayerId, 'HumanPlayerId' as lk.ComponentKind);
   engine.registerComponentType(Paddle, 'Paddle' as lk.ComponentKind);
   engine.registerComponentType(WallVertex, 'WallVertex' as lk.ComponentKind);
-  engine.registerComponentType(Lerp2D, 'Lerp2D' as lk.ComponentKind);
+  engine.registerComponentType(PolarLerp2D, 'PolarLerp2D' as lk.ComponentKind);
   engine.registerComponentType(EntityScheduledDeletion, 'EntityScheduledDeletion' as lk.ComponentKind);
   engine.registerComponentType(BallMovement, 'BallMovement' as lk.ComponentKind);
   engine.registerComponentType(BallSpawner, 'BallSpawner' as lk.ComponentKind);

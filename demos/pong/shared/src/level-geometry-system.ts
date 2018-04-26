@@ -5,10 +5,10 @@ import * as lk from 'laniakea-shared';
 import {
   EntityScheduledDeletion,
   Final2Players,
-  Lerp2D,
   Orientation,
   Paddle,
   PlayerInfo,
+  PolarLerp2D,
   Position2,
   SerializableVector2,
   WallVertex,
@@ -47,29 +47,22 @@ function getOrCreateFinal2Players(state: lk.EntityComponentState): lk.Component<
   return newEntity.getComponent(Final2Players)!;
 }
 
-function playerIndexToPersistentVertexIndex(playerIndex: number): number {
-  // Indices 1 and 3 are reserved for the playerless walls that are injected into the 2 player board
-  if (playerIndex === 0) {
-    return 0;
-  }
-  if (playerIndex === 1) {
-    return 2;
-  }
-  return playerIndex + 2;
-}
-
 function calculatePersistentVertexIndices(numPlayers: number): number[] {
-  // default with 2 sides in fixed clockwise order to prevent them experiencing
-  // a swapping as the shape grows / contracts between the random regime and this one
-  let persistentIndices = [0, 2];
+  // default with 2 sides in fixed clockwise order
+  let persistentIndices = [1, 2];
   let prng = new DeterministicPRNG(1);
   for (let i = 2; i < numPlayers; ++i) {
     // Insert the sides in a scrambled but deterministic order that
     // ensures existing sides are not reordered
     let targetIndex = prng.getRandomInt(persistentIndices.length);
-    persistentIndices.splice(targetIndex, 0, playerIndexToPersistentVertexIndex(i));
+    persistentIndices.splice(targetIndex, 0, i + 1);
   }
-  return persistentIndices;
+  // Now insert holes for playerless walls
+  let persistentIndicesWithHoles = new Array<number>();
+  for(let i of persistentIndices) {
+    persistentIndicesWithHoles.push(i, -i);
+}
+  return persistentIndicesWithHoles;
 }
 
 function calculateShapeForNumPlayers(numPlayers: number) {
@@ -107,13 +100,41 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   let alivePlayers = players.filter((pi) => pi.getData().alive);
   let numPlayersAlive = alivePlayers.length;
 
+  let targetShape = calculateShapeForNumPlayers(numPlayersAlive);
+  let persistentIndices = calculatePersistentVertexIndices(numPlayersEverAlive);
+
   // This gives us memory of the final 2 players on the board so that we dont churn the geometry
   // unneccessarily when below 3 players
   let final2Players = getOrCreateFinal2Players(state);
   let final2Data = final2Players.getData();
   if (numPlayersAlive === 2) {
-    final2Data.finalPlayerIndexA = alivePlayers[0].getData().playerIndex;
-    final2Data.finalPlayerIndexB = alivePlayers[1].getData().playerIndex;
+    let playerIndexA = alivePlayers[0].getData().playerIndex;
+    let playerIndexB = alivePlayers[1].getData().playerIndex;
+    // The goal is to make entries in to this object "sticky". To not reorder them unnecessarily.
+    // Start by looking for one of the players already being in the list, if they exist we just set
+    // the remaining entry to the other player.
+    if (final2Data.finalPlayerIndexA == playerIndexA) {
+      final2Data.finalPlayerIndexB = playerIndexB;
+    } else if (final2Data.finalPlayerIndexA == playerIndexB) {
+      final2Data.finalPlayerIndexB = playerIndexA;
+    } else if (final2Data.finalPlayerIndexB == playerIndexA) {
+      final2Data.finalPlayerIndexA = playerIndexB;
+    } else if (final2Data.finalPlayerIndexB == playerIndexB) {
+      final2Data.finalPlayerIndexA = playerIndexA;
+    } else {
+      // We insert them in the order as they would be in the natural geometry
+      let persistentIndexA = playerIndexA;
+      let persistentIndexB = playerIndexB;
+      let indexInPersistentIdsOfA = persistentIndices.indexOf(persistentIndexA);
+      let indexInPersistentIdsOfB = persistentIndices.indexOf(persistentIndexB);
+      if (indexInPersistentIdsOfA < indexInPersistentIdsOfB) {
+        final2Data.finalPlayerIndexA = playerIndexA;
+        final2Data.finalPlayerIndexB = playerIndexB;
+      } else {
+        final2Data.finalPlayerIndexA = playerIndexB;
+        final2Data.finalPlayerIndexB = playerIndexA;
+  }
+    }
   }
 
   // This is a multi phase process where we:
@@ -125,49 +146,8 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // All vertices lerp towards the target position of their persistentIndex or the target position of the next existing persistentIndex
   // On completion of lerps we delete persistentIndices which are not meant to exist any more and we re-assign visualIndices.
 
-  let targetShape = calculateShapeForNumPlayers(numPlayersAlive);
-  let persistentIndices = calculatePersistentVertexIndices(numPlayersEverAlive);
   // Represents all the persistent indices that should exist.
-  let alivePersistentIndicesSet = new Set<number>(alivePlayers.map((pi) => playerIndexToPersistentVertexIndex(pi.getData().playerIndex)));
-
-  // Insert 2 walls that are either the final 2 players or ready for the first 2
-  // And position the playerless sidewalls
-  let playerIndexA = final2Data.finalPlayerIndexA !== -1 ? final2Data.finalPlayerIndexA : 0;
-  let playerPersistentIndexA = playerIndexToPersistentVertexIndex(playerIndexA);
-  let playerIndexB = final2Data.finalPlayerIndexB !== -1 ? final2Data.finalPlayerIndexB : 1;
-  let playerPersistentIndexB = playerIndexToPersistentVertexIndex(playerIndexB);
-
-  let indexInPersistentListOfA = persistentIndices.indexOf(playerPersistentIndexA);
-  let indexInPersistentListOfB = persistentIndices.indexOf(playerPersistentIndexB);
-
-  // Always put wall1 at the lower of the indices versus wall 3 to prevent reordering
-  let targetIndexForWall1 = Math.min(indexInPersistentListOfA, indexInPersistentListOfB) + 1;
-  persistentIndices.splice(targetIndexForWall1, 0, 1);
-  let targetIndexForWall3 = Math.max(indexInPersistentListOfA, indexInPersistentListOfB) + 2; // + 2 because we just inserted wall 1 at the lower index.
-  persistentIndices.splice(targetIndexForWall3, 0, 3);
-
-  if (numPlayersAlive <= 2) {
-    // Guarantee these 4 walls
-    alivePersistentIndicesSet.add(1);
-    alivePersistentIndicesSet.add(3);
-    alivePersistentIndicesSet.add(playerPersistentIndexA);
-    alivePersistentIndicesSet.add(playerPersistentIndexB);
-  }
-
-  // Remove indices of dead vertices, building interpolation targets as we go.
-  let alivePersistentIndices: number[] = [];
-  // Describes the index in the target shape to which each persistentvertex should interpolate to.
-  let interpolationTargetIndex = new Array<number>(persistentIndices.length);
-  let numAliveIndicesPassed = 0;
-  for (let i = 0; i < persistentIndices.length; ++i) {
-    let persistentIndex = persistentIndices[i];
-    interpolationTargetIndex[i] = numAliveIndicesPassed % targetShape.length;
-    if (alivePersistentIndicesSet.has(persistentIndex)) {
-      // Effectively "consumes" this vertex on the shape and we start sending vertices to the next one.
-      numAliveIndicesPassed += 1;
-      alivePersistentIndices.push(persistentIndex);
-    }
-  }
+  let alivePersistentIndicesSet = new Set<number>(alivePlayers.map((pi) => pi.getData().playerIndex));
 
   interface VertAspect {
     wallVertex: lk.Component<WallVertex>;
@@ -183,6 +163,76 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   };
 
   let existingVertices = fetchVerts();
+
+  if (numPlayersAlive <= 2) {
+    let playerPersistentIndexA = final2Data.finalPlayerIndexA;
+    let persistentIndexOfPlayerlessWallA = - playerPersistentIndexA;
+    let playerPersistentIndexB = final2Data.finalPlayerIndexB;
+    let persistentIndexOfPlayerlessWallB = - playerPersistentIndexB;
+
+    // Now we will try to see if there already exists playerless walls that partition our
+    // shape as needed, so that we dont recreate the playerless wall with every change of players.
+    // If the shape is not partitioned right, we add the playerless wall that comes after player A or B
+    // (with indices -A and -B) as needed.
+
+    // Divide the persistent indices in to 2 partitions, the BtoA partition is implied by the AtoB one
+    let positiveIndicesFromAtoB = new Set<number>();
+
+    let indexOfPlayerA = persistentIndices.indexOf(playerPersistentIndexA);
+    let indexOfPlayerB = persistentIndices.indexOf(playerPersistentIndexB);
+    for (let i = indexOfPlayerA; i !== indexOfPlayerB; i = mod(i + 2, persistentIndices.length)) {
+      positiveIndicesFromAtoB.add(persistentIndices[i]);
+    }
+
+    let existingPlayerlessVertsFromAtoB = new Set<number>();
+    let existingPlayerlessVertsFromBtoA = new Set<number>();
+
+    for(let vert of existingVertices) {
+      let persistentIndex = vert.wallVertex.getData().persistentIndex;
+      // We only care about playerless verts
+      if(persistentIndex < 0) {
+        if(positiveIndicesFromAtoB.has(-persistentIndex)) {
+          existingPlayerlessVertsFromAtoB.add(persistentIndex);
+        } else {
+          existingPlayerlessVertsFromBtoA.add(persistentIndex);
+        }
+      }
+    }
+
+    // If theres already a playerless wall in here, recycle it
+    if(existingPlayerlessVertsFromAtoB.size > 0) {
+      persistentIndexOfPlayerlessWallA = existingPlayerlessVertsFromAtoB.values().next().value;
+    }
+    if(existingPlayerlessVertsFromBtoA.size > 0) {
+      persistentIndexOfPlayerlessWallB = existingPlayerlessVertsFromBtoA.values().next().value;
+    }
+
+    // Guarantee these 4 walls
+    alivePersistentIndicesSet.add(playerPersistentIndexA);
+    alivePersistentIndicesSet.add(persistentIndexOfPlayerlessWallA);
+    alivePersistentIndicesSet.add(playerPersistentIndexB);
+    alivePersistentIndicesSet.add(persistentIndexOfPlayerlessWallB);
+
+    // Finally.....
+    // The vertices in the 2 player shape are hardcoded to have playerlessWallA at index 1, we need to rotate it to match.
+    // To do this we need to know the order in which our 4 walls have appeared in the persistent indices.
+  let alivePersistentIndices: number[] = [];
+  for (let i = 0; i < persistentIndices.length; ++i) {
+    let persistentIndex = persistentIndices[i];
+    if (alivePersistentIndicesSet.has(persistentIndex)) {
+      alivePersistentIndices.push(persistentIndex);
+    }
+  }
+
+    let indexOfPlayerlessWallA = alivePersistentIndices.indexOf(persistentIndexOfPlayerlessWallA);
+    let shapeOffset = indexOfPlayerlessWallA - 1;
+    targetShape = [
+      targetShape[mod(0 - shapeOffset, 4)],
+      targetShape[mod(1 - shapeOffset, 4)],
+      targetShape[mod(2 - shapeOffset, 4)],
+      targetShape[mod(3 - shapeOffset, 4)]];
+  }
+
   let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.wallVertex.getData().persistentIndex));
   let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
   let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter((i) => !alivePersistentIndicesSet.has(i));
@@ -266,13 +316,26 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     }
   }
 
+  // Build interpolation targets
+  // Describes the index in the target shape to which each persistentvertex should interpolate to.
+  let interpolationTargetIndex = new Array<number>(persistentIndices.length);
+  let numAliveIndicesPassed = 0;
+  for (let i = 0; i < persistentIndices.length; ++i) {
+    let persistentIndex = persistentIndices[i];
+    interpolationTargetIndex[i] = numAliveIndicesPassed % targetShape.length;
+    if (alivePersistentIndicesSet.has(persistentIndex)) {
+      // Effectively "consumes" this vertex on the shape and we start sending vertices to the next one.
+      numAliveIndicesPassed += 1;
+    }
+  }
+
   // Begin Lerps
   for (let i = 0; i < persistentIndices.length; ++i) {
     let persistentIndex = persistentIndices[i];
     let maybeObj = existingVerticesMap.get(persistentIndex);
     if (maybeObj !== undefined) {
       let currentPos = maybeObj.position.getData();
-      let lerp = new Lerp2D();
+      let lerp = new PolarLerp2D();
       lerp.originalPosition.copy(currentPos);
       // Note the typecast on the next line is just to get around the quirks of threejs' "this" typings limitations.
       lerp.targetPosition.copy(targetShape[interpolationTargetIndex[i]] as SerializableVector2);
@@ -290,7 +353,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       // This player needs a paddle created.
       let newPaddle = new Paddle();
       newPaddle.playerIndex = playerData.playerIndex;
-      newPaddle.wallPersistentId = playerIndexToPersistentVertexIndex(playerData.playerIndex);
+      newPaddle.wallPersistentId = playerData.playerIndex;
       // TODO Technically a Paddle's position is entirely slaved to its wallposition stuff and does not need replication
       // Consider revisiting this once we have controlled replication.
       let newPosition = new Position2();

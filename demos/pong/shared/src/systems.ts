@@ -8,11 +8,11 @@ import {
   BotSpawner,
   EntityScheduledDeletion,
   HumanPlayerId,
-  Lerp2D,
   MoveIntent,
   Orientation,
   Paddle,
   PlayerInfo,
+  PolarLerp2D,
   Position2,
   WallVertex,
 } from './components';
@@ -26,21 +26,39 @@ function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
 
-export class Lerp2DProcessor implements lk.System {
+/**
+ *  This lerps 2 vectors in in their polar space, this looks better for our geometrical layouts.
+ */
+export class PolarLerp2DProcessor implements lk.System {
   public Step({simulationTimeS, state}: lk.StepParams): void {
-    for (let [_, position, lerp] of state.getAspect(WallVertex, Position2, Lerp2D)) {
+    for (let [position, lerp] of state.getAspect(Position2, PolarLerp2D)) {
       let lerpData = lerp.getData();
       let lerpFactor = (simulationTimeS - lerpData.startTimeS) / lerpData.durationS;
       if (lerpFactor < 0) {
         continue;
       }
       if (lerpFactor >= 1) {
-        lerpFactor = 1;
+        position.getData().copy(lerpData.targetPosition);
         lerp.delete();
+        continue;
       }
       // Just for a bit of fun this is technically not a L(inear int)erp-olation anymore but whatever
       let smoothLerpFactor = THREE.Math.smoothstep(lerpFactor, 0, 1);
-      position.getData().lerpVectors(lerpData.originalPosition, lerpData.targetPosition, smoothLerpFactor);
+
+      let originalAngle = lerpData.originalPosition.angle();
+      let targetAngle = lerpData.targetPosition.angle();
+      let angleDelta = targetAngle - originalAngle;
+      // Now make sure we don't take the "long" way round the circle
+      if (angleDelta > Math.PI) {
+        angleDelta = angleDelta - 2 * Math.PI;
+      } else if (angleDelta < - Math.PI) {
+        angleDelta = angleDelta + 2 * Math.PI;
+      }
+      let interpolatedAngle = originalAngle + smoothLerpFactor * angleDelta;
+      let originalMagnitude = lerpData.originalPosition.length();
+      let targetMagnitude = lerpData.targetPosition.length();
+      let interpolatedMagnitude = originalMagnitude + smoothLerpFactor * (targetMagnitude - originalMagnitude);
+      position.getData().set(interpolatedMagnitude * Math.cos(interpolatedAngle), interpolatedMagnitude * Math.sin(interpolatedAngle));
     }
   }
 }
@@ -433,7 +451,7 @@ export class BotSpawnerSystem implements lk.System {
     if (isTimeToSpawn && numPlayersAlive <= 4) {
       spawner.getData().lastBotSpawnTimeS = simulationTimeS;
       let newPlayerInfo = new PlayerInfo();
-      newPlayerInfo.playerIndex = players.length;
+      newPlayerInfo.playerIndex = players.length + 1;
       state.createEntity([newPlayerInfo]);
     }
   }
