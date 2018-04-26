@@ -329,22 +329,22 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   }
 
   // Rotate target shape to mimimise interpolation distances
-  let bestShape: Array<THREE.Vector2> = targetShape;
+  let bestShape: THREE.Vector2[] = targetShape;
   let lowestSumDistancesSquared = Infinity;
   let origin2D = new THREE.Vector2();
-  for(let i = 0; i < 12; ++ i) {
+  for (let i = 0; i < 12; ++ i) {
     let shapeAngleOffset = (i / 12) * 2 * Math.PI;
     let rotatedShape = targetShape.map((v) => v.clone().rotateAround(origin2D, shapeAngleOffset));
     let sumDistancesSquared = 0;
-    for (let i = 0; i < persistentIndices.length; ++i) {
-      let persistentIndex = persistentIndices[i];
+    for (let j = 0; j < persistentIndices.length; ++j) {
+      let persistentIndex = persistentIndices[j];
       let maybeObj = existingVerticesMap.get(persistentIndex);
       if (maybeObj !== undefined) {
         let currentPos = maybeObj.position.getData();
-        sumDistancesSquared += rotatedShape[interpolationTargetIndex[i]].distanceToSquared(currentPos);
+        sumDistancesSquared += rotatedShape[interpolationTargetIndex[j]].distanceToSquared(currentPos);
       }
     }
-    if(sumDistancesSquared < lowestSumDistancesSquared) {
+    if (sumDistancesSquared < lowestSumDistancesSquared) {
       lowestSumDistancesSquared = sumDistancesSquared;
       bestShape = rotatedShape;
     }
@@ -413,7 +413,7 @@ export class LevelGeometrySystem implements lk.System {
     let alivePlayers = players.filter((pi) => pi.getData().alive);
 
     let newSortedAlivePlayerIndices = alivePlayers.map((pi) => pi.getData().playerIndex).sort();
-    if(this.sortedAlivePlayerIndices.length !== newSortedAlivePlayerIndices.length
+    if (this.sortedAlivePlayerIndices.length !== newSortedAlivePlayerIndices.length
         || !this.sortedAlivePlayerIndices.every((v, i) => v === newSortedAlivePlayerIndices[i])) {
       this.sortedAlivePlayerIndices = newSortedAlivePlayerIndices;
       doUpdateLevelGeometry(state, simulationTimeS);

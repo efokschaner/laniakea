@@ -143,15 +143,15 @@ export class BallMovementSystem implements lk.System {
     walls = walls.filter((w) => {
       return w.next.wallLength !== 0 && w.prev.wallLength !== 0;
     });
-    for(let wall of walls) {
+    for (let wall of walls) {
       // if dot product of wallpoint with wall unit vec is positive, the wall is anticlockwise and we'll flip it.
-      if(wall.prev.wallPoint.dot(wall.prev.wallUnitVec) > 0) {
+      if (wall.prev.wallPoint.dot(wall.prev.wallUnitVec) > 0) {
         let originalStartPoint = wall.prev.wallPoint;
         wall.prev.wallPoint = wall.prev.wallEndPoint;
         wall.prev.wallEndPoint = originalStartPoint;
         wall.prev.wallUnitVec.negate();
       }
-      if(wall.next.wallPoint.dot(wall.next.wallUnitVec) > 0) {
+      if (wall.next.wallPoint.dot(wall.next.wallUnitVec) > 0) {
         let originalStartPoint = wall.next.wallPoint;
         wall.next.wallPoint = wall.next.wallEndPoint;
         wall.next.wallEndPoint = originalStartPoint;
