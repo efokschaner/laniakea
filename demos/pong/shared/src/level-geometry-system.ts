@@ -268,9 +268,9 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
 
   // In lieu of a "generalised" approach for sequencing / scheduling work, we'll just do the lerp and the deletion on the same timeout.
   // TODO we need to fixup visual indices when these are deleted.
-  let lerpStartDelayS = 0.1;
-  let lerpDurationS = 1;
-  let entityDeletionTime = simulationTimeS + lerpStartDelayS + lerpDurationS;
+  let lerpStartDelayS = 0.2;
+  let lerpMaxDurationS = 4;
+  let entityDeletionTime = simulationTimeS + lerpStartDelayS + lerpMaxDurationS;
   for (let persistentIndex of persistentIndicesToDelete) {
     // It MUST be in here based on prior logic
     let vert = existingVerticesMap.get(persistentIndex)!;
@@ -362,7 +362,16 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       // Note the typecast on the next line is just to get around the quirks of threejs' "this" typings limitations.
       lerp.targetPosition.copy(targetShape[interpolationTargetIndex[i]] as SerializableVector2);
       lerp.startTimeS = simulationTimeS + lerpStartDelayS;
-      lerp.durationS = lerpDurationS;
+
+      let angleDelta = lerp.targetPosition.angle() - lerp.originalPosition.angle();
+      if (angleDelta > Math.PI) {
+        angleDelta = angleDelta - 2 * Math.PI;
+      } else if (angleDelta < - Math.PI) {
+        angleDelta = angleDelta + 2 * Math.PI;
+      }
+      // Scale the duration by the angle we'll move through.
+      // We know angleDelta is less than PI due the shortest path logic above.
+      lerp.durationS = lerpMaxDurationS * Math.abs(angleDelta) / Math.PI;
       state.addComponent(maybeObj.position.getOwnerId(), lerp);
     }
   }
