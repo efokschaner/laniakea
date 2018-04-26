@@ -328,6 +328,29 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     }
   }
 
+  // Rotate target shape to mimimise interpolation distances
+  let bestShape: Array<THREE.Vector2> = targetShape;
+  let lowestSumDistancesSquared = Infinity;
+  let origin2D = new THREE.Vector2();
+  for(let i = 0; i < 12; ++ i) {
+    let shapeAngleOffset = (i / 12) * 2 * Math.PI;
+    let rotatedShape = targetShape.map((v) => v.clone().rotateAround(origin2D, shapeAngleOffset));
+    let sumDistancesSquared = 0;
+    for (let i = 0; i < persistentIndices.length; ++i) {
+      let persistentIndex = persistentIndices[i];
+      let maybeObj = existingVerticesMap.get(persistentIndex);
+      if (maybeObj !== undefined) {
+        let currentPos = maybeObj.position.getData();
+        sumDistancesSquared += rotatedShape[interpolationTargetIndex[i]].distanceToSquared(currentPos);
+      }
+    }
+    if(sumDistancesSquared < lowestSumDistancesSquared) {
+      lowestSumDistancesSquared = sumDistancesSquared;
+      bestShape = rotatedShape;
+    }
+  }
+  targetShape = bestShape;
+
   // Begin Lerps
   for (let i = 0; i < persistentIndices.length; ++i) {
     let persistentIndex = persistentIndices[i];
