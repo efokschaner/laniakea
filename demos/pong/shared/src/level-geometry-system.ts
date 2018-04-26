@@ -69,7 +69,7 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   let scaleFactor = 10;
   // Create a classic pong board
   if (numPlayers < 3) {
-    let boxMax = new THREE.Vector2(0.9 * scaleFactor, 0.5 * scaleFactor);
+    let boxMax = new THREE.Vector2(0.9, 0.5);
     let box = new THREE.Box2(
       boxMax.clone().multiplyScalar(-1),
       boxMax,
@@ -77,10 +77,10 @@ function calculateShapeForNumPlayers(numPlayers: number) {
     return [
       // Order matters here, we start in the top right so its not far
       // from the top vertex that is usually the start off wall 0 in the polygon
-      new THREE.Vector2(box.max.x, box.max.y),
-      new THREE.Vector2(box.max.x, box.min.y),
-      new THREE.Vector2(box.min.x, box.min.y),
-      new THREE.Vector2(box.min.x, box.max.y),
+      new THREE.Vector2(box.max.x, box.max.y).setLength(scaleFactor),
+      new THREE.Vector2(box.max.x, box.min.y).setLength(scaleFactor),
+      new THREE.Vector2(box.min.x, box.min.y).setLength(scaleFactor),
+      new THREE.Vector2(box.min.x, box.max.y).setLength(scaleFactor),
     ];
   }
   // Arrange players around a circle to create a polygon
