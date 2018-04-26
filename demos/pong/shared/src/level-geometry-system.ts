@@ -374,14 +374,16 @@ export class LevelGeometrySystem implements lk.System {
   // to this one in terms of number of players alive.
   // This poses an interesting problem regarding the relation of systems and events
   // that I don't have a solid answer for at this time.
-  private numAlivePlayersPreviouslyHandled = 0;
+  private sortedAlivePlayerIndices = new Array<number>();
   public Step({state, simulationTimeS}: lk.StepParams): void {
     // Updates level geometry whenever number of alive players has changed
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
-    let numPlayersAlive = alivePlayers.length;
-    if (numPlayersAlive !== this.numAlivePlayersPreviouslyHandled) {
-      this.numAlivePlayersPreviouslyHandled = numPlayersAlive;
+
+    let newSortedAlivePlayerIndices = alivePlayers.map((pi) => pi.getData().playerIndex).sort();
+    if(this.sortedAlivePlayerIndices.length !== newSortedAlivePlayerIndices.length
+        || !this.sortedAlivePlayerIndices.every((v, i) => v === newSortedAlivePlayerIndices[i])) {
+      this.sortedAlivePlayerIndices = newSortedAlivePlayerIndices;
       doUpdateLevelGeometry(state, simulationTimeS);
     }
   }
