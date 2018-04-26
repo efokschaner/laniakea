@@ -129,12 +129,34 @@ export class BallMovementSystem implements lk.System {
       let endIndex = mod(i + 1, vertsToConsiderSorted.length);
       let startVerts = vertsToConsiderSorted[startIndex];
       let endVerts = vertsToConsiderSorted[endIndex];
-
       walls.push({
         prev: wallPointsToWallData(startVerts.prev.getData(), endVerts.prev.getData()),
         next: wallPointsToWallData(startVerts.next.getData(), endVerts.next.getData()),
         persistentIndex: startVerts.persistentIndex,
       });
+    }
+
+    // When walls get really short during interpolation, they can become zero length / swap directions.
+    // This causes errors in our collision detection.
+    // We filter any walls with length zero.
+    // We also force the direction of all walls to be clockwise around the origin.
+    walls = walls.filter((w) => {
+      return w.next.wallLength !== 0 && w.prev.wallLength !== 0;
+    });
+    for(let wall of walls) {
+      // if dot product of wallpoint with wall unit vec is positive, the wall is anticlockwise and we'll flip it.
+      if(wall.prev.wallPoint.dot(wall.prev.wallUnitVec) > 0) {
+        let originalStartPoint = wall.prev.wallPoint;
+        wall.prev.wallPoint = wall.prev.wallEndPoint;
+        wall.prev.wallEndPoint = originalStartPoint;
+        wall.prev.wallUnitVec.negate();
+      }
+      if(wall.next.wallPoint.dot(wall.next.wallUnitVec) > 0) {
+        let originalStartPoint = wall.next.wallPoint;
+        wall.next.wallPoint = wall.next.wallEndPoint;
+        wall.next.wallEndPoint = originalStartPoint;
+        wall.next.wallUnitVec.negate();
+      }
     }
 
     let persistentIndexToPaddle = new Map(
