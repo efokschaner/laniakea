@@ -398,12 +398,15 @@ export class BotLogic implements lk.System {
       let ourWall = persistentIndexToWallData.get(paddle.wallPersistentId)!;
       // Find nearest ball with net velocity in direction of our wall
       // Intersect ball velocity with wall line, move to that point.
-      // If no balls match, move to centre.
+      // If no balls match, we find the nearest ball and defend against that
+      // this is to cope with nearby walls that could get deflected to us
+      // by another player.
       let desiredWallPosInWallSpace = 0.5;
       let wallLine = new THREE.Line3(
         new THREE.Vector3(ourWall.wallPoint.x, ourWall.wallPoint.y),
         new THREE.Vector3(ourWall.wallEndPoint.x, ourWall.wallEndPoint.y),
       );
+      let considerBallsNotMovingAtUs = true;
       let nearestBallDistance: number = Infinity;
       for (let ballComponents of balls) {
         let ballPosition = ballComponents[1].getData();
@@ -416,12 +419,21 @@ export class BotLogic implements lk.System {
         );
         // is ball moving in direction of nearest point?
         let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
-        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
-        if (!isMovingTowardsWall) {
-          // Ignore this ball
+        let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
+        if(distanceToWall > wallLine.distance() / 4) {
+          // ignore balls further than 1/4 a side length away.
           continue;
         }
-        let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
+        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
+        if (!isMovingTowardsWall) {
+          if(considerBallsNotMovingAtUs) {
+            // We havent yet found a ball moving at us so we might as well try to guard against this one.
+            desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWall, true);
+          }
+          // Finished considering this ball
+          continue;
+        }
+        considerBallsNotMovingAtUs = false;
         if (nearestBallDistance > distanceToWall) {
           nearestBallDistance = distanceToWall;
           let normalizedBallVelocity = ballVelocity.clone().normalize();
