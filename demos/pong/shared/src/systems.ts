@@ -420,13 +420,13 @@ export class BotLogic implements lk.System {
         // is ball moving in direction of nearest point?
         let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
         let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
-        if(distanceToWall > wallLine.distance() / 4) {
+        if (distanceToWall > wallLine.distance() / 4) {
           // ignore balls further than 1/4 a side length away.
           continue;
         }
         let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
         if (!isMovingTowardsWall) {
-          if(considerBallsNotMovingAtUs) {
+          if (considerBallsNotMovingAtUs) {
             // We havent yet found a ball moving at us so we might as well try to guard against this one.
             desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWall, true);
           }
