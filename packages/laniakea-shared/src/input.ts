@@ -28,21 +28,20 @@ export class InputFrame implements Serializable {
   }
 
   public serialize(stream: SerializationStream): void {
-    let numContinuousInputsObj =  {val: this.continuousInputs.size};
-    stream.serializeUint32(numContinuousInputsObj, 'val');
     if (stream.isWriting) {
+      stream.writeUint32(this.continuousInputs.size);
       for (let [kindId, input] of this.continuousInputs.entries()) {
-        stream.serializeUint32({kindId}, 'kindId');
+        stream.writeInt32(kindId);
         input.serialize(stream);
       }
     } else {
       this.continuousInputs.clear();
-      for (let i = 0; i < numContinuousInputsObj.val; ++i) {
-        let kindId = {val: 0};
-        stream.serializeUint32(kindId, 'val');
-        let input = this.continuousInputTypes.construct(kindId.val as ContinuousInputKindId, []) as Serializable;
+      let numContinuousInputs = stream.readUint32();
+      for (let i = 0; i < numContinuousInputs; ++i) {
+        let kindId = stream.readUint32();
+        let input = this.continuousInputTypes.construct(kindId as ContinuousInputKindId, []) as Serializable;
         input.serialize(stream);
-        this.continuousInputs.set(kindId.val, input);
+        this.continuousInputs.set(kindId, input);
       }
     }
   }

@@ -14,12 +14,10 @@ export interface Serializable {
   serialize(stream: SerializationStream): void;
 }
 
-// TODO possibly unneeded?
-export function isSerializable(arg: {}): arg is Serializable {
-  return (arg as Serializable).serialize !== undefined;
-}
+export type SerializationStream = ReadStream | WriteStream | MeasureStream;
 
-export interface SerializationStream {
+export interface SerializationStreamInterface {
+  readonly kind: 'read'|'write';
   readonly isReading: boolean;
   readonly isWriting: boolean;
 
@@ -42,7 +40,8 @@ export interface SerializationStream {
   serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
 }
 
-export class ReadStream implements SerializationStream {
+export class ReadStream implements SerializationStreamInterface {
+  public readonly kind: 'read' = 'read';
   public readonly isReading = true;
   public readonly isWriting = false;
 
@@ -50,62 +49,72 @@ export class ReadStream implements SerializationStream {
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getUint8(this.curOffset) > 0;
+  public readBoolean(): boolean {
+    let result = this.dataView.getUint8(this.curOffset) > 0;
     this.curOffset += 1;
+    return result;
   }
 
-  public serializeUint8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getUint8(this.curOffset);
+  public readUint8(): number {
+    let result = this.dataView.getUint8(this.curOffset);
     this.curOffset += 1;
+    return result;
   }
-  public serializeUint16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getUint16(this.curOffset);
+  public readUint16(): number {
+    let result = this.dataView.getUint16(this.curOffset);
     this.curOffset += 2;
+    return result;
   }
-  public serializeUint32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getUint32(this.curOffset);
+  public readUint32(): number {
+    let result = this.dataView.getUint32(this.curOffset);
     this.curOffset += 4;
+    return result;
   }
 
-  public serializeInt8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getInt8(this.curOffset);
+  public readInt8(): number {
+    let result = this.dataView.getInt8(this.curOffset);
     this.curOffset += 1;
+    return result;
   }
-  public serializeInt16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getInt16(this.curOffset);
+  public readInt16(): number {
+    let result = this.dataView.getInt16(this.curOffset);
     this.curOffset += 2;
+    return result;
   }
-  public serializeInt32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getInt32(this.curOffset);
+  public readInt32(): number {
+    let result = this.dataView.getInt32(this.curOffset);
     this.curOffset += 4;
+    return result;
   }
 
-  public serializeFloat32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getFloat32(this.curOffset);
+  public readFloat32(): number {
+    let result = this.dataView.getFloat32(this.curOffset);
     this.curOffset += 4;
+    return result;
   }
-  public serializeFloat64<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.dataView.getFloat64(this.curOffset);
+  public readFloat64(): number {
+    let result = this.dataView.getFloat64(this.curOffset);
     this.curOffset += 8;
+    return result;
   }
 
-  public serializeStringUTF16<T extends {[k in K]?: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public readStringUTF16(): string {
     let strLenBytes = this.dataView.getUint8(this.curOffset);
     this.curOffset += 1;
     let stringView = new Uint16Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, strLenBytes);
     this.curOffset += strLenBytes;
-    obj[key] = String.fromCharCode(...stringView);
+    let result = String.fromCharCode(...stringView);
+    return result;
   }
-  public serializeUint8Array<T extends {[k in K]?: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public readUint8Array(): Uint8Array {
     let buffLenBytes = this.dataView.getUint16(this.curOffset);
     this.curOffset += 2;
-    let buffView = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
+    let result = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
     this.curOffset += buffLenBytes;
-    obj[key] = buffView;
+    return result;
   }
 
-  public serializeSerializable<T extends {[k in K]?: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public readSerializable(): Serializable {
     if (this.classRegistry === undefined) {
       throw new Error('Can not serialize arbitrary type without a classRegistry.');
     }
@@ -113,11 +122,54 @@ export class ReadStream implements SerializationStream {
     this.curOffset += 4;
     let result = this.classRegistry.construct(kindId, []) as Serializable;
     result.serialize(this);
-    obj[key] = result;
+    return result;
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readBoolean();
+  }
+
+  public serializeUint8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readUint8();
+  }
+  public serializeUint16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readUint16();
+  }
+  public serializeUint32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readUint32();
+  }
+
+  public serializeInt8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readInt8();
+  }
+  public serializeInt16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readInt16();
+  }
+  public serializeInt32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readInt32();
+  }
+
+  public serializeFloat32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readFloat32();
+  }
+  public serializeFloat64<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readFloat64();
+  }
+
+  public serializeStringUTF16<T extends {[k in K]?: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readStringUTF16();
+  }
+  public serializeUint8Array<T extends {[k in K]?: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readUint8Array();
+  }
+
+  public serializeSerializable<T extends {[k in K]?: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    obj[key] = this.readSerializable();
   }
 }
 
-export class WriteStream implements SerializationStream {
+export class WriteStream implements SerializationStreamInterface {
+  public readonly kind: 'write' = 'write';
   public readonly isReading = false;
   public readonly isWriting = true;
 
@@ -126,63 +178,61 @@ export class WriteStream implements SerializationStream {
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setUint8(this.curOffset, obj[key] ? 1 : 0);
+  public writeBoolean(value: boolean): void {
+    this.dataView.setUint8(this.curOffset, value ? 1 : 0);
     this.curOffset += 1;
   }
 
-  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setUint8(this.curOffset, obj[key]);
+  public writeUint8(value: number): void {
+    this.dataView.setUint8(this.curOffset, value);
     this.curOffset += 1;
   }
-  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setUint16(this.curOffset, obj[key]);
+  public writeUint16(value: number): void {
+    this.dataView.setUint16(this.curOffset, value);
     this.curOffset += 2;
   }
-  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setUint32(this.curOffset, obj[key]);
+  public writeUint32(value: number): void {
+    this.dataView.setUint32(this.curOffset, value);
     this.curOffset += 4;
   }
 
-  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setInt8(this.curOffset, obj[key]);
+  public writeInt8(value: number): void {
+    this.dataView.setInt8(this.curOffset, value);
     this.curOffset += 1;
   }
-  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setInt16(this.curOffset, obj[key]);
+  public writeInt16(value: number): void {
+    this.dataView.setInt16(this.curOffset, value);
     this.curOffset += 2;
   }
-  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setInt32(this.curOffset, obj[key]);
+  public writeInt32(value: number): void {
+    this.dataView.setInt32(this.curOffset, value);
     this.curOffset += 4;
   }
 
-  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setFloat32(this.curOffset, obj[key]);
+  public writeFloat32(value: number): void {
+    this.dataView.setFloat32(this.curOffset, value);
     this.curOffset += 4;
   }
-  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    this.dataView.setFloat64(this.curOffset, obj[key]);
+  public writeFloat64(value: number): void {
+    this.dataView.setFloat64(this.curOffset, value);
     this.curOffset += 8;
   }
 
-  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    let str = obj[key] as string; // Don't ask about this cast. Try removing it and see the insanity (at least in TS 2.3.4).
-    let strLenBytes = str.length * 2;
+  public writeStringUTF16(value: string): void {
+    let strLenBytes = value.length * 2;
     // tslint:disable-next-line:no-bitwise
     if (strLenBytes >= 1 << 8) {
       throw new Error("Don't serialize such a large string...");
     }
     this.dataView.setUint8(this.curOffset, strLenBytes);
     this.curOffset += 1;
-    for (let i = 0, len = str.length; i < len; i++) {
-      this.dataView.setUint16(this.curOffset, str.charCodeAt(i));
+    for (let i = 0, len = value.length; i < len; i++) {
+      this.dataView.setUint16(this.curOffset, value.charCodeAt(i));
       this.curOffset += 2;
     }
   }
-  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    let buff = obj[key] as Uint8Array; // Don't ask about this cast. Try removing it and see the insanity (at least in TS 2.3.4).
-    let buffLenBytes = buff.length;
+  public writeUint8Array(value: Uint8Array): void {
+    let buffLenBytes = value.length;
     // tslint:disable-next-line:no-bitwise
     if (buffLenBytes >= 1 << 16) {
       throw new Error("Don't serialize such a large buffer...");
@@ -190,24 +240,67 @@ export class WriteStream implements SerializationStream {
     this.dataView.setUint16(this.curOffset, buffLenBytes);
     this.curOffset += 2;
     let buffView = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
-    buffView.set(buff);
+    buffView.set(value);
     this.curOffset += buffLenBytes;
   }
 
-  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeSerializable(value: Serializable): void {
     if (this.classRegistry === undefined) {
       throw new Error('Can not serialize arbitrary type without a classRegistry.');
     }
-    let kindId = this.classRegistry.getKindIdFromConstructor(obj[key].constructor)!;
+    let kindId = this.classRegistry.getKindIdFromConstructor(value.constructor as reflection.GenericConstructor)!;
     this.dataView.setUint32(this.curOffset, kindId);
     this.curOffset += 4;
-    obj[key].serialize(this);
+    value.serialize(this);
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeBoolean(obj[key]);
+  }
+
+  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint8(obj[key]);
+  }
+  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint16(obj[key]);
+  }
+  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint32(obj[key]);
+  }
+
+  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt8(obj[key]);
+  }
+  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt16(obj[key]);
+  }
+  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt32(obj[key]);
+  }
+
+  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeFloat32(obj[key]);
+  }
+  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeFloat64(obj[key]);
+  }
+
+  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeStringUTF16(obj[key]);
+  }
+  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint8Array(obj[key]);
+  }
+
+  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeSerializable(obj[key]);
   }
 }
 
-export class MeasureStream implements SerializationStream {
+export class MeasureStream implements SerializationStreamInterface {
+  public readonly kind: 'write' = 'write'; // Want the writer to behave exactly as they would if they were writing.
   public readonly isReading = false;
-  public readonly isWriting = true; // Want the writer to behave exactly as they would if they were writing.
+  public readonly isWriting = true;
 
   private curOffset = 0;
 
@@ -215,52 +308,48 @@ export class MeasureStream implements SerializationStream {
     return this.curOffset;
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeBoolean(value: boolean): void {
     this.curOffset += 1;
   }
 
-  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeUint8(value: number): void {
     this.curOffset += 1;
   }
-  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeUint16(value: number): void {
     this.curOffset += 2;
   }
-  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeUint32(value: number): void {
     this.curOffset += 4;
   }
 
-  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeInt8(value: number): void {
     this.curOffset += 1;
   }
-  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeInt16(value: number): void {
     this.curOffset += 2;
   }
-  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeInt32(value: number): void {
     this.curOffset += 4;
   }
 
-  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeFloat32(value: number): void {
     this.curOffset += 4;
   }
-  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeFloat64(value: number): void {
     this.curOffset += 8;
   }
 
-  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    let str = obj[key] as string;  // Don't ask about this cast. Try removing it and see the insanity (at least in TS 2.3.4).
-    let strLenBytes = str.length * 2;
+  public writeStringUTF16(value: string): void {
+    let strLenBytes = value.length * 2;
     // tslint:disable-next-line:no-bitwise
     if (strLenBytes >= 1 << 8) {
       throw new Error("Don't serialize such a large string...");
     }
     this.curOffset += 1;
-    for (let i = 0, len = str.length; i < len; i++) {
-      this.curOffset += 2;
-    }
+    this.curOffset += strLenBytes;
   }
-  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    let buff = obj[key] as Uint8Array;  // Don't ask about this cast. Try removing it and see the insanity (at least in TS 2.3.4).
-    let buffLenBytes = buff.length;
+  public writeUint8Array(value: Uint8Array): void {
+    let buffLenBytes = value.length;
     // tslint:disable-next-line:no-bitwise
     if (buffLenBytes >= 1 << 16) {
       throw new Error("Don't serialize such a large buffer...");
@@ -269,9 +358,51 @@ export class MeasureStream implements SerializationStream {
     this.curOffset += buffLenBytes;
   }
 
-  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public writeSerializable(value: Serializable): void {
     this.curOffset += 4;
-    obj[key].serialize(this);
+    value.serialize(this);
+  }
+
+  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeBoolean(obj[key]);
+  }
+
+  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint8(obj[key]);
+  }
+  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint16(obj[key]);
+  }
+  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint32(obj[key]);
+  }
+
+  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt8(obj[key]);
+  }
+  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt16(obj[key]);
+  }
+  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeInt32(obj[key]);
+  }
+
+  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeFloat32(obj[key]);
+  }
+  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeFloat64(obj[key]);
+  }
+
+  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeStringUTF16(obj[key]);
+  }
+  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeUint8Array(obj[key]);
+  }
+
+  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+    this.writeSerializable(obj[key]);
   }
 }
 

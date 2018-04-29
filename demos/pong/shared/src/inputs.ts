@@ -16,22 +16,16 @@ export enum ButtonState {
 }
 
 function serializeSetOfUint8(stream: lk.SerializationStream, set: Set<number>): void {
-  let numEntries = {val: 0};
-  if (stream.isWriting) {
-    numEntries.val = set.size;
-  }
-  stream.serializeUint8(numEntries, 'val');
-  if (stream.isWriting) {
+  if (stream.kind === 'write') {
+    stream.writeUint8(set.size);
     for (let value of set.values()) {
-      let valueObj = { value };
-      stream.serializeUint8(valueObj, 'value');
+      stream.writeUint8(value);
     }
   } else {
     set.clear();
-    for (let i = 0; i < numEntries.val; ++i) {
-      let valueObj = { value: 0 };
-      stream.serializeUint8(valueObj, 'value');
-      set.add(valueObj.value);
+    let numEntries = stream.readUint8();
+    for (let i = 0; i < numEntries; ++i) {
+      set.add(stream.readUint8());
     }
   }
 }
