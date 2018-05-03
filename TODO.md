@@ -1,4 +1,4 @@
-- [ ] Fix component additions to replace / delete / generally handle a component already existing.
+- [ ] Consider whether we should abandon component IDs and instead make kindId + entityId the only primary key.
 - [ ] Finish up implementation of entity and component deletion so we can release resources and
       make state packets stop growing indefinitely.
 - [ ] Add leading underscores to private members (for JavaScript consumers' sake).
