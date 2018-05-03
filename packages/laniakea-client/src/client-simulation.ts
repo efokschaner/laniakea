@@ -267,6 +267,7 @@ export class ClientSimulation {
     this.applyPredictedOrAuthoritativeInputsToResolvedInputs(nextFrame);
     this.engine.stepSimulation(1 / this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
     this.applyAuthoritativeStateToResolvedState(nextFrame);
+    nextFrame.resolvedFrameData.state.purgeDeletedState();
     // By copying the data to itself, we quantize the state, which ensures that the values being
     // passed in to the next step will match more closely those that the client will receive
     // on the network, as well as the client performing the same operation on itself to create

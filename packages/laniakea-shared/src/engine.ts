@@ -135,10 +135,10 @@ class EngineImpl implements Engine {
       timeDeltaS,
       simulationTimeS: nextFrame.simulationTimeS,
       inputs: nextFrame.inputs,
-      state: nextFrame.state,
+      state: nextFrame.state.withDeletedStateHidden(),
       previousFrameSimulationTimeS: previousFrame.simulationTimeS,
       previousFrameInputs: previousFrame.inputs,
-      previousFrameState: previousFrame.state,
+      previousFrameState: previousFrame.state.withDeletedStateHidden(),
     };
     this.systems.forEach((s) => s.Step(stepParams));
   }
