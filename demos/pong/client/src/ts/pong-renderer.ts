@@ -1,4 +1,4 @@
-import dat from 'dat.gui';
+import * as dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
@@ -269,20 +269,20 @@ class ThreeRenderer implements lk.RenderingSystem {
         if (paddleIsOurs) {
           foundOurPaddle = true;
           maybeObj.material = this.allyPaddleMaterial;
-            let targetOrientation = paddleOrientationData.clone();
-            // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
-            // rotate by another 180 degrees to put it at the bottom
-            targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
-            if (!this.cameraIsLockedToPlayer) {
-              this.startCameraLerp(domHighResTimestampMS, targetOrientation, 1000);
-            }
-            if (this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
-              this.cameraIsLockedToPlayer = true;
-              this.camera.quaternion.copy(targetOrientation);
-            }
+          let targetOrientation = paddleOrientationData.clone();
+          // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
+          // rotate by another 180 degrees to put it at the bottom
+          targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
+          if (!this.cameraIsLockedToPlayer) {
+            this.startCameraLerp(domHighResTimestampMS, targetOrientation, 1000);
+          }
+          if (this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
+            this.cameraIsLockedToPlayer = true;
+            this.camera.quaternion.copy(targetOrientation);
           }
         }
       }
+    }
     if (!foundOurPaddle) {
       this.cameraIsLockedToPlayer = false;
       this.startCameraLerp(domHighResTimestampMS, new THREE.Quaternion(0, 0, 0, 1), 2000);

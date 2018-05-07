@@ -1,4 +1,4 @@
-import dat from 'dat.gui';
+import * as dat from 'dat.gui';
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-client';
