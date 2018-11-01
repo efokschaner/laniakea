@@ -49,3 +49,10 @@ yarn run build
 yarn run demo
 ```
 While it's running open <http://127.0.0.1:8080> to see the demo. Try opening 2 browser tabs!
+
+
+#### Going Nuclear with package upgrades
+```
+yarn run lerna exec --concurrency 1 'yarn upgrade --latest'
+yarn upgrade --latest
+```

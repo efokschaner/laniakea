@@ -2,16 +2,33 @@ import * as R from 'ramda';
 import * as util from 'util';
 import * as winston from 'winston';
 
-const logger = new (winston.Logger)({
+const { combine, timestamp, printf } = winston.format;
+
+function padStart (text: string, max: number, fillString?: string) {
+  const cur = text.length;
+  if (max <= cur) {
+    return text;
+  }
+  const masked = max - cur;
+  let filler = fillString || ' ';
+  while (filler.length < masked) {
+    filler += filler;
+  }
+  const fillerSlice = filler.slice(0, masked);
+  return fillerSlice + text;
+}
+
+const humanFormat = printf(info => {
+  return `${info.timestamp} - ${padStart(info.level.toUpperCase(), 6)}: ${info.message}`;
+});
+
+const logger = winston.createLogger({
   transports: [
     new (winston.transports.Console)({
-      timestamp() {
-        return (new Date()).toString();
-      },
-      formatter(options: any) {
-        return options.timestamp() + ' ' + options.level.toUpperCase() + ' ' + (undefined !== options.message ? options.message : '') +
-          (options.meta && Object.keys(options.meta).length ? '\n\t' + JSON.stringify(options.meta) : '' );
-      },
+      format: combine(
+        timestamp(),
+        humanFormat
+      )
     }),
   ],
 });

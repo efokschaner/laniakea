@@ -117,8 +117,8 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
           reliableChannelIsOpen = true;
           onChannelOpen();
         };
-        reliableChannel.onerror = (error) => {
-          reject(new Error(error.message));
+        reliableChannel.onerror = (event) => {
+          reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
         };
         reliableChannel.onclose = () => {
           reject(new Error('Reliable channel closed during startup.'));
@@ -127,8 +127,8 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
           unreliableChannelIsOpen = true;
           onChannelOpen();
         };
-        unreliableChannel.onerror = (error) => {
-          reject(new Error(error.message));
+        unreliableChannel.onerror = (event) => {
+          reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
         };
         unreliableChannel.onclose = () => {
           reject(new Error('Unreliable channel closed during startup.'));

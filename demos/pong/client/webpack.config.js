@@ -2,7 +2,7 @@ var path = require('path');
 
 var webpack = require('webpack');
 
-var cssnext = require('postcss-cssnext');
+var postcssPresetEnv = require('postcss-preset-env');
 var nested = require('postcss-nested');
 var doiuse = require('doiuse');
 var wordwrap = require('wordwrap');
@@ -11,7 +11,7 @@ var colors = require('colors');
 
 var postCSSPlugins = [
   nested,
-  cssnext(),
+  postcssPresetEnv({ stage: 2 }),
   doiuse({
     browsers: ['> 1%'],
     ignore: ['kerning-pairs-ligatures'],

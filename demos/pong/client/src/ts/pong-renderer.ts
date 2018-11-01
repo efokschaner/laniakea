@@ -167,7 +167,8 @@ class ThreeRenderer implements lk.RenderingSystem {
     // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
     // their current pos as the value.
     for (let currentFramePos of nearestFrames.current.state.getComponents(Position2)) {
-      let interpolatedPosition = currentFramePos.getData().clone();
+      // TODO Vector2.clone() signature should actually return a "this" type but doesn't.
+      let interpolatedPosition = currentFramePos.getData().clone() as Position2;
       let maybeNextFramePos = nearestFrames.next.state.getComponent(Position2, currentFramePos.getId());
       if (maybeNextFramePos !== undefined) {
         interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);

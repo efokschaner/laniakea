@@ -11,11 +11,11 @@
   "author": "efokschaner",
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^9.6.6",
+    "@types/node": "^10.12.1",
     "present": "^1.0.0",
-    "three": "^0.92.0",
+    "three": "^0.98.0",
     "ts-events": "^3.2.0",
-    "typescript": "^2.7.2",
+    "typescript": "^3.1.5",
     "xxhashjs": "^0.2.1"
   }
 }

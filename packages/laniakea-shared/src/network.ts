@@ -12,59 +12,6 @@ import {
   WriteStream,
 } from './serialization';
 
-declare global {
-  // Apply some improvements to RTCPeerConnection's interface
-
-  // https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelinit
-  interface RTCDataChannelInit {
-    ordered?: boolean; // default = true
-    maxPacketLifeTime?: number;
-    maxRetransmits?: number;
-    protocol?: string; // default = ''
-    negotiated?: boolean; // default = false
-    id?: number;
-  }
-
-  // https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelstate
-  type RTCDataChannelState = 'connecting' | 'open' | 'closing' | 'closed';
-
-  // https://www.w3.org/TR/websockets/#dom-websocket-binarytype
-  type RTCBinaryType = 'blob' | 'arraybuffer';
-
-  // https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannel
-  interface RTCDataChannel extends EventTarget {
-    readonly label: string;
-    readonly ordered: boolean;
-    readonly maxPacketLifeTime: number | null;
-    readonly maxRetransmits: number | null;
-    readonly protocol: string;
-    readonly negotiated: boolean;
-    readonly id: number;
-    readonly readyState: RTCDataChannelState;
-    readonly bufferedAmount: number;
-    bufferedAmountLowThreshold: number;
-    binaryType: RTCBinaryType;
-
-    close(): void;
-    send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
-
-    onopen: (event: Event) => void;
-    onmessage: (event: MessageEvent) => void;
-    onbufferedamountlow: (event: Event) => void;
-    onerror: (event: ErrorEvent) => void;
-    onclose: (event: Event) => void;
-  }
-
-    // https://www.w3.org/TR/webrtc/#h-rtcdatachannelevent
-  interface RTCDataChannelEvent {
-    readonly channel: RTCDataChannel;
-  }
-
-  interface RTCPeerConnection {
-    createDataChannel(label: string | null, dataChannelDict?: RTCDataChannelInit): RTCDataChannel;
-    ondatachannel: (event: RTCDataChannelEvent) => void;
-  }
-}
 
 // Buffers RTCDataChannel recieved messages until the
 // flushAndStopBuffering function is called.
@@ -115,11 +62,15 @@ export class RTCPeerConnectionWithOpenDataChannels {
   }
 
   public sendReliable(data: ArrayBuffer | ArrayBufferView): void {
-    this.reliableChannel.send(data);
+    // TODO This `as` is inaccurate but TS can't handle passing a union
+    // to an overloaded method that supports all the union types
+    this.reliableChannel.send(data as ArrayBuffer);
   }
 
   public sendUnreliable(data: ArrayBuffer | ArrayBufferView): void {
-    this.unreliableChannel.send(data);
+    // TODO This `as` is inaccurate but TS can't handle passing a union
+    // to an overloaded method that supports all the union types
+    this.unreliableChannel.send(data as ArrayBuffer);
   }
 
   public close() {
