@@ -25,7 +25,7 @@ export class ClassRegistry {
   public getKindIds(): Iterable<KindId> {
     return this.kindIdToKind.keys();
   }
-  public registerClass<T>(ctor: GenericConstructor, kind: string): KindId {
+  public registerClass(ctor: GenericConstructor, kind: string): KindId {
     let kindId = this.getKindId(kind as Kind);
     if (this.kindIdToKind.has(kindId)) {
       throw new Error('Key Collision');

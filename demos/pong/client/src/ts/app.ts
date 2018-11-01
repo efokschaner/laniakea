@@ -63,8 +63,8 @@ clientEngine.engine.addSystem(new PaddleMovementSystem());
 clientEngine.engine.addSystem(new PaddlePositionSyncSystem());
 clientEngine.engine.addSystem(new BallMovementSystem(false));
 
-// tslint:disable-next-line:no-unused-variable
-let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
+// tslint:disable-next-line:no-unused-expression
+new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
   switch (key) {
     case 'a': return GameButtons.LEFT;
     case 'd': return GameButtons.RIGHT;

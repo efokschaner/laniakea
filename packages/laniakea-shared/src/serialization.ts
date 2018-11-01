@@ -308,34 +308,34 @@ export class MeasureStream implements SerializationStreamInterface {
     return this.curOffset;
   }
 
-  public writeBoolean(value: boolean): void {
+  public writeBoolean(_value: boolean): void {
     this.curOffset += 1;
   }
 
-  public writeUint8(value: number): void {
+  public writeUint8(_value: number): void {
     this.curOffset += 1;
   }
-  public writeUint16(value: number): void {
+  public writeUint16(_value: number): void {
     this.curOffset += 2;
   }
-  public writeUint32(value: number): void {
+  public writeUint32(_value: number): void {
     this.curOffset += 4;
   }
 
-  public writeInt8(value: number): void {
+  public writeInt8(_value: number): void {
     this.curOffset += 1;
   }
-  public writeInt16(value: number): void {
+  public writeInt16(_value: number): void {
     this.curOffset += 2;
   }
-  public writeInt32(value: number): void {
+  public writeInt32(_value: number): void {
     this.curOffset += 4;
   }
 
-  public writeFloat32(value: number): void {
+  public writeFloat32(_value: number): void {
     this.curOffset += 4;
   }
-  public writeFloat64(value: number): void {
+  public writeFloat64(_value: number): void {
     this.curOffset += 8;
   }
 

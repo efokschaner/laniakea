@@ -30,8 +30,8 @@ initialiseEngine(clientEngine.engine);
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 
-// tslint:disable-next-line:no-unused-variable
-let keyboardHandler = new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
+// tslint:disable-next-line:no-unused-expression
+new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
   switch (key) {
     case 'w': return GameButtons.UP;
     case 's': return GameButtons.DOWN;

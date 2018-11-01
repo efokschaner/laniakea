@@ -133,7 +133,7 @@ type GenericComponentFactory = (
  * A component that is builtin, marks entities as deleted
  */
 class DeletedTag implements Serializable {
-  public serialize(stream: SerializationStream): void {
+  public serialize(_stream: SerializationStream): void {
     // Nothing to serialize
   }
 }

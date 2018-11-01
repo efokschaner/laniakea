@@ -85,7 +85,7 @@ class EngineImpl implements Engine {
     this.continuousInputTypes.registerClass(inputType, inputKind);
   }
 
-  public registerEventedInputType<T extends Serializable>(inputType: {new(): T}, inputKind: EventedInputKind): void {
+  public registerEventedInputType<T extends Serializable>(_inputType: {new(): T}, _inputKind: EventedInputKind): void {
     throw new Error('Unimplemented');
   }
 

@@ -12,7 +12,6 @@ import {
   WriteStream,
 } from './serialization';
 
-
 // Buffers RTCDataChannel recieved messages until the
 // flushAndStopBuffering function is called.
 // Do not touch the onmessage attribute on the datachannel

@@ -56,7 +56,6 @@ class ThreeRenderer implements lk.RenderingSystem {
   // ORBITAL CAMERA JUST FOR DEBUG.
   private cameraController?: THREE.OrbitControls;
 
-  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -92,7 +91,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     this.floorMesh.receiveShadow = true;
     this.scene.add(this.floorMesh);
 
-    sceneElementContainer.appendChild(this.renderer.domElement);
+    this.sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
   private updateCamera(domHighResTimestampMS: number) {
@@ -296,7 +295,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     for (let ball of this.rendererBalls.values()) {
       ball.visible = false;
     }
-    for (let [ballPosition, _] of state.getAspect(Position2, BallMovement)) {
+    for (let [ballPosition] of state.getAspect(Position2, BallMovement)) {
       let maybeBall = this.rendererBalls.get(ballPosition.getOwnerId());
       if (maybeBall === undefined) {
         maybeBall = new THREE.Mesh(this.ballGeometry, this.ballMaterial);
@@ -328,7 +327,7 @@ export class GuiRenderer implements lk.RenderingSystem {
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
   }
 
-  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(_domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
     this.guiViewModel.currentSimTime = simulation.getCurrentSimulationTimeS() || 0;
     let inputTravelTimeS = simulation.getInputTravelTimeS() || 0;
     this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
@@ -339,9 +338,8 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private threeRenderer: ThreeRenderer;
   private guiRenderer: GuiRenderer;
 
-  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
-    this.threeRenderer = new ThreeRenderer(sceneElementContainer);
+    this.threeRenderer = new ThreeRenderer(this.sceneElementContainer);
     this.guiRenderer = new GuiRenderer();
   }
 

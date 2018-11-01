@@ -10,7 +10,6 @@
         "max-line-length": [true, 160],
         "member-ordering": false,
         "no-console": false,
-        "no-unused-variable": [true, {"ignore-pattern": "^_"}],
         "object-literal-sort-keys": false,
         "only-arrow-functions": [true, "allow-named-functions"],
         "prefer-const": false,

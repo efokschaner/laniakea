@@ -4,7 +4,7 @@ import * as winston from 'winston';
 
 const { combine, timestamp, printf } = winston.format;
 
-function padStart (text: string, max: number, fillString?: string) {
+function padStart(text: string, max: number, fillString?: string) {
   const cur = text.length;
   if (max <= cur) {
     return text;
@@ -18,7 +18,7 @@ function padStart (text: string, max: number, fillString?: string) {
   return fillerSlice + text;
 }
 
-const humanFormat = printf(info => {
+const humanFormat = printf((info) => {
   return `${info.timestamp} - ${padStart(info.level.toUpperCase(), 6)}: ${info.message}`;
 });
 
@@ -27,8 +27,8 @@ const logger = winston.createLogger({
     new (winston.transports.Console)({
       format: combine(
         timestamp(),
-        humanFormat
-      )
+        humanFormat,
+      ),
     }),
   ],
 });

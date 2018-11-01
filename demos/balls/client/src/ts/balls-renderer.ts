@@ -21,8 +21,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
   private cameraController: THREE.OrbitControls;
-  // tslint:disable-next-line:no-unused-variable
-  private currentlySelectedObject?: THREE.Object3D;
   private activeCameraLerp?: (currentWallTimeMS: number) => void;
   private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
   private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
@@ -41,7 +39,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
       this.cameraController.target = originalTargetPos.clone().lerp(targetPosition, lerpFactor);
       this.cameraController.object.position.copy(this.cameraController.target.clone().add(targetPosToCameraPos));
     };
-    this.currentlySelectedObject = object;
   }
 
   private raycaster = new THREE.Raycaster();
@@ -51,7 +48,6 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     return this.raycaster.intersectObjects(objects);
   }
 
-  // tslint:disable-next-line:no-unused-variable
   constructor(private sceneElementContainer: HTMLElement) {
     this.guiView.add(this.guiViewModel, 'currentSimTimeS').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
@@ -92,7 +88,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     let ambientLight = new THREE.AmbientLight(0x202020);
     this.scene.add(ambientLight);
 
-    sceneElementContainer.appendChild(this.renderer.domElement);
+    this.sceneElementContainer.appendChild(this.renderer.domElement);
   }
 
   public render(domHighResTimestampMS: number, clientSimulation: lk.ClientSimulation) {

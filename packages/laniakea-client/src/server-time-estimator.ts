@@ -106,7 +106,7 @@ export class ServerTimeEstimator {
   private timeSyncSamples = new Array<TimeSyncSample>();
 
   private readonly requestPeriodS = 2;
-  private getNextRequestTimeJitteredS(lastRequestTimeS: number): number {
+  private getNextRequestTimeJitteredS(_lastRequestTimeS: number): number {
     return (Math.random() + 0.5) * this.requestPeriodS;
   }
   // undefined if no request has been sent yet

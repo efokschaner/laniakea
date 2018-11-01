@@ -60,7 +60,7 @@ class RTCServer {
   private httpServer: http.Server;
   private wsServer: WebSocketServer;
   constructor(private authenticatePlayer: AuthCallback) {
-    this.httpServer = http.createServer((request, response) => {
+    this.httpServer = http.createServer((_request, response) => {
       response.writeHead(404);
       response.end();
     });
@@ -84,7 +84,7 @@ class RTCServer {
   }
   public close() {
     return new Bluebird((resolve, reject) => {
-      this.wsServer.on('close', (connection, closeReason, description) => {
+      this.wsServer.on('close', (_connection, _closeReason, _description) => {
         if (this.wsServer.connections.length === 0) {
           resolve();
         }
@@ -97,7 +97,7 @@ class RTCServer {
       this.httpServer.close();
     });
   }
-  private _originIsAllowed(origin: string) {
+  private _originIsAllowed(_origin: string) {
     // TODO: Figure out if origin restrictions are needed
     return true;
   }
@@ -167,7 +167,7 @@ class RTCServer {
       }
     });
     wsConnection.on('close', (reasonCode, description) => {
-      console.log('WebSocket client ' + wsConnection.remoteAddress + ' disconnected.');
+      console.log(`WebSocket client ${wsConnection.remoteAddress} disconnected. ${reasonCode} : ${description}`);
     });
     // send any ice candidates to the other peer
     peerConnection.onicecandidate = (evt) => {
