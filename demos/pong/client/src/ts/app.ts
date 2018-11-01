@@ -21,6 +21,7 @@ import {
 } from 'lk-demo-pong-shared';
 
 import { KeyboardHandler } from './keyboard-handler';
+import { MockStorage } from './mock-storage';
 import { RenderingSystemImpl } from './pong-renderer';
 
 interface HTMLHyperlinkElementUtils {
@@ -37,13 +38,16 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
+let persistToLocalStorage = false;
+let localStorage = persistToLocalStorage ? window.localStorage : new MockStorage();
+
 function getUserId() {
-  let prior = window.localStorage.getItem('user_id');
+  let prior = localStorage.getItem('user_id');
   if (prior) {
     return prior;
   }
   let newId = Math.round(Math.random() * 10000).toString();
-  window.localStorage.setItem('user_id', newId);
+  localStorage.setItem('user_id', newId);
   return newId;
 }
 

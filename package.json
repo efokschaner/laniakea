@@ -7,7 +7,7 @@
     "bootstrap": "yarn install && lerna bootstrap",
     "build": "lerna run build",
     "clean": "lerna exec --parallel -- rimraf dist",
-    "demo": "$(cd packages/lk-demo-server && yarn run start) & $(cd packages/lk-demo-client && yarn run start) && fg",
+    "demo": "$(cd demos/pong/server && yarn run start) & $(cd demos/pong/client && yarn run start) && fg",
     "lerna": "./node_modules/.bin/lerna",
     "tslint": "lerna exec -- tslint --project .",
     "tslint:fix": "lerna exec -- tslint --project . --fix"
