@@ -51,7 +51,7 @@ export class C2S_InputFramePacket implements Serializable {
 
 export function registerPacketTypes(
   registerCb: <T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string) => void) {
   registerCb(S2C_FrameUpdatePacket, 'S2C_FrameUpdatePacket');
   registerCb(C2S_TimeSyncRequestPacket, 'C2S_TimeSyncRequestPacket');

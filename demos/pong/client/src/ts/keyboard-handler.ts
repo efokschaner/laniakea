@@ -9,7 +9,7 @@ export class KeyboardHandler<T extends Serializable & {buttonStates: Map<number,
    */
   constructor(
     private clientEngine: ClientEngine,
-    private inputType: { new (): T; },
+    private inputType: new () => T,
     private buttonMappingCallback: (keyboardKey: string) => number | undefined) {
     document.addEventListener('keydown', this.onKeyDown.bind(this));
     document.addEventListener('keyup', this.onKeyUp.bind(this));

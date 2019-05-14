@@ -50,7 +50,7 @@ export interface Component<T extends Serializable> extends GenericComponent {
 
 export interface Entity {
   getId(): EntityId;
-  getComponent<T extends Serializable>(componentType: {new(): T}): Component<T> | undefined;
+  getComponent<T extends Serializable>(componentType: new() => T): Component<T> | undefined;
   delete(): void;
 }
 
@@ -69,22 +69,22 @@ export interface EntityComponentState extends Serializable {
    */
   addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> | undefined;
 
-  getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>>;
-  getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined;
-  getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined;
+  getComponents<T extends Serializable>(componentType: new() => T): Iterable<Component<T>>;
+  getComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): Component<T> | undefined;
+  getComponentOfEntity<T extends Serializable>(componentType: new() => T, entityId: EntityId): Component<T> | undefined;
 
   getAspect<T extends Serializable, U extends Serializable>(
-    componentTypeT: {new(): T},
-    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]>;
+    componentTypeT: new() => T,
+    componentTypeU: new() => U): Iterable<[Component<T>, Component<U>]>;
   getAspect<T extends Serializable, U extends Serializable, V extends Serializable>(
-      componentTypeT: {new(): T},
-      componentTypeU: {new(): U},
-      componentTypeV: {new(): V}): Iterable<[Component<T>, Component<U>, Component<V>]>;
+      componentTypeT: new() => T,
+      componentTypeU: new() => U,
+      componentTypeV: new() => V): Iterable<[Component<T>, Component<U>, Component<V>]>;
 
   getEntity(entityId: EntityId): Entity | undefined;
 
   deleteEntity(entityId: EntityId): void;
-  deleteComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): void;
+  deleteComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): void;
 
   /**
    * Returns this same state, but all getters will filter out deleted entities and components.
@@ -157,7 +157,7 @@ export class ComponentReflection {
   public getComponentKindIds(): Iterable<ComponentKindId> {
     return this.componentKindIdToComponentKind.keys();
   }
-  public registerType<T extends Serializable>(ctor: {new(): T}, componentKind: ComponentKind): ComponentKindId {
+  public registerType<T extends Serializable>(ctor: new() => T, componentKind: ComponentKind): ComponentKindId {
     let componentKindId = this.getComponentKindId(componentKind);
     this.componentKindIdToComponentKind.set(componentKindId, componentKind);
     this.componentKindIdToComponentDataConstructor.set(componentKindId, ctor);
@@ -190,7 +190,7 @@ export class ComponentReflection {
 
   private componentKindIdToComponentKind: Map<ComponentKindId, ComponentKind> = new Map();
   // Following pair are each others inverse
-  private componentKindIdToComponentDataConstructor: Map<ComponentKindId, {new(): Serializable}> = new Map();
+  private componentKindIdToComponentDataConstructor: Map<ComponentKindId, new() => Serializable> = new Map();
   // Allow the use of Function. It's truly the type of constructors in TS...
   // tslint:disable-next-line:ban-types
   private componentDataConstructorToComponentKindId: Map<Function, ComponentKindId> = new Map();
@@ -243,7 +243,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
   }
 
   public addComponent<T extends Serializable>(ownerId: EntityId, data: T): Component<T> | undefined {
-    let componentConstructor = data.constructor as { new(): T };
+    let componentConstructor = data.constructor as new() => T;
     let maybeComponent = this.getComponentOfEntity(componentConstructor, ownerId);
     if (maybeComponent && !maybeComponent.isDeleted()) {
       maybeComponent.setData(data);
@@ -264,7 +264,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     this.addComponent(entityId, new DeletedTag());
   }
 
-  public deleteComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): void {
+  public deleteComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): void {
     // TODO, eventually we should rig things so that once we know the deletion has been
     // replicated to all clients we destroy the actual data.
     // For now this "leaks" indefinitely.
@@ -277,7 +277,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     }
   }
 
-  private _getComponents<T extends Serializable>(componentType: {new(): T}): Map<ComponentId, Component<T>> | undefined {
+  private _getComponents<T extends Serializable>(componentType: new() => T): Map<ComponentId, Component<T>> | undefined {
     let componentKindId = this.componentReflection.getComponentKindIdFromConstructor(componentType);
     if (componentKindId === undefined) {
       return undefined;
@@ -285,7 +285,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return this.getComponentsByKindId(componentKindId) as Map<ComponentId, Component<T>> | undefined;
   }
 
-  public *getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>> {
+  public *getComponents<T extends Serializable>(componentType: new() => T): Iterable<Component<T>> {
     for (let component of this._getComponents(componentType)!.values()) {
       yield component;
     }
@@ -295,7 +295,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return this.getComponentsByKindId(this.componentReflection.getComponentKindId(componentKind)).get(componentId);
   }
 
-  public getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined {
+  public getComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): Component<T> | undefined {
     let componentsOfKind = this._getComponents(componentType);
     if (componentsOfKind === undefined) {
       return undefined;
@@ -303,7 +303,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     return componentsOfKind.get(componentId);
   }
 
-  public getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined {
+  public getComponentOfEntity<T extends Serializable>(componentType: new() => T, entityId: EntityId): Component<T> | undefined {
     let maybeEntityComponents = this.entityIdToComponents.get(entityId);
     if (maybeEntityComponents === undefined) {
       return undefined;
@@ -328,17 +328,17 @@ export class EntityComponentStateImpl implements EntityComponentState {
 
   // TODO maybe create a caching-y optimiser-y thing for aspect queries.
   public getAspect<T extends Serializable, U extends Serializable>(
-    componentTypeT: {new(): T},
-    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]>;
+    componentTypeT: new() => T,
+    componentTypeU: new() => U): Iterable<[Component<T>, Component<U>]>;
   public getAspect<T extends Serializable, U extends Serializable, V extends Serializable>(
-    componentTypeT: {new(): T},
-    componentTypeU: {new(): U},
-    componentTypeV: {new(): V}): Iterable<[Component<T>, Component<U>, Component<V>]>;
-  public getAspect(...componentTypes: Array<{new(): Serializable}>): Iterable<GenericComponent[]> {
+    componentTypeT: new() => T,
+    componentTypeU: new() => U,
+    componentTypeV: new() => V): Iterable<[Component<T>, Component<U>, Component<V>]>;
+  public getAspect(...componentTypes: Array<new() => Serializable>): Iterable<GenericComponent[]> {
     return this.getAspectGeneric(componentTypes);
   }
 
-  public *getAspectGeneric(componentTypes: Array<{new(): Serializable}>): Iterable<GenericComponent[]> {
+  public *getAspectGeneric(componentTypes: Array<new() => Serializable>): Iterable<GenericComponent[]> {
     let componentTypeIdList = componentTypes.map((c) => this.componentReflection.getComponentKindIdFromConstructor(c));
     let anyUndefined = componentTypeIdList.indexOf(undefined) !== -1;
     if (anyUndefined) {
@@ -472,7 +472,7 @@ class EntityImpl implements Entity {
   public getId(): EntityId {
     return this.id;
   }
-  public getComponent<T extends Serializable>(componentType: {new(): T}): Component<T> | undefined {
+  public getComponent<T extends Serializable>(componentType: new() => T): Component<T> | undefined {
     return this.ecState.getComponentOfEntity<T>(componentType, this.id);
   }
   public delete(): void {
@@ -500,7 +500,7 @@ export class EntityComponentStateDeletionHidingFacade implements EntityComponent
     return this.state.addComponent(ownerId, data);
   }
 
-  public *getComponents<T extends Serializable>(componentType: {new(): T}): Iterable<Component<T>> {
+  public *getComponents<T extends Serializable>(componentType: new() => T): Iterable<Component<T>> {
     for (let component of this.state.getComponents(componentType)) {
       if (!component.isDeleted()) {
         yield component;
@@ -508,7 +508,7 @@ export class EntityComponentStateDeletionHidingFacade implements EntityComponent
     }
   }
 
-  public getComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): Component<T> | undefined {
+  public getComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): Component<T> | undefined {
     let maybeComponent = this.state.getComponent(componentType, componentId);
     if (maybeComponent === undefined || maybeComponent.isDeleted()) {
       return undefined;
@@ -516,7 +516,7 @@ export class EntityComponentStateDeletionHidingFacade implements EntityComponent
     return maybeComponent;
   }
 
-  public getComponentOfEntity<T extends Serializable>(componentType: {new(): T}, entityId: EntityId): Component<T> | undefined {
+  public getComponentOfEntity<T extends Serializable>(componentType: new() => T, entityId: EntityId): Component<T> | undefined {
     let maybeComponent = this.state.getComponentOfEntity(componentType, entityId);
     if (maybeComponent === undefined || maybeComponent.isDeleted()) {
       return undefined;
@@ -525,13 +525,13 @@ export class EntityComponentStateDeletionHidingFacade implements EntityComponent
   }
 
   public getAspect<T extends Serializable, U extends Serializable>(
-    componentTypeT: {new(): T},
-    componentTypeU: {new(): U}): Iterable<[Component<T>, Component<U>]>;
+    componentTypeT: new() => T,
+    componentTypeU: new() => U): Iterable<[Component<T>, Component<U>]>;
   public getAspect<T extends Serializable, U extends Serializable, V extends Serializable>(
-    componentTypeT: {new(): T},
-    componentTypeU: {new(): U},
-    componentTypeV: {new(): V}): Iterable<[Component<T>, Component<U>, Component<V>]>;
-  public *getAspect(...componentTypes: Array<{new(): Serializable}>): Iterable<GenericComponent[]> {
+    componentTypeT: new() => T,
+    componentTypeU: new() => U,
+    componentTypeV: new() => V): Iterable<[Component<T>, Component<U>, Component<V>]>;
+  public *getAspect(...componentTypes: Array<new() => Serializable>): Iterable<GenericComponent[]> {
     for (let components of this.state.getAspectGeneric(componentTypes)) {
       if (components.some((c) => c.isDeleted())) {
         continue;
@@ -555,7 +555,7 @@ export class EntityComponentStateDeletionHidingFacade implements EntityComponent
     return this.state.deleteEntity(entityId);
   }
 
-  public deleteComponent<T extends Serializable>(componentType: {new(): T}, componentId: ComponentId): void {
+  public deleteComponent<T extends Serializable>(componentType: new() => T, componentId: ComponentId): void {
     return this.state.deleteComponent(componentType, componentId);
   }
 

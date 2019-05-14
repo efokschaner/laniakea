@@ -47,7 +47,7 @@ export class InputFrame implements Serializable {
   }
 
   /** returns the object of the requested type, it's mutable to allow the application of inputs */
-  public getContinuousInput<T extends Serializable>(inputType: {new(): T}): T | undefined {
+  public getContinuousInput<T extends Serializable>(inputType: new() => T): T | undefined {
     let inputKindId = this.continuousInputTypes.getKindIdFromConstructor(inputType);
     if (inputKindId === undefined) {
       return undefined;

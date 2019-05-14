@@ -166,14 +166,14 @@ export class NetworkClient {
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerPacketType<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string,
   ): void {
     return this.packetPeer.registerPacketType(ctor, uniquePacketTypeName);
   }
 
   public registerPacketHandler<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     handler: (t: T, sequenceNumber: number) => void,
   ): void {
     return this.packetPeer.registerPacketHandler(ctor, handler);

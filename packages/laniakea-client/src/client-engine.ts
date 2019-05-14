@@ -92,11 +92,11 @@ export class ClientEngine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: string): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: string): void {
     this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
   }
 
-  public getCurrentContinuousInput<T extends Serializable>(inputType: {new(): T}): T|undefined {
+  public getCurrentContinuousInput<T extends Serializable>(inputType: new() => T): T|undefined {
     if (this.currentInputFrame === undefined) {
       return undefined;
     }

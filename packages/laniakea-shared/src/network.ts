@@ -292,7 +292,7 @@ export class PacketPayloadRouter {
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerPacketType<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string,
   ): void {
     this.classRegistry.registerClass(ctor, uniquePacketTypeName);
@@ -302,7 +302,7 @@ export class PacketPayloadRouter {
    * Add handlers for any packet type you wish to handle
    */
   public registerHandler<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     handler: (t: T, sequenceNumber: number) => void): void {
     this.callbacks.set(ctor, handler);
   }
@@ -351,14 +351,14 @@ export class PacketPeer {
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerPacketType<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string,
   ): void {
     return this.packetRouter.registerPacketType(ctor, uniquePacketTypeName);
   }
 
   public registerPacketHandler<T extends Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     handler: (t: T, sequenceNumber: number) => void,
   ): void {
     this.packetRouter.registerHandler(ctor, handler);

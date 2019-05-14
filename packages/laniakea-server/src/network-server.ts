@@ -256,18 +256,18 @@ export class NetworkServer {
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerPacketType<T extends lk.Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string,
   ): void {
     this.registeredPacketTypes.push([ctor, uniquePacketTypeName]);
   }
 
   public registerPacketHandler<T extends lk.Serializable>(
-    ctor: {new(...args: any[]): T},
+    ctor: new(...args: any[]) => T,
     handler: (playerId: lk.PlayerId, packet: T, sequenceNumber: number) => void,
   ): void {
     this.registeredPacketHandlers.push([
-      ctor as {new(...args: any[]): lk.Serializable},
+      ctor as new(...args: any[]) => lk.Serializable,
       handler as (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]);
   }
 
@@ -278,8 +278,8 @@ export class NetworkServer {
     }
   }
 
-  private registeredPacketTypes: Array<[{new(...args: any[]): lk.Serializable}, string]> = [];
+  private registeredPacketTypes: Array<[new(...args: any[]) => lk.Serializable, string]> = [];
   private registeredPacketHandlers: Array<[
-    {new(...args: any[]): lk.Serializable},
+    new(...args: any[]) => lk.Serializable,
     (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]> = [];
 }

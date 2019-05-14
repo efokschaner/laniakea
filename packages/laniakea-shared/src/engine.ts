@@ -43,16 +43,16 @@ export interface Engine {
    * Continuous input remains the same on the server if it doesnt get an update from client.
    * Good for things like player movement instructions from inputs that are held down by the player.
    */
-  registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: ContinuousInputKind): void;
+  registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: ContinuousInputKind): void;
 
   /**
    * Evented input has reliable and ordered delivery, and does not persist beyond the frame it is processed in.
    * Good for things like shooting a single projectile in a target direction, putting points in a stat.
    */
-  registerEventedInputType<T extends Serializable>(inputType: {new(): T}, inputKind: EventedInputKind): void;
+  registerEventedInputType<T extends Serializable>(inputType: new() => T, inputKind: EventedInputKind): void;
 
   // State Registration
-  registerComponentType<T extends Serializable>(componentType: {new(): T}, componentKind: ComponentKind): void;
+  registerComponentType<T extends Serializable>(componentType: new() => T, componentKind: ComponentKind): void;
 
   // System Registration
   addSystem(system: System): void;
@@ -81,15 +81,15 @@ class EngineImpl implements Engine {
   private componentReflection = new ComponentReflection();
   private systems: System[] = [];
 
-  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: ContinuousInputKind): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: ContinuousInputKind): void {
     this.continuousInputTypes.registerClass(inputType, inputKind);
   }
 
-  public registerEventedInputType<T extends Serializable>(_inputType: {new(): T}, _inputKind: EventedInputKind): void {
+  public registerEventedInputType<T extends Serializable>(_inputType: new() => T, _inputKind: EventedInputKind): void {
     throw new Error('Unimplemented');
   }
 
-  public registerComponentType<T extends Serializable>(componentType: {new(): T}, componentKind: ComponentKind) {
+  public registerComponentType<T extends Serializable>(componentType: new() => T, componentKind: ComponentKind) {
     this.componentReflection.registerType(componentType, componentKind);
   }
 

@@ -67,7 +67,7 @@ export class ServerEngine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: {new(): T}, inputKind: string): void {
+  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: string): void {
     this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
   }
 

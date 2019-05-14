@@ -10,7 +10,7 @@ export enum _KindIdBrand {}
 export type Kind = string & _KindBrand;
 export type KindId = number & _KindIdBrand;
 
-export interface GenericConstructor { new(...args: any[]): {}; }
+export type GenericConstructor = new(...args: any[]) => {};
 
 export class ClassRegistry {
   public getKindId(kind: Kind): KindId {
