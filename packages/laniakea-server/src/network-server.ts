@@ -10,8 +10,8 @@ import { RTCPeerConnection } from 'wrtc';
 
 import * as lk from 'laniakea-shared';
 
-function logError(...args: any[]) {
-  return console.error.apply(console, args);
+function logError(message: any, ...optionalParams: any[]) {
+  return console.error.apply(console, [message, ...optionalParams]);
 }
 
 export interface AuthSuccessResult {

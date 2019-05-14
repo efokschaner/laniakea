@@ -1,8 +1,7 @@
-import 'laniakea-server/dist/logger';
-
 import * as THREE from 'three';
 
 import * as lk from 'laniakea-server';
+lk.hookConsoleWithLogger();
 
 import {
   BallShape,

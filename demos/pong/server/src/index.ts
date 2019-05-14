@@ -1,6 +1,5 @@
-import 'laniakea-server/dist/logger';
-
 import * as lk from 'laniakea-server';
+lk.hookConsoleWithLogger();
 
 import {
   GameButtonsInput,

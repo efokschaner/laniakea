@@ -21,23 +21,23 @@ export interface SerializationStreamInterface {
   readonly isReading: boolean;
   readonly isWriting: boolean;
 
-  serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void;
 
-  serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
+  serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
+  serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
 
-  serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
+  serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
+  serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
 
-  serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
+  serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
 
-  serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
-  serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void;
+  serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void;
 
-  serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void;
+  serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void;
 }
 
 export class ReadStream implements SerializationStreamInterface {
@@ -125,46 +125,46 @@ export class ReadStream implements SerializationStreamInterface {
     return result;
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readBoolean();
+  public serializeBoolean<T extends Record<K, boolean|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, boolean>)[key] = this.readBoolean();
   }
 
-  public serializeUint8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readUint8();
+  public serializeUint8<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readUint8();
   }
-  public serializeUint16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readUint16();
+  public serializeUint16<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readUint16();
   }
-  public serializeUint32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readUint32();
-  }
-
-  public serializeInt8<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readInt8();
-  }
-  public serializeInt16<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readInt16();
-  }
-  public serializeInt32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readInt32();
+  public serializeUint32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readUint32();
   }
 
-  public serializeFloat32<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readFloat32();
+  public serializeInt8<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readInt8();
   }
-  public serializeFloat64<T extends {[k in K]?: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readFloat64();
+  public serializeInt16<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readInt16();
   }
-
-  public serializeStringUTF16<T extends {[k in K]?: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readStringUTF16();
-  }
-  public serializeUint8Array<T extends {[k in K]?: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readUint8Array();
+  public serializeInt32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readInt32();
   }
 
-  public serializeSerializable<T extends {[k in K]?: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
-    obj[key] = this.readSerializable();
+  public serializeFloat32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readFloat32();
+  }
+  public serializeFloat64<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, number>)[key] = this.readFloat64();
+  }
+
+  public serializeStringUTF16<T extends Record<K, string|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, string>)[key] = this.readStringUTF16();
+  }
+  public serializeUint8Array<T extends Record<K, Uint8Array|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, Uint8Array>)[key] = this.readUint8Array();
+  }
+
+  public serializeSerializable<T extends Record<K, Serializable|undefined>, K extends keyof T>(obj: T, key: K): void {
+    (obj as Record<K, Serializable>)[key] = this.readSerializable();
   }
 }
 
@@ -254,45 +254,45 @@ export class WriteStream implements SerializationStreamInterface {
     value.serialize(this);
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void {
     this.writeBoolean(obj[key]);
   }
 
-  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint8(obj[key]);
   }
-  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint16(obj[key]);
   }
-  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint32(obj[key]);
   }
 
-  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt8(obj[key]);
   }
-  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt16(obj[key]);
   }
-  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt32(obj[key]);
   }
 
-  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeFloat32(obj[key]);
   }
-  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeFloat64(obj[key]);
   }
 
-  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void {
     this.writeStringUTF16(obj[key]);
   }
-  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint8Array(obj[key]);
   }
 
-  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void {
     this.writeSerializable(obj[key]);
   }
 }
@@ -363,45 +363,45 @@ export class MeasureStream implements SerializationStreamInterface {
     value.serialize(this);
   }
 
-  public serializeBoolean<T extends {[k in K]: boolean} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void {
     this.writeBoolean(obj[key]);
   }
 
-  public serializeUint8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint8(obj[key]);
   }
-  public serializeUint16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint16(obj[key]);
   }
-  public serializeUint32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint32(obj[key]);
   }
 
-  public serializeInt8<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt8(obj[key]);
   }
-  public serializeInt16<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt16(obj[key]);
   }
-  public serializeInt32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeInt32(obj[key]);
   }
 
-  public serializeFloat32<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeFloat32(obj[key]);
   }
-  public serializeFloat64<T extends {[k in K]: number} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
     this.writeFloat64(obj[key]);
   }
 
-  public serializeStringUTF16<T extends {[k in K]: string} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void {
     this.writeStringUTF16(obj[key]);
   }
-  public serializeUint8Array<T extends {[k in K]: Uint8Array} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void {
     this.writeUint8Array(obj[key]);
   }
 
-  public serializeSerializable<T extends {[k in K]: Serializable} & {[k: string]: any}, K extends keyof T>(obj: T, key: K): void {
+  public serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void {
     this.writeSerializable(obj[key]);
   }
 }

@@ -4,7 +4,7 @@ const path = require('path');
 let curPackagePath = '';
 
 process.stdin.pipe(require('split')()).on('data', function (line) {
-  let packageBuildRegex = /.* Errored while running script in '(\S+)'$/;
+  let packageBuildRegex = /.* exited \d+ in '(\S+)'$/;
   let packageBuildRegexResult = packageBuildRegex.exec(line);
   if (packageBuildRegexResult) {
     let demoPackageRegex = /lk-demo-(\S+)-(\S+)$/;

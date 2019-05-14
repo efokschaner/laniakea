@@ -13,11 +13,11 @@
     "tslint:fix": "lerna exec -- tslint --project . --fix"
   },
   "devDependencies": {
-    "lerna": "^3.4.3",
-    "rimraf": "^2.6.2",
+    "lerna": "^3.13.4",
+    "rimraf": "^2.6.3",
     "split": "^1.0.1",
-    "tslint": "^5.11.0",
-    "typescript": "^3.1.5"
+    "tslint": "^5.16.0",
+    "typescript": "^3.4.0"
   },
   "workspaces": [
     "packages/*",

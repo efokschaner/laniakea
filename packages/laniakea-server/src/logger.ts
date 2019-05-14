@@ -33,11 +33,16 @@ const logger = winston.createLogger({
   ],
 });
 
-const formatArgs = util.format.bind(util);
-console.error = R.compose(logger.error.bind(logger), formatArgs);
-console.log = R.compose(logger.info.bind(logger), formatArgs); // Intentionally bound to info, winston.log != console.log
-console.info = R.compose(logger.info.bind(logger), formatArgs);
-console.debug = R.compose(logger.debug.bind(logger), formatArgs);
-console.warn = R.compose(logger.warn.bind(logger), formatArgs);
+function hookConsoleWithLogger() {
+  const formatArgs = util.format.bind(util);
+  console.error = R.compose<any, string, winston.Logger>(logger.error.bind(logger), formatArgs);
+  console.log = R.compose<any, string, winston.Logger>(logger.info.bind(logger), formatArgs); // Intentionally bound to info, winston.log != console.log
+  console.info = R.compose<any, string, winston.Logger>(logger.info.bind(logger), formatArgs);
+  console.debug = R.compose<any, string, winston.Logger>(logger.debug.bind(logger), formatArgs);
+  console.warn = R.compose<any, string, winston.Logger>(logger.warn.bind(logger), formatArgs);
+}
 
-export default logger;
+export {
+  logger,
+  hookConsoleWithLogger,
+};
