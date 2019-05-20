@@ -1008,6 +1008,11 @@ ansi-html@0.0.7:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/ansi-html/-/ansi-html-0.0.7.tgz#813584021962a9e9e6fd039f940d12f56ca7859e"
   integrity sha1-gTWEAhliqenm/QOflA0S9WynhZ4=
 
+ansi-regex@^1.0.0:
+  version "1.1.1"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/ansi-regex/-/ansi-regex-1.1.1.tgz#41c847194646375e6a1a5d10c3ca054ef9fc980d"
+  integrity sha1-QchHGUZGN15qGl0Qw8oFTvn8mA0=
+
 ansi-regex@^2.0.0:
   version "2.1.1"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/ansi-regex/-/ansi-regex-2.1.1.tgz#c3b33ab5ee360d86e0e628f0468ae7ef27d654df"
@@ -1022,6 +1027,11 @@ ansi-regex@^4.1.0:
   version "4.1.0"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/ansi-regex/-/ansi-regex-4.1.0.tgz#8b9f8f08cf1acb843756a839ca8c7e3168c51997"
   integrity sha1-i5+PCM8ay4Q3Vqg5yox+MWjFGZc=
+
+ansi-state@~1.0.5:
+  version "1.0.5"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/ansi-state/-/ansi-state-1.0.5.tgz#0aeda248409664ac16b589121ac831cd6f721aa7"
+  integrity sha1-Cu2iSECWZKwWtYkSGsgxzW9yGqc=
 
 ansi-styles@^2.2.1:
   version "2.2.1"
@@ -1498,6 +1508,11 @@ buffer-indexof@^1.0.0:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/buffer-indexof/-/buffer-indexof-1.1.1.tgz#52fabcc6a606d1a00302802648ef68f639da268c"
   integrity sha1-Uvq8xqYG0aADAoAmSO9o9jnaJow=
 
+buffer-shims@^1.0.0:
+  version "1.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/buffer-shims/-/buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51"
+  integrity sha1-mXjOMXOIxkmth5MCjDR37wRKi1E=
+
 buffer-xor@^1.0.3:
   version "1.0.3"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/buffer-xor/-/buffer-xor-1.0.3.tgz#26e61ed1422fb70dd42e6e36729ed51d855fe8d9"
@@ -1881,6 +1896,25 @@ columnify@^1.5.4:
   dependencies:
     strip-ansi "^3.0.0"
     wcwidth "^1.0.0"
+
+columnify@~1.3.2:
+  version "1.3.2"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/columnify/-/columnify-1.3.2.tgz#61bd578a9269ae6fd949ce36fff589f3702c7867"
+  integrity sha1-Yb1XipJprm/ZSc42//WJ83AseGc=
+  dependencies:
+    strip-ansi "^2.0.0"
+    wcwidth "^1.0.0"
+
+columns@0.8.0:
+  version "0.8.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/columns/-/columns-0.8.0.tgz#c272fd81a18704423b2a3842e99d1920a577edd9"
+  integrity sha1-wnL9gaGHBEI7KjhC6Z0ZIKV37dk=
+  dependencies:
+    ansi-state "~1.0.5"
+    heartbeats "~3.1.0"
+    split "~0.3.2"
+    strip-bom "~1.0.0"
+    wcwidth.js "~1.0.0"
 
 combined-stream@^1.0.6, combined-stream@~1.0.6:
   version "1.0.8"
@@ -2474,7 +2508,7 @@ default-gateway@^4.2.0:
     execa "^1.0.0"
     ip-regex "^2.1.0"
 
-defaults@^1.0.3:
+defaults@^1.0.0, defaults@^1.0.3:
   version "1.0.3"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/defaults/-/defaults-1.0.3.tgz#c656051e9817d9ff08ed881477f3fe4019f3ef7d"
   integrity sha1-xlYFHpgX2f8I7YgUd/P+QBnz730=
@@ -2861,6 +2895,13 @@ etag@~1.8.1:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
 
+event-transmitter@2.0.0:
+  version "2.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/event-transmitter/-/event-transmitter-2.0.0.tgz#7d58aeb72abb47c1e7eab0d7bf78033c0de33493"
+  integrity sha1-fViutyq7R8Hn6rDXv3gDPA3jNJM=
+  dependencies:
+    readable-stream "2.2.3"
+
 eventemitter3@^3.0.0:
   version "3.1.2"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/eventemitter3/-/eventemitter3-3.1.2.tgz#2d3d48f9c346698fce83a85d7d664e98535df6e7"
@@ -3170,6 +3211,11 @@ findup-sync@^2.0.0:
     is-glob "^3.1.0"
     micromatch "^3.0.4"
     resolve-dir "^1.0.1"
+
+first-chunk-stream@^1.0.0:
+  version "1.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/first-chunk-stream/-/first-chunk-stream-1.0.0.tgz#59bfb50cd905f60d7c394cd3d9acaab4e6ad934e"
+  integrity sha1-Wb+1DNkF9g18OUzT2ayqtOatk04=
 
 flatten@^1.0.2:
   version "1.0.2"
@@ -3624,6 +3670,11 @@ hash.js@^1.0.0, hash.js@^1.0.3:
   dependencies:
     inherits "^2.0.3"
     minimalistic-assert "^1.0.1"
+
+heartbeats@~3.1.0:
+  version "3.1.5"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/heartbeats/-/heartbeats-3.1.5.tgz#99be8b2392b9075cc9aebebb5831616bceac160e"
+  integrity sha1-mb6LI5K5B1zJrr67WDFha86sFg4=
 
 hmac-drbg@^1.0.0:
   version "1.0.1"
@@ -4353,6 +4404,11 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+keypress@0.2.1:
+  version "0.2.1"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/keypress/-/keypress-0.2.1.tgz#1e80454250018dbad4c3fe94497d6e67b6269c77"
+  integrity sha1-HoBFQlABjbrUw/6USX1uZ7YmnHc=
+
 killable@^1.0.1:
   version "1.0.1"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/killable/-/killable-1.0.1.tgz#4c8ce441187a061c7474fb87ca08e2a638194892"
@@ -4951,6 +5007,17 @@ multimatch@^2.0.0, multimatch@^2.1.0:
     array-union "^1.0.1"
     arrify "^1.0.0"
     minimatch "^3.0.0"
+
+"multiview@https://github.com/efokschaner/multiview.git":
+  version "2.5.3"
+  resolved "https://github.com/efokschaner/multiview.git#b915592c66f0cc1b997a27dbed23f50c539666b5"
+  dependencies:
+    columns "0.8.0"
+    event-transmitter "2.0.0"
+    keypress "0.2.1"
+    protogram "1.1.3"
+    protogram-help "1.0.2"
+    unparse-args "1.0.1"
 
 mute-stream@0.0.7:
   version "0.0.7"
@@ -5747,6 +5814,11 @@ pkg-dir@^3.0.0:
   dependencies:
     find-up "^3.0.0"
 
+pkginfo@~0.3.0:
+  version "0.3.1"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/pkginfo/-/pkginfo-0.3.1.tgz#5b29f6a81f70717142e09e765bbeab97b4f81e21"
+  integrity sha1-Wyn2qB9wcXFC4J52W76rl7T4HiE=
+
 portfinder@^1.0.20:
   version "1.0.20"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/portfinder/-/portfinder-1.0.20.tgz#bea68632e54b2e13ab7b0c4775e9b41bf270e44a"
@@ -6136,6 +6208,11 @@ present@^1.0.0:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/present/-/present-1.0.0.tgz#6d2f865be7a96885118f4660e83e2161fb71cf2b"
   integrity sha1-bS+GW+epaIURj0Zg6D4hYftxzys=
 
+process-nextick-args@~1.0.6:
+  version "1.0.7"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
+  integrity sha1-FQ4gt1ZZCtP5EJPyWk8q2L/zC6M=
+
 process-nextick-args@~2.0.0:
   version "2.0.0"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/process-nextick-args/-/process-nextick-args-2.0.0.tgz#a37d732f4271b4ab1ad070d35508e8290788ffaa"
@@ -6182,6 +6259,22 @@ protoduck@^5.0.1:
   integrity sha1-A8NlnKGAB7aaUP2Cp+vMUWJhFR8=
   dependencies:
     genfun "^5.0.0"
+
+protogram-help@1.0.2:
+  version "1.0.2"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/protogram-help/-/protogram-help-1.0.2.tgz#fb49cacff85fe80edb3568ac6eac78af0b032a19"
+  integrity sha1-+0nKz/hf6A7bNWisbqx4rwsDKhk=
+  dependencies:
+    columnify "~1.3.2"
+    pkginfo "~0.3.0"
+
+protogram@1.1.3:
+  version "1.1.3"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/protogram/-/protogram-1.1.3.tgz#95f1df709c43310d62c13942baa09b753a688cf1"
+  integrity sha1-lfHfcJxDMQ1iwTlCuqCbdTpojPE=
+  dependencies:
+    subarg "~1.0.0"
+    unparse-args "~1.0.1"
 
 proxy-addr@~2.0.4:
   version "2.0.5"
@@ -6433,6 +6526,19 @@ read@1, read@~1.0.1:
     inherits "^2.0.3"
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
+
+readable-stream@2.2.3:
+  version "2.2.3"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/readable-stream/-/readable-stream-2.2.3.tgz#9cf49463985df016c8ae8813097a9293a9b33729"
+  integrity sha1-nPSUY5hd8BbIrogTCXqSk6mzNyk=
+  dependencies:
+    buffer-shims "^1.0.0"
+    core-util-is "~1.0.0"
+    inherits "~2.0.1"
+    isarray "~1.0.0"
+    process-nextick-args "~1.0.6"
+    string_decoder "~0.10.x"
+    util-deprecate "~1.0.1"
 
 "readable-stream@>=1.0.33-1 <1.1.0-0":
   version "1.0.34"
@@ -6861,6 +6967,11 @@ shebang-regex@^1.0.0:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/shebang-regex/-/shebang-regex-1.0.0.tgz#da42f49740c0b42db2ca9728571cb190c98efea3"
   integrity sha1-2kL0l0DAtC2yypcoVxyxkMmO/qM=
 
+shell-escape@~0.1.0:
+  version "0.1.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/shell-escape/-/shell-escape-0.1.0.tgz#20e996fdd5f0c51be3f3c550119b77723d98e335"
+  integrity sha1-IOmW/dXwxRvj88VQEZt3cj2Y4zU=
+
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
@@ -7082,6 +7193,13 @@ split@^1.0.0, split@^1.0.1:
   dependencies:
     through "2"
 
+split@~0.3.2:
+  version "0.3.3"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/split/-/split-0.3.3.tgz#cd0eea5e63a211dfff7eb0f091c4133e2d0dd28f"
+  integrity sha1-zQ7qXmOiEd//frDwkcQTPi0N0o8=
+  dependencies:
+    through "2"
+
 sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
@@ -7208,6 +7326,13 @@ string_decoder@~1.1.1:
   dependencies:
     safe-buffer "~5.1.0"
 
+strip-ansi@^2.0.0:
+  version "2.0.1"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/strip-ansi/-/strip-ansi-2.0.1.tgz#df62c1aa94ed2f114e1d0f21fd1d50482b79a60e"
+  integrity sha1-32LBqpTtLxFOHQ8h/R1QSCt5pg4=
+  dependencies:
+    ansi-regex "^1.0.0"
+
 strip-ansi@^3.0.0, strip-ansi@^3.0.1:
   version "3.0.1"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/strip-ansi/-/strip-ansi-3.0.1.tgz#6a385fb8853d952d5ff05d0e8aaf94278dc63dcf"
@@ -7240,6 +7365,14 @@ strip-bom@^3.0.0:
   version "3.0.0"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/strip-bom/-/strip-bom-3.0.0.tgz#2334c18e9c759f7bdd56fdef7e9ae3d588e68ed3"
   integrity sha1-IzTBjpx1n3vdVv3vfprj1YjmjtM=
+
+strip-bom@~1.0.0:
+  version "1.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/strip-bom/-/strip-bom-1.0.0.tgz#85b8862f3844b5a6d5ec8467a93598173a36f794"
+  integrity sha1-hbiGLzhEtabV7IRnqTWYFzo295Q=
+  dependencies:
+    first-chunk-stream "^1.0.0"
+    is-utf8 "^0.2.0"
 
 strip-dirs@^2.0.0:
   version "2.1.0"
@@ -7293,6 +7426,13 @@ style-loader@^0.23.1:
   dependencies:
     loader-utils "^1.1.0"
     schema-utils "^1.0.0"
+
+subarg@~1.0.0:
+  version "1.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/subarg/-/subarg-1.0.0.tgz#f62cf17581e996b48fc965699f54c06ae268b8d2"
+  integrity sha1-9izxdYHplrSPyWVpn1TAauJouNI=
+  dependencies:
+    minimist "^1.1.0"
 
 supports-color@^2.0.0:
   version "2.0.0"
@@ -7712,6 +7852,13 @@ universalify@^0.1.0:
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/universalify/-/universalify-0.1.2.tgz#b646f69be3942dabcecc9d6639c80dc105efaa66"
   integrity sha1-tkb2m+OULavOzJ1mOcgNwQXvqmY=
 
+unparse-args@1.0.1, unparse-args@~1.0.1:
+  version "1.0.1"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/unparse-args/-/unparse-args-1.0.1.tgz#85906d556861045806f97533cd325ad100677078"
+  integrity sha1-hZBtVWhhBFgG+XUzzTJa0QBncHg=
+  dependencies:
+    shell-escape "~0.1.0"
+
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
@@ -7878,6 +8025,13 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   integrity sha1-wdjRSTFtPqhShIiVy2oL/oh7h98=
   dependencies:
     minimalistic-assert "^1.0.0"
+
+wcwidth.js@~1.0.0:
+  version "1.0.0"
+  resolved "https://artifacts.riotgames.com:443/artifactory/api/npm/npm/wcwidth.js/-/wcwidth.js-1.0.0.tgz#62c19310a3e9c1025cd57f53c35b47acf643fdc3"
+  integrity sha1-YsGTEKPpwQJc1X9Tw1tHrPZD/cM=
+  dependencies:
+    defaults "^1.0.0"
 
 wcwidth@^1.0.0:
   version "1.0.1"
