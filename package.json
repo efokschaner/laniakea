@@ -15,12 +15,12 @@
     "tslint:fix": "lerna exec -- tslint --project . --fix"
   },
   "devDependencies": {
-    "lerna": "^3.13.4",
+    "lerna": "^3.14.1",
     "multiview": "https://github.com/efokschaner/multiview.git",
     "rimraf": "^2.6.3",
     "split": "^1.0.1",
     "tslint": "^5.16.0",
-    "typescript": "^3.4.0"
+    "typescript": "^3.4.5"
   },
   "workspaces": [
     "packages/*",
