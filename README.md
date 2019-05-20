@@ -39,7 +39,7 @@ Games will be able to control networking where it intersects with things like "v
 
 ### Demo/Development
 This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
-We'll assume you have `node` and `yarn` installed. I'm using `node v10.13.0` and `yarn v1.12.1` in case it matters.
+We'll assume you have `node` and `yarn` installed. I'm using `node v10.15.3` and `yarn v1.15.2` in case it matters.
 
 To get started:
 ```
