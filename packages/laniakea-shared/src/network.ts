@@ -119,7 +119,7 @@ let SEQUENCE_NUMBER_BYTES = 2;
 let MAX_SEQUENCE_NUMBER_EXCLUSIVE = (2 ** 8) ** SEQUENCE_NUMBER_BYTES;
 let ACK_BITFIELD_BYTES = 4;
 
-function sequenceNumberIsGreaterThan(lhs: number, rhs: number) {
+export function sequenceNumberIsGreaterThan(lhs: number, rhs: number) {
   let halfRange = MAX_SEQUENCE_NUMBER_EXCLUSIVE / 2;
   let diff = lhs - rhs;
   return ((diff > 0) && (diff <= halfRange)) || diff < -halfRange;
@@ -195,6 +195,9 @@ export class AckingPacketProtocol {
 
   // Exposing the sequence number allows higher level systems to know whether
   // this payload is new data that supersedes old data.
+  // TODO exposing outer system to rolling sequence number is risky, we should maybe keep our
+  // own internal counter of the number of times the sequence has rolled over to allow us to
+  // expose a true global sequenceNumber, rather than forcing consumers to account for rollover.
   public onPacketReceived = new SyncEvent<{payload: Uint8Array, sequenceNumber: number}>();
 
   public sendPacket(payload: Uint8Array, onAck?: () => void) {

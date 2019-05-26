@@ -6,6 +6,7 @@ import {
   InputFrame,
   PlayerId,
   ReadStream,
+  sequenceNumberIsGreaterThan,
 } from 'laniakea-shared';
 
 interface InputBufferHeapEntry {
@@ -63,7 +64,7 @@ class InputBuffer {
     }
     // Coallescing inputs for now just means grabbing the one with the highest sequence number.
     let result = framesToCoallesce.reduce((acc: InputBufferHeapEntry|undefined, frame) => {
-      if (acc === undefined || frame.packetSequenceNumber > acc.packetSequenceNumber) {
+      if (acc === undefined || sequenceNumberIsGreaterThan(frame.packetSequenceNumber, acc.packetSequenceNumber)) {
         return frame;
       }
       return acc;
@@ -77,7 +78,7 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: simulationTimeS,
       inputs: result.inputs,
-      packetSequenceNumber: 0,
+      packetSequenceNumber: result.packetSequenceNumber,
     });
     return result.inputs;
   }
