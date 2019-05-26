@@ -56,9 +56,9 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.cameraController = new OrbitControls(this.camera, this.renderer.domElement);
     this.cameraController.enablePan = true;
     this.cameraController.mouseButtons = {
-      ORBIT: THREE.MOUSE.RIGHT,
-      ZOOM: THREE.MOUSE.MIDDLE,
-      PAN: THREE.MOUSE.LEFT,
+      LEFT: THREE.MOUSE.RIGHT,
+      MIDDLE: THREE.MOUSE.MIDDLE,
+      RIGHT: THREE.MOUSE.LEFT,
     };
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
