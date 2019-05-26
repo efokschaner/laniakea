@@ -1,7 +1,5 @@
 // tslint:disable-next-line:no-var-requires
 require('../css/main.css');
-// tslint:disable-next-line:no-var-requires
-require('imports-loader?THREE=three!three/examples/js/controls/OrbitControls.js');
 
 import * as lk from 'laniakea-client';
 import {

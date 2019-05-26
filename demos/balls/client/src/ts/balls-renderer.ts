@@ -1,5 +1,6 @@
 import * as dat from 'dat.gui';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import * as lk from 'laniakea-client';
 
@@ -20,7 +21,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
 
-  private cameraController: THREE.OrbitControls;
+  private cameraController: OrbitControls;
   private activeCameraLerp?: (currentWallTimeMS: number) => void;
   private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
   private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
@@ -52,7 +53,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     this.guiView.add(this.guiViewModel, 'currentSimTimeS').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
     this.camera.translateZ(200);
-    this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.cameraController = new OrbitControls(this.camera, this.renderer.domElement);
     this.cameraController.enablePan = true;
     this.cameraController.mouseButtons = {
       ORBIT: THREE.MOUSE.RIGHT,

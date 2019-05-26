@@ -1,5 +1,6 @@
 import * as dat from 'dat.gui';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import * as lk from 'laniakea-client';
 
@@ -54,7 +55,7 @@ class ThreeRenderer implements lk.RenderingSystem {
   private dayLight = new THREE.DirectionalLight();
 
   // ORBITAL CAMERA JUST FOR DEBUG.
-  private cameraController?: THREE.OrbitControls;
+  private cameraController?: OrbitControls;
 
   constructor(private sceneElementContainer: HTMLElement) {
     this.renderer.shadowMap.enabled = true;
@@ -78,7 +79,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     // this.scene.add(new THREE.BoxHelper(this.floorMesh));
     // CAMERA CONTROLS
     /*
-    this.cameraController = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.cameraController = new OrbitControls(this.camera, this.renderer.domElement);
     this.cameraController.enablePan = true;
     this.cameraController.mouseButtons = {
       ORBIT: THREE.MOUSE.RIGHT,
