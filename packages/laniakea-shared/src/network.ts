@@ -47,6 +47,15 @@ export function bufferRTCDataChannel(dataChannel: RTCDataChannel): BufferedRTCDa
   return bufferedChannel;
 }
 
+/**
+ * This is the largest number of bytes we should send in a data channel payload
+ * to avoid fragmentation. It's not a guaranteed fact as MTU is not a constant.
+ * So this is a conservative estimate.
+ * See this for derivation:
+ * https://groups.google.com/d/msg/discuss-webrtc/LZsm-jbP0zA/JITEhtx4HAQJ
+ */
+let webRtcPayloadMTU = 1131;
+
 export class RTCPeerConnectionWithOpenDataChannels {
   public onReliableData = new SyncEvent<ArrayBuffer>();
   public onUnreliableData = new SyncEvent<ArrayBuffer>();
@@ -61,12 +70,18 @@ export class RTCPeerConnectionWithOpenDataChannels {
   }
 
   public sendReliable(data: ArrayBuffer | ArrayBufferView): void {
+    if (data.byteLength > webRtcPayloadMTU) {
+      console.warn(`DataChannel payload is ${data.byteLength} bytes, which is larger than webRtcPayloadMTU: ${webRtcPayloadMTU}. Fragmentation may occur.`);
+    }
     // TODO This `as` is inaccurate but TS can't handle passing a union
     // to an overloaded method that supports all the union types
     this.reliableChannel.send(data as ArrayBuffer);
   }
 
   public sendUnreliable(data: ArrayBuffer | ArrayBufferView): void {
+    if (data.byteLength > webRtcPayloadMTU) {
+      console.warn(`DataChannel payload is ${data.byteLength} bytes, which is larger than webRtcPayloadMTU: ${webRtcPayloadMTU}. Fragmentation may occur.`);
+    }
     // TODO This `as` is inaccurate but TS can't handle passing a union
     // to an overloaded method that supports all the union types
     this.unreliableChannel.send(data as ArrayBuffer);
@@ -99,9 +114,6 @@ export class RTCPeerConnectionWithOpenDataChannels {
     };
   }
 }
-
-// https://groups.google.com/d/msg/discuss-webrtc/LZsm-jbP0zA/JITEhtx4HAQJ
-export let webRtcMTU = 1131;
 
 let SEQUENCE_NUMBER_BYTES = 2;
 let MAX_SEQUENCE_NUMBER_EXCLUSIVE = (2 ** 8) ** SEQUENCE_NUMBER_BYTES;
@@ -153,6 +165,20 @@ class SentPacketData {
 
 class ReceivedPacketData {
 }
+
+function calculatePayloadMTU(): number {
+  let dummyPacket = new Packet();
+  dummyPacket.sequenceNumber = 0;
+  dummyPacket.ackSequenceNumber = 0;
+  dummyPacket.ackBitfield = 0;
+  dummyPacket.payload = new Uint8Array(0);
+  let measureStream = new MeasureStream();
+  dummyPacket.serialize(measureStream);
+  let ackingPacketOverhead = measureStream.getNumBytesWritten();
+  return webRtcPayloadMTU - ackingPacketOverhead;
+}
+
+let ackingPacketProtocolPayloadMTU = calculatePayloadMTU();
 
 /**
  * Wraps RTCPeerConnectionWithOpenDataChannels
@@ -310,9 +336,7 @@ export class PacketPayloadRouter {
   public handleRoutedPacket({payload, sequenceNumber}: {payload: Uint8Array, sequenceNumber: number}): void {
     let dataView = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let readStream = new ReadStream(dataView, this.classRegistry);
-    let readResult: {packet: Serializable|undefined } = { packet: undefined };
-    readStream.serializeSerializable(readResult, 'packet');
-    let packet = readResult.packet!;
+    let packet = readStream.readSerializable();
     let maybeCb = this.callbacks.get(packet.constructor);
     if (maybeCb === undefined) {
       console.error(`No handler registered for packet type: ${packet.constructor.name}`);
@@ -323,11 +347,10 @@ export class PacketPayloadRouter {
 
   public serializeRoutedPacket(packet: Serializable): ArrayBuffer {
     let measureStream = new MeasureStream();
-    let packetWrapper = {packet};
-    measureStream.serializeSerializable(packetWrapper, 'packet');
+    measureStream.writeSerializable(packet);
     let writeBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());
     let writeStream = new WriteStream(new DataView(writeBuffer), this.classRegistry);
-    writeStream.serializeSerializable(packetWrapper, 'packet');
+    writeStream.writeSerializable(packet);
     return writeBuffer;
   }
 
@@ -342,6 +365,14 @@ export class PacketPayloadRouter {
  * to remove boilerplate from client and server.
  */
 export class PacketPeer {
+  /**
+   * The largest serialised packet length you can pass to sendPacket() without risk of fragmentation
+   */
+  public static getPacketMTU(): number {
+    let serializableOverhead = 4; // Hardcoded for simplicity but comes from the serialisation stream code.
+    return ackingPacketProtocolPayloadMTU - serializableOverhead;
+  }
+
   public attachToConnection(openRtcPeerConnection: RTCPeerConnectionWithOpenDataChannels) {
     this.ackingTransport = new AckingPacketProtocol(openRtcPeerConnection);
     this.ackingTransport.onPacketReceived.attach(this.packetRouter.handleRoutedPacket.bind(this.packetRouter));
