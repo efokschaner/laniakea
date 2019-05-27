@@ -18,6 +18,7 @@ import {
 } from './components';
 
 import { ButtonState, GameButtons, GameButtonsInput } from './inputs';
+import { crossProduct2DBetweenWallAndPoint, WallData, wallPointsToWallData } from './wall-utils';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,
@@ -72,33 +73,6 @@ export class EntityScheduledDeletionProcessor implements lk.System {
       }
     }
   }
-}
-
-// Side calculation will use the formula d=(x−x1)(y2−y1)−(y−y1)(x2−x1)
-// Where (x1,y1) and (x2,y2) are points on the wall and (x,y) is the point.
-// Here we will pre-calculate (y2−y1) and (x2−x1), i.e vertA - vertB on the wall
-interface WallData {
-  wallPoint: THREE.Vector2;
-  wallEndPoint: THREE.Vector2;
-  wallUnitVec: THREE.Vector2;
-  wallLength: number;
-}
-
-function wallPointsToWallData(pointA: THREE.Vector2, pointB: THREE.Vector2): WallData {
-  let wallVec = pointB.clone().sub(pointA);
-  let wallLength = wallVec.length();
-  let wallUnitVec = wallVec.normalize();
-  return {
-    wallPoint: pointA,
-    wallEndPoint: pointB,
-    wallUnitVec,
-    wallLength,
-  };
-}
-
-function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vector2) {
-  let wallPointToPoint = point.clone().sub(wallData.wallPoint);
-  return (wallPointToPoint.x * wallData.wallUnitVec.y) - (wallPointToPoint.y * wallData.wallUnitVec.x);
 }
 
 export class BallMovementSystem implements lk.System {
@@ -189,7 +163,7 @@ export class BallMovementSystem implements lk.System {
             let positionOfBallInWallspace = nextPos.clone().sub(wall.next.wallPoint).dot(wall.next.wallUnitVec) / wall.next.wallLength;
             let distanceBetweenPaddleAndBallInWallspace = Math.abs(paddleData.positionInWallSpace - positionOfBallInWallspace);
             // Paddle radius is half its length, plus a fudge factor to make the game a little more visually forgiving.
-            let paddleRadiusInWallSpace = 0.55 * paddleLengthAsProportionOfWallLength;
+            let paddleRadiusInWallSpace = 0.55 * Paddle.lengthAsProportionOfWallLength;
             if (distanceBetweenPaddleAndBallInWallspace > paddleRadiusInWallSpace) {
               // Paddle did not intercept ball
               shouldReflect = false;
@@ -298,8 +272,6 @@ export class InputHandlerSystem implements lk.System {
   }
 }
 
-export let paddleLengthAsProportionOfWallLength = 0.1;
-let paddleAcceleration = 5.0;
 export class PaddleMovementSystem implements lk.System {
   public Step({state, timeDeltaS}: lk.StepParams): void {
     for (let paddle of state.getComponents(Paddle)) {
@@ -308,25 +280,25 @@ export class PaddleMovementSystem implements lk.System {
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
           if (paddleData.velocityInWallSpace > 0) {
-            paddleData.velocityInWallSpace -= paddleAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace -= Paddle.maxAcceleration * timeDeltaS;
             paddleData.velocityInWallSpace = Math.max(paddleData.velocityInWallSpace, 0);
           } else if (paddleData.velocityInWallSpace < 0) {
-            paddleData.velocityInWallSpace += paddleAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace += Paddle.maxAcceleration * timeDeltaS;
             paddleData.velocityInWallSpace = Math.min(paddleData.velocityInWallSpace, 0);
           }
           break;
         case MoveIntent.NEGATIVE:
-          paddleData.velocityInWallSpace -= paddleAcceleration * timeDeltaS;
+          paddleData.velocityInWallSpace -= Paddle.maxAcceleration * timeDeltaS;
           break;
         case MoveIntent.POSITIVE:
-          paddleData.velocityInWallSpace += paddleAcceleration * timeDeltaS;
+          paddleData.velocityInWallSpace += Paddle.maxAcceleration * timeDeltaS;
           break;
       }
       paddleData.velocityInWallSpace = THREE.Math.clamp(paddleData.velocityInWallSpace, -maxMoveSpeed, maxMoveSpeed);
       paddleData.positionInWallSpace = THREE.Math.clamp(
         paddleData.positionInWallSpace + paddleData.velocityInWallSpace * timeDeltaS,
-        0.5 * paddleLengthAsProportionOfWallLength,
-        1 - (0.5 * paddleLengthAsProportionOfWallLength));
+        0.5 * Paddle.lengthAsProportionOfWallLength,
+        1 - (0.5 * Paddle.lengthAsProportionOfWallLength));
     }
   }
 }
@@ -348,118 +320,6 @@ export class PaddlePositionSyncSystem implements lk.System {
       posData.lerpVectors(wallStartVertPos.clone(), wallEndVertPos.clone(), paddle.getData().positionInWallSpace);
       let wallDirection = wallEndVertPos.clone().sub(wallStartVertPos).normalize();
       orientation.getData().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
-    }
-  }
-}
-
-export class BotLogic implements lk.System {
-  public Step({state}: lk.StepParams): void {
-    let playerIndexToPaddleMap = new Map(
-      Array.from(
-        state.getComponents(Paddle),
-      ).map(
-        (paddle) => [paddle.getData().playerIndex, paddle.getData()] as [number, Paddle],
-      ),
-    );
-
-    let vertsToConsider = Array.from(state.getAspect(WallVertex, Position2));
-    let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
-    let persistentIndexToWallData = new Map<number, WallData>();
-    for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
-      let startIndex = i;
-      let endIndex = mod(i + 1, vertsToConsiderSorted.length);
-      let startVert = vertsToConsiderSorted[startIndex];
-      let endVert = vertsToConsiderSorted[endIndex];
-      persistentIndexToWallData.set(
-        startVert[0].getData().persistentIndex,
-        wallPointsToWallData(startVert[1].getData(), endVert[1].getData()),
-      );
-    }
-
-    let balls = Array.from(state.getAspect(BallMovement, Position2));
-
-    // All players with no human player ID are implicitly bots.
-    for (let playerInfo of state.getComponents(PlayerInfo)) {
-      let playerInfoData = playerInfo.getData();
-      if (!playerInfoData.alive) {
-        // Dead, ignore
-        continue;
-      }
-      let maybeHumanId = state.getComponentOfEntity(HumanPlayerId, playerInfo.getOwnerId());
-      if (maybeHumanId !== undefined) {
-        // Not a bot
-        continue;
-      }
-      let paddle = playerIndexToPaddleMap.get(playerInfoData.playerIndex)!;
-      if (paddle === undefined) {
-        // player does not have paddle yet, or maybe just got deleted
-        continue;
-      }
-      let ourWall = persistentIndexToWallData.get(paddle.wallPersistentId)!;
-      // Find nearest ball with net velocity in direction of our wall
-      // Intersect ball velocity with wall line, move to that point.
-      // If no balls match, we find the nearest ball and defend against that
-      // this is to cope with nearby walls that could get deflected to us
-      // by another player.
-      let desiredWallPosInWallSpace = 0.5;
-      let wallLine = new THREE.Line3(
-        new THREE.Vector3(ourWall.wallPoint.x, ourWall.wallPoint.y),
-        new THREE.Vector3(ourWall.wallEndPoint.x, ourWall.wallEndPoint.y),
-      );
-      let considerBallsNotMovingAtUs = true;
-      let nearestBallDistance: number = Infinity;
-      for (let ballComponents of balls) {
-        let ballPosition = ballComponents[1].getData();
-        let ballVelocity = ballComponents[0].getData().velocity;
-        let ballPos3D = new THREE.Vector3(ballPosition.x, ballPosition.y);
-        let closestPointOnWall = wallLine.closestPointToPoint(
-          new THREE.Vector3(ballPosition.x, ballPosition.y),
-          true,
-          new THREE.Vector3(),
-        );
-        // is ball moving in direction of nearest point?
-        let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
-        let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
-        if (distanceToWall > wallLine.distance() / 4) {
-          // ignore balls further than 1/4 a side length away.
-          continue;
-        }
-        let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
-        if (!isMovingTowardsWall) {
-          if (considerBallsNotMovingAtUs) {
-            // We havent yet found a ball moving at us so we might as well try to guard against this one.
-            desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWall, true);
-          }
-          // Finished considering this ball
-          continue;
-        }
-        considerBallsNotMovingAtUs = false;
-        if (nearestBallDistance > distanceToWall) {
-          nearestBallDistance = distanceToWall;
-          let normalizedBallVelocity = ballVelocity.clone().normalize();
-          let ballRay = new THREE.Ray(
-            new THREE.Vector3(ballPosition.x, ballPosition.y),
-            new THREE.Vector3(normalizedBallVelocity.x, normalizedBallVelocity.y));
-          let intersectOfWallWithBall = new THREE.Vector3();
-          ballRay.distanceSqToSegment(wallLine.start, wallLine.end, intersectOfWallWithBall);
-          desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(intersectOfWallWithBall, true);
-        }
-      }
-      // Bot's prediction of where it will be if it stops moving now
-      let predictedPositionOfRest = paddle.positionInWallSpace;
-      if (paddle.velocityInWallSpace !== 0) {
-        let paddleAccelerationIfWeStopMoving = - Math.sign(paddle.velocityInWallSpace) * paddleAcceleration;
-        let timeToRest = - paddle.velocityInWallSpace / paddleAccelerationIfWeStopMoving;
-        predictedPositionOfRest += paddle.velocityInWallSpace * timeToRest + 0.5 * paddleAccelerationIfWeStopMoving * (timeToRest ** 2);
-      }
-      let deadZoneProportion = paddleLengthAsProportionOfWallLength / 4;
-      if (predictedPositionOfRest > (1 + deadZoneProportion) * desiredWallPosInWallSpace) {
-        paddle.moveIntent = MoveIntent.NEGATIVE;
-      } else if (predictedPositionOfRest < (1 - deadZoneProportion) * desiredWallPosInWallSpace) {
-        paddle.moveIntent = MoveIntent.POSITIVE;
-      } else {
-        paddle.moveIntent = MoveIntent.NONE;
-      }
     }
   }
 }

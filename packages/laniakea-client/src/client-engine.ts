@@ -140,7 +140,7 @@ export class ClientEngine {
 
   private networkClient: NetworkClient;
   private serverTimeEstimator: ServerTimeEstimator;
-  private clientSimulation: ClientSimulation;
+  public readonly clientSimulation: ClientSimulation;
   private currentInputFrame?: InputFrame;
   private renderingSystem?: RenderingSystem;
   private updateServerTimeEstimatorHandle?: PeriodicCallbackHandle;

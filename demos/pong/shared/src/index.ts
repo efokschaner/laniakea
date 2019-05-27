@@ -1,3 +1,4 @@
+export * from './bot-logic';
 export * from './components';
 export * from './inputs';
 export * from './level-geometry-system';

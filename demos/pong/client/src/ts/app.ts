@@ -18,6 +18,8 @@ import {
   simFPS,
 } from 'lk-demo-pong-shared';
 
+import { ClientSettings } from './client-settings';
+import { doClientSideBotting } from './client-side-bot';
 import { KeyboardHandler } from './keyboard-handler';
 import { MockStorage } from './mock-storage';
 import { RenderingSystemImpl } from './pong-renderer';
@@ -36,8 +38,8 @@ interface HTMLHyperlinkElementUtils {
   hash: string;
 }
 
-let persistToLocalStorage = false;
-let localStorage = persistToLocalStorage ? window.localStorage : new MockStorage();
+let persistIdToLocalStorage = false;
+let localStorage = persistIdToLocalStorage ? window.localStorage : new MockStorage();
 
 function getUserId() {
   let prior = localStorage.getItem('user_id');
@@ -48,6 +50,8 @@ function getUserId() {
   localStorage.setItem('user_id', newId);
   return newId;
 }
+
+let clientSettings = new ClientSettings(window.localStorage);
 
 let clientEngine = new lk.ClientEngine({simFPS, globalSimulationRateMultiplier});
 
@@ -96,7 +100,7 @@ sceneElement.addEventListener('touchend', handleTouches, false);
 sceneElement.addEventListener('touchcancel', handleTouches, false);
 sceneElement.addEventListener('touchmove', handleTouches, false);
 
-let renderingSystem = new RenderingSystemImpl(sceneElement);
+let renderingSystem = new RenderingSystemImpl(sceneElement, clientSettings);
 clientEngine.setRenderingSystem(renderingSystem);
 
 clientEngine.start();
@@ -109,3 +113,9 @@ gameServerWsUrl.password = 'whateverpass';
 
 clientEngine.connectToServer(gameServerWsUrl.href);
 clientEngine.onConnectedToServer.attach(() => { console.log('Connected to server'); });
+
+setInterval(() => {
+  if (clientSettings.clientIsBot) {
+    doClientSideBotting(clientEngine.clientSimulation, clientEngine.getCurrentContinuousInput(GameButtonsInput)!);
+  }
+}, 25);

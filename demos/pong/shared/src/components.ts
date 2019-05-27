@@ -78,6 +78,9 @@ export class Paddle implements lk.Serializable {
   public positionInWallSpace = 0.5;
   public velocityInWallSpace = 0;
   public moveIntent = MoveIntent.NONE;
+
+  public static maxAcceleration = 5.0;
+  public static lengthAsProportionOfWallLength = 0.1;
 }
 
 export class WallVertex implements lk.Serializable {

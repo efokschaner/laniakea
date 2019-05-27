@@ -9,12 +9,12 @@ import {
   HumanPlayerId,
   Orientation,
   Paddle,
-  paddleLengthAsProportionOfWallLength,
   PlayerInfo,
   Position2,
   WallVertex,
 } from 'lk-demo-pong-shared';
 
+import { ClientSettings } from './client-settings';
 import {RendererSizeUpdater} from './renderer-size-updater';
 
 class ThreeRenderer implements lk.RenderingSystem {
@@ -256,7 +256,7 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.scene.add(maybeObj);
       }
       let pos = interpolatedPositions.get(paddlePos.getId())!;
-      maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * paddleLengthAsProportionOfWallLength;
+      maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * Paddle.lengthAsProportionOfWallLength;
       maybeObj.position.x = pos.x;
       maybeObj.position.y = pos.y;
       maybeObj.position.z = 0;
@@ -321,11 +321,13 @@ export class GuiRenderer implements lk.RenderingSystem {
     currentSimTime: 0,
     inputTravelTimeMS: 0,
   };
+
   private guiView = new dat.GUI({width: 300});
 
-  constructor() {
+  constructor(clientSettings: ClientSettings) {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
+    this.guiView.add(clientSettings, 'clientIsBot').listen();
   }
 
   public render(_domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
@@ -339,9 +341,9 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private threeRenderer: ThreeRenderer;
   private guiRenderer: GuiRenderer;
 
-  constructor(private sceneElementContainer: HTMLElement) {
+  constructor(private sceneElementContainer: HTMLElement, clientSettings: ClientSettings) {
     this.threeRenderer = new ThreeRenderer(this.sceneElementContainer);
-    this.guiRenderer = new GuiRenderer();
+    this.guiRenderer = new GuiRenderer(clientSettings);
   }
 
   public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
