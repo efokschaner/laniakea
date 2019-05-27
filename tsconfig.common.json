@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": false,
+        "declaration": true,
+        "incremental": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": true,
+        "strict": true,
+        "target": "es2015"
+    }
+}

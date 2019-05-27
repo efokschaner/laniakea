@@ -1,17 +1,7 @@
 {
+    "extends": "../../../tsconfig.common.json",
     "compilerOptions": {
-        "allowSyntheticDefaultImports": false,
-        "target": "es2015",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
         "outDir": "dist",
-        "strict": true,
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "sourceMap": true,
-        "declaration": true
     },
     "include": [
         "src/**/*"
