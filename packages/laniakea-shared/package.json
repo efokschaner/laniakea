@@ -13,7 +13,7 @@
   "dependencies": {
     "@types/node": "^10.12.1",
     "present": "^1.0.0",
-    "three": "^0.104.0",
+    "three": "^0.106.0",
     "ts-events": "^3.2.0",
     "typescript": "^3.4.5",
     "xxhashjs": "^0.2.1"
