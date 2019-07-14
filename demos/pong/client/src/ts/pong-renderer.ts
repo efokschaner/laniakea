@@ -257,6 +257,7 @@ class ThreeRenderer implements lk.RenderingSystem {
       }
       let pos = interpolatedPositions.get(paddlePos.getId())!;
       maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * Paddle.lengthAsProportionOfWallLength;
+      maybeObj.scale.x = Math.max(0.001, maybeObj.scale.x) // Don't allow 0 scale
       maybeObj.position.x = pos.x;
       maybeObj.position.y = pos.y;
       maybeObj.position.z = 0;
