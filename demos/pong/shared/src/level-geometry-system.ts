@@ -269,7 +269,8 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // In lieu of a "generalised" approach for sequencing / scheduling work, we'll just do the lerp and the deletion on the same timeout.
   // TODO we need to fixup visual indices when these are deleted.
   let lerpStartDelayS = 0.2;
-  let lerpMaxDurationS = 4;
+  let lerpMinDurationS = 1;
+  let lerpMaxDurationS = 2;
   let entityDeletionTime = simulationTimeS + lerpStartDelayS + lerpMaxDurationS;
   for (let persistentIndex of persistentIndicesToDelete) {
     // It MUST be in here based on prior logic
@@ -371,7 +372,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       }
       // Scale the duration by the angle we'll move through.
       // We know angleDelta is less than PI due the shortest path logic above.
-      lerp.durationS = lerpMaxDurationS * Math.abs(angleDelta) / Math.PI;
+      lerp.durationS = THREE.Math.lerp(lerpMinDurationS, lerpMaxDurationS, Math.abs(angleDelta) / Math.PI);
       state.addComponent(maybeObj.position.getOwnerId(), lerp);
     }
   }
