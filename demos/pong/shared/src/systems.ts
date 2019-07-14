@@ -341,8 +341,8 @@ export class BotSpawnerSystem implements lk.System {
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let numPlayersAlive = alivePlayers.length;
-    let isTimeToSpawn = spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 10;
-    if (isTimeToSpawn && numPlayersAlive <= 4) {
+    let isTimeToSpawn = spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 5;
+    if (isTimeToSpawn && numPlayersAlive <= 20) {
       spawner.getData().lastBotSpawnTimeS = simulationTimeS;
       let newPlayerInfo = new PlayerInfo();
       newPlayerInfo.playerIndex = players.length + 1;
