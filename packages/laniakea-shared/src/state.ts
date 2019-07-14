@@ -428,6 +428,7 @@ export class EntityComponentStateImpl implements EntityComponentState {
     }
     stream.serializeUint8Array(ids8Buffer, 'val');
     if (stream.isReading) {
+      this.entityIdToComponents.clear();
       let ids32Buffer = new Uint32Array(ids8Buffer.val);
       for (let entityId of ids32Buffer) {
         this.entityIdToComponents.set(entityId, new Map());
@@ -452,6 +453,9 @@ export class EntityComponentStateImpl implements EntityComponentState {
         }
       }
     } else {
+      for (let [ , componentsMap] of this.componentKindIdToComponents) {
+        componentsMap.clear();
+      }
       for (let i = 0; i < componentsLengthObj.val; ++i) {
         let kindId = {val: 0};
         stream.serializeUint32(kindId, 'val');
