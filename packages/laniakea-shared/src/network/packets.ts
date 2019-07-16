@@ -1,7 +1,7 @@
 import {
   Serializable,
   SerializationStream,
-} from './serialization';
+} from '../serialization';
 
 // Allow our packet name format
 // tslint:disable:class-name

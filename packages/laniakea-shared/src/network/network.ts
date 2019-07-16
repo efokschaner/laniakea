@@ -1,8 +1,8 @@
 // tslint:disable-next-line:no-var-requires
 const present = require('present');
 import { SyncEvent } from 'ts-events';
-import { CyclicBuffer } from './cyclic-buffer';
-import * as reflection from './reflection';
+import { CyclicBuffer } from '../cyclic-buffer';
+import * as reflection from '../reflection';
 import {
   measureAndSerialize,
   MeasureStream,
@@ -10,7 +10,7 @@ import {
   Serializable,
   SerializationStream,
   WriteStream,
-} from './serialization';
+} from '../serialization';
 
 // Buffers RTCDataChannel recieved messages until the
 // flushAndStopBuffering function is called.
