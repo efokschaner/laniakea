@@ -302,7 +302,7 @@ export class AckingPacketProtocol {
     let halfTheAckRangeOfAPacket = ACK_BITFIELD_BYTES * 4;
     if (sequenceNumberIsGreaterThan(
       inboundPacket.sequenceNumber,
-      this.lastSentAckSequenceNumber + halfTheAckRangeOfAPacket)) {
+      normalizeSequenceNumber(this.lastSentAckSequenceNumber + halfTheAckRangeOfAPacket))) {
       // This implies we have half a packet's ack capacity of un-acked packets to ack
       // Send a packet with zero length payload so that we transmit some acks.
       this.sendPacket(new Uint8Array(0));

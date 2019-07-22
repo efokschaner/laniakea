@@ -4,7 +4,7 @@
 import * as Bluebird from 'bluebird';
 import * as lk from 'laniakea-shared';
 import { Serializable } from 'laniakea-shared';
-import {SyncEvent, VoidSyncEvent} from 'ts-events';
+import { SyncEvent, VoidSyncEvent } from 'ts-events';
 
 function logError(message: string) {
   return console.error(message);
@@ -12,9 +12,9 @@ function logError(message: string) {
 
 class ClientRTCConnection extends lk.RTCPeerConnectionWithOpenDataChannels {
   constructor(
-      peerConnection: RTCPeerConnection,
-      reliableChannel: lk.BufferedRTCDataChannel,
-      unreliableChannel: lk.BufferedRTCDataChannel) {
+    peerConnection: RTCPeerConnection,
+    reliableChannel: lk.BufferedRTCDataChannel,
+    unreliableChannel: lk.BufferedRTCDataChannel) {
     super(peerConnection, reliableChannel, unreliableChannel);
   }
 }
@@ -25,62 +25,60 @@ interface ConnectionAndPlayerId {
 }
 
 function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId> {
-  let disposableWebsocket = Bluebird.try(() => {
-    return new WebSocket(serverWsUrl);
-  }).disposer((ws) => { ws.close(); });
-  return Bluebird.using(disposableWebsocket, (wsClient) => {
-    return new Bluebird<WebSocket>((resolve, reject) => {
-      wsClient.onopen = (openEvent) => {
-        console.log('wsClient.onopen', openEvent);
-        resolve(wsClient);
-      };
-      wsClient.onclose = (closeEvent) => {
-        console.log('wsClient.onclose', closeEvent);
-        reject(new Error(closeEvent.code + ' ' + closeEvent.reason));
-      };
-      wsClient.onerror = (error) => {
-        // Connection failures result in an onclose judging from
-        // https://www.w3.org/TR/websockets/#concept-websocket-close-fail
-        // So here we just log.
-        console.log('wsClient.onerror', error);
-      };
-    })
-    .then((connectedWsClient) => {
-      let assignedPlayerId: number|undefined;
-      connectedWsClient.onmessage = (evt) => {
-        console.log('connectedWsClient.onmessage', evt);
-        let message = JSON.parse(evt.data);
-        if (message.desc) {
-          let desc = message.desc;
-          if (desc.type === 'answer') {
-            peerConnection.setRemoteDescription(desc).catch(logError);
-          } else {
-            console.log('Unhandled session description mesage', desc);
-          }
-        } else if (message.candidate) {
-          peerConnection.addIceCandidate(message.candidate).catch(logError);
-        } else if (message.playerIdAssignment) {
-          assignedPlayerId = message.playerIdAssignment;
+  let websocketForCleanup: WebSocket | undefined = undefined;
+  let assignedPlayerId: number | undefined;
+  return new Bluebird<{ websocket: WebSocket, peerConnection: RTCPeerConnection }>((resolve, reject) => {
+    let peerConnection = new RTCPeerConnection(undefined);
+    let websocket = new WebSocket(serverWsUrl);
+    websocketForCleanup = websocket;
+    websocket.onmessage = (evt) => {
+      console.log('connectedWsClient.onmessage', evt);
+      let message = JSON.parse(evt.data);
+      if (message.desc) {
+        let desc = message.desc;
+        if (desc.type === 'answer') {
+          peerConnection.setRemoteDescription(desc).catch(logError);
         } else {
-          console.log('Unhandled ws mesage', message);
+          console.log('Unhandled session description mesage', desc);
         }
-      };
-      // RTCPeerConnection's configuration is optional
-      let peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
+      } else if (message.candidate) {
+        peerConnection.addIceCandidate(message.candidate).catch(logError);
+      } else if (message.playerIdAssignment !== undefined) {
+        assignedPlayerId = message.playerIdAssignment;
+      } else {
+        console.log('Unhandled ws mesage', message);
+      }
+    };
+    websocket.onopen = (openEvent) => {
+      console.log('wsClient.onopen', openEvent);
+      resolve({ websocket, peerConnection })
+    }
+    websocket.onclose = (closeEvent) => {
+      console.log('wsClient.onclose', closeEvent);
+      reject(new Error(closeEvent.code + ' ' + closeEvent.reason));
+    };
+    websocket.onerror = (error) => {
+      // Connection failures result in an onclose judging from
+      // https://www.w3.org/TR/websockets/#concept-websocket-close-fail
+      // So here we just log.
+      console.log('websocket.onerror', error);
+    };
+  }).then(({ websocket, peerConnection }) => {
+    return new Bluebird<ConnectionAndPlayerId>((resolve, reject) => {
       // send any ice candidates to the other peer
       peerConnection.onicecandidate = (evt) => {
-        connectedWsClient.send(JSON.stringify({ candidate: evt.candidate }));
+        websocket.send(JSON.stringify({ candidate: evt.candidate }));
       };
       // let the "negotiationneeded" event trigger offer generation
       peerConnection.onnegotiationneeded = () => {
         peerConnection.createOffer().then((offer) => {
           return peerConnection.setLocalDescription(offer);
         })
-        .then(() => {
-          // send the offer to the other peer
-          connectedWsClient.send(JSON.stringify({ desc: peerConnection.localDescription }));
-        })
-        .catch(logError);
+          .then(() => {
+            // send the offer to the other peer
+            websocket.send(JSON.stringify({ desc: peerConnection.localDescription }));
+          })
+          .catch(logError);
       };
       // Because we're waiting for two channels to open,
       // it's possible for messages to arrive on one before
@@ -95,46 +93,48 @@ function connectToRTCServer(serverWsUrl: string): Bluebird<ConnectionAndPlayerId
         peerConnection.createDataChannel('unreliable', { ordered: false, maxRetransmits: 0 }));
       unreliableChannel.binaryType = 'arraybuffer';
       let unreliableChannelIsOpen = false;
-      return new Bluebird<ConnectionAndPlayerId>((resolve, reject) => {
-        function onChannelOpen() {
-          if (reliableChannelIsOpen && unreliableChannelIsOpen) {
-            if (assignedPlayerId === undefined) {
-              // This should never happen as playerId should be transmitted before rtc stuff.
-              reject(new Error('Expected to have assignedPlayerId before connection was fully open.'));
-            } else {
-              resolve({
-                assignedPlayerId,
-                connection: new ClientRTCConnection(
-                  peerConnection,
-                  reliableChannel,
-                  unreliableChannel,
-                ),
-              });
-            }
+      function onChannelOpen() {
+        if (reliableChannelIsOpen && unreliableChannelIsOpen) {
+          if (assignedPlayerId === undefined) {
+            // This should never happen as playerId should be transmitted before rtc stuff.
+            reject(new Error('Expected to have assignedPlayerId before connection was fully open.'));
+          } else {
+            resolve({
+              assignedPlayerId,
+              connection: new ClientRTCConnection(
+                peerConnection,
+                reliableChannel,
+                unreliableChannel,
+              ),
+            });
           }
         }
-        reliableChannel.onopen = () => {
-          reliableChannelIsOpen = true;
-          onChannelOpen();
-        };
-        reliableChannel.onerror = (event) => {
-          reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
-        };
-        reliableChannel.onclose = () => {
-          reject(new Error('Reliable channel closed during startup.'));
-        };
-        unreliableChannel.onopen = () => {
-          unreliableChannelIsOpen = true;
-          onChannelOpen();
-        };
-        unreliableChannel.onerror = (event) => {
-          reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
-        };
-        unreliableChannel.onclose = () => {
-          reject(new Error('Unreliable channel closed during startup.'));
-        };
-      });
+      }
+      reliableChannel.onopen = () => {
+        reliableChannelIsOpen = true;
+        onChannelOpen();
+      };
+      reliableChannel.onerror = (event) => {
+        reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
+      };
+      reliableChannel.onclose = () => {
+        reject(new Error('Reliable channel closed during startup.'));
+      };
+      unreliableChannel.onopen = () => {
+        unreliableChannelIsOpen = true;
+        onChannelOpen();
+      };
+      unreliableChannel.onerror = (event) => {
+        reject(new Error(event.error && event.error.message || 'No message available, missing event.error'));
+      };
+      unreliableChannel.onclose = () => {
+        reject(new Error('Unreliable channel closed during startup.'));
+      };
     });
+  }).finally(() => {
+    if (websocketForCleanup) {
+      websocketForCleanup.close();
+    }
   });
 }
 
@@ -154,7 +154,13 @@ export class NetworkClient {
       // re-architecture can eliminate it (by hooking up handlers before connecting)
       // If it IS necessary, is this the right place to do it?
       this.rtcConnection.flushAndStopBuffering();
-    }).catch(() => this.handleDisconnect());
+    }).tapCatch(() => this.handleDisconnect());
+  }
+
+  public close() {
+    if (this.rtcConnection !== undefined) {
+      this.rtcConnection.close();
+    }
   }
 
   public isConnected = false;
@@ -166,14 +172,14 @@ export class NetworkClient {
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerPacketType<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
+    ctor: new (...args: any[]) => T,
     uniquePacketTypeName: string,
   ): void {
     return this.packetPeer.registerPacketType(ctor, uniquePacketTypeName);
   }
 
   public registerPacketHandler<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
+    ctor: new (...args: any[]) => T,
     handler: (t: T, sequenceNumber: number) => void,
   ): void {
     return this.packetPeer.registerPacketHandler(ctor, handler);

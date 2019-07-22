@@ -1,4 +1,5 @@
 import * as http from 'http';
+import { AddressInfo } from 'net';
 
 // tslint:disable-next-line:no-var-requires
 const getBasicAuthCreds = require('basic-auth');
@@ -70,12 +71,12 @@ class RTCServer {
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  public listen(serverPort: number) {
+  public listen(serverPort: number) : Bluebird<AddressInfo> {
     return new Bluebird((resolve, reject) => {
       this.httpServer.listen(serverPort, () => {
         let address = this.httpServer.address();
         console.log('HTTP server is listening on ', address);
-        resolve(address);
+        resolve(address as AddressInfo); // Type assertion because only UNIX domain sockets have string address according to docs.
       });
       this.httpServer.on('error', (err: any) => {
         reject(err);
@@ -90,6 +91,9 @@ class RTCServer {
         }
       });
       this.wsServer.shutDown();
+      if (this.wsServer.connections.length === 0) {
+        resolve();
+      }
       setTimeout(() => {
         reject(new Error('Could not shut down all ws connections in time.'));
       }, 500);
@@ -242,7 +246,7 @@ export class NetworkServer {
       conn.flushAndStopBuffering();
     });
   }
-  public listen(serverPort: number) {
+  public listen(serverPort: number) : Bluebird<AddressInfo> {
     return this.rtcServer.listen(serverPort);
   }
   public close() {
