@@ -1,0 +1,22 @@
+{
+  "name": "network-integration-test",
+  "version": "0.0.1",
+  "description": "Tests for the laniakea network client and server",
+  "main": "dist/index.js",
+  "private": true,
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node -r source-map-support/register ."
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "laniakea-client": "0.0.1",
+    "laniakea-server": "0.0.1",
+    "source-map-support": "^0.5.12",
+    "websocket": "^1.0.29",
+    "wrtc": "^0.4.1"
+  }
+}

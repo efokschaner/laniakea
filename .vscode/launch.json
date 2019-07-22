@@ -31,6 +31,25 @@
       "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/demos/**/dist/**/*.js"],
       "localRoot": "${workspaceRoot}",
       "remoteRoot": null
-    }
+    },
+    {
+      "name": "Debug Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/tests/network-integration-test/dist/index.js",
+      "stopOnEntry": false,
+      "args": [],
+      "cwd": "${workspaceRoot}/tests/network-integration-test",
+      "preLaunchTask": null,
+      "runtimeExecutable": null,
+      "runtimeArgs": [
+        "--nolazy"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "sourceMaps": true,
+      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/tests/**/dist/**/*.js"]
+    },
   ]
 }
