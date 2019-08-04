@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+- name: 'files_in_this_folder'
+  orgId: 1
+  folder: ''
+  folderUid: ''
+  type: file
+  disableDeletion: true
+  editable: true
+  updateIntervalSeconds: 10
+  options:
+    path: /etc/grafana/provisioning/dashboards
