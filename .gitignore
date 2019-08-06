@@ -89,3 +89,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# .0x profiling output
+*.0x/
