@@ -1,17 +1,18 @@
 import * as Bluebird from 'bluebird';
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
 import {
-  C2S_InputFramePacket,
+  C2S_InputFrameMessage,
   ContinuousInputKind,
   createEngine,
   Engine,
   InputFrame,
   measureAndSerialize,
   PlayerId,
-  registerPacketTypes,
-  S2C_FrameUpdatePacket,
+  periodicCallback,
+  PeriodicCallbackHandle,
+  registerMessageTypes,
+  S2C_FrameUpdateMessage,
   Serializable,
+  SequenceNumber,
 } from 'laniakea-shared';
 import { SyncEvent } from 'ts-events';
 import { ClientSimulation } from './client-simulation';
@@ -20,37 +21,6 @@ import { ServerTimeEstimator } from './server-time-estimator';
 
 export interface RenderingSystem {
   render(domHighResTimestampMS: number, simulation: ClientSimulation): void;
-}
-
-interface PeriodicCallbackHandle {
-  stop(): void;
-}
-
-function periodicCallback(callback: () => void, periodMS: number, cosmeticName: string): PeriodicCallbackHandle {
-  let nextTimeoutHandle: NodeJS.Timer;
-  let callbackWrapper = () => {
-    let startTimeMS = present();
-    try {
-      callback();
-    } catch (e) {
-      console.error(`Exception from ${cosmeticName} callback`);
-      console.error(e, e.stack);
-    }
-    let endTimeMS = present();
-    let durationMS = startTimeMS - endTimeMS;
-    let timeToNextCallMS = periodMS - durationMS;
-    if (timeToNextCallMS < 0) {
-      console.warn(`${cosmeticName} callback took longer than period. periodMS=${periodMS} durationMS=${durationMS}`);
-      timeToNextCallMS = 0;
-    }
-    nextTimeoutHandle = setTimeout(callbackWrapper, timeToNextCallMS);
-  };
-  nextTimeoutHandle = setTimeout(callbackWrapper, 0);
-  return {
-    stop() {
-      clearTimeout(nextTimeoutHandle);
-    },
-  };
 }
 
 export interface ClientEngineOptions {
@@ -80,10 +50,10 @@ export class ClientEngine {
       this.options.simFPS,
       this.serverTimeEstimator,
       this.engine);
-    registerPacketTypes(this.networkClient.registerPacketType.bind(this.networkClient));
-    this.networkClient.registerPacketHandler(
-      S2C_FrameUpdatePacket,
-      this.clientSimulation.onFrameUpdatePacket.bind(this.clientSimulation),
+    registerMessageTypes(this.networkClient.registerMessageType.bind(this.networkClient));
+    this.networkClient.registerMessageHandler(
+      S2C_FrameUpdateMessage,
+      this.clientSimulation.onFrameUpdateMessage.bind(this.clientSimulation),
     );
     this.networkClient.onConnected.attach((playerId) => {
       this.playerId = playerId;
@@ -148,6 +118,13 @@ export class ClientEngine {
   private updateInputHandle?: PeriodicCallbackHandle;
   private fallbackClientSimulationHandle?: PeriodicCallbackHandle;
 
+  private nextOutboundSequenceNumber = new SequenceNumber(0);
+  private getNextOutboundSequenceNumber(): SequenceNumber {
+    let ret = this.nextOutboundSequenceNumber;
+    this.nextOutboundSequenceNumber = this.nextOutboundSequenceNumber.add(1);
+    return ret;
+  }
+
   private updateInput() {
     if (this.currentInputFrame === undefined) {
       return;
@@ -155,16 +132,18 @@ export class ClientEngine {
     let serverSimTimeS = this.clientSimulation.getCurrentSimulationTimeS();
     let inputTravelTime = this.clientSimulation.getInputTravelTimeS();
     let targetSimulationTimeS: number | undefined;
-    let packet = new C2S_InputFramePacket();
+    let packet = new C2S_InputFrameMessage();
+    packet.sequenceNumber = this.getNextOutboundSequenceNumber();
     packet.inputFrame = new Uint8Array(measureAndSerialize(this.currentInputFrame));
     if (serverSimTimeS !== undefined && inputTravelTime !== undefined) {
       targetSimulationTimeS = serverSimTimeS + inputTravelTime;
       packet.targetSimulationTimeS = targetSimulationTimeS;
     }
-    this.networkClient.sendPacket(packet);
+    this.networkClient.sendMessage(packet);
     if (targetSimulationTimeS !== undefined) {
       this.clientSimulation.notifyInputBeingSent(this.currentInputFrame, targetSimulationTimeS);
     }
+    this.networkClient.flushMessagesToNetwork();
   }
 
   private renderLoop(domHighResTimestampMS: number) {

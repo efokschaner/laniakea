@@ -1,15 +1,13 @@
-import * as http from 'http';
-import { AddressInfo } from 'net';
-
-// tslint:disable-next-line:no-var-requires
-const getBasicAuthCreds = require('basic-auth');
-
 import * as Bluebird from 'bluebird';
+import * as http from 'http';
+import * as lk from 'laniakea-shared';
+import { AddressInfo } from 'net';
 import { SyncEvent } from 'ts-events';
 import { request as WebSocketRequest, server as WebSocketServer } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
 
-import * as lk from 'laniakea-shared';
+// tslint:disable-next-line:no-var-requires
+const getBasicAuthCreds = require('basic-auth');
 
 function logError(message: any, ...optionalParams: any[]) {
   return console.error.apply(console, [message, ...optionalParams]);
@@ -54,13 +52,27 @@ export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthRe
   return { playerId: parseInt(creds.name, 10) };
 }
 
+
+export interface WebrtcPeerConnectionPortRange {
+  min?: number, // defaults to 0
+  max?: number // defaults to 65535
+}
+
+export interface ListenOptions {
+  signalingWebsocketServerPort: number,
+  webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange
+}
+
 // Handles authentication + establishment of the webRTC conn via WebSockets
 class RTCServer {
-  public readonly onConnection = new SyncEvent<{playerId: lk.PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels}>();
-  private connections = new Map<lk.PlayerId, lk.RTCPeerConnectionWithOpenDataChannels>();
+  public readonly onConnection = new SyncEvent<{playerId: lk.PlayerId, networkPeer: lk.NetworkPeer}>();
+  private connections = new Map<lk.PlayerId, lk.NetworkPeer>();
   private httpServer: http.Server;
   private wsServer: WebSocketServer;
-  constructor(private authenticatePlayer: AuthCallback) {
+  constructor(
+    private authenticatePlayer: AuthCallback,
+    // The purpose of this callback is to ensure that message handlers are attached to the opening channel asap before incoming messages arrive
+    private constructNetworkPeerFromChannel: (playerId: lk.PlayerId, l: lk.LikeRTCDataChannelOrWebSocket) => lk.NetworkPeer) {
     this.httpServer = http.createServer((_request, response) => {
       response.writeHead(404);
       response.end();
@@ -71,9 +83,10 @@ class RTCServer {
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  public listen(serverPort: number) : Bluebird<AddressInfo> {
+  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions) : Bluebird<AddressInfo> {
+    this.webrtcPeerConnectionPortRange = webrtcPeerConnectionPortRange;
     return new Bluebird((resolve, reject) => {
-      this.httpServer.listen(serverPort, () => {
+      this.httpServer.listen(signalingWebsocketServerPort, () => {
         let address = this.httpServer.address();
         console.log('HTTP server is listening on ', address);
         resolve(address as AddressInfo); // Type assertion because only UNIX domain sockets have string address according to docs.
@@ -93,10 +106,11 @@ class RTCServer {
       this.wsServer.shutDown();
       if (this.wsServer.connections.length === 0) {
         resolve();
+      } else {
+        setTimeout(() => {
+          reject(new Error('Could not shut down all ws connections in time.'));
+        }, 500);
       }
-      setTimeout(() => {
-        reject(new Error('Could not shut down all ws connections in time.'));
-      }, 500);
     }).finally(() => {
       this.httpServer.close();
     });
@@ -105,16 +119,16 @@ class RTCServer {
     // TODO: Figure out if origin restrictions are needed
     return true;
   }
-  private _handleNewConnection(playerId: lk.PlayerId, conn: lk.RTCPeerConnectionWithOpenDataChannels) {
+  private _handleNewConnection(playerId: lk.PlayerId, networkPeer: lk.NetworkPeer) {
     let maybeExistingConn = this.connections.get(playerId);
     if (maybeExistingConn !== undefined) {
       maybeExistingConn.close();
     }
-    conn.onClose.attach(() => {
+    networkPeer.onClose.attach(() => {
       this.connections.delete(playerId);
     });
-    this.connections.set(playerId, conn);
-    this.onConnection.post({playerId, conn});
+    this.connections.set(playerId, networkPeer);
+    this.onConnection.post({playerId, networkPeer});
   }
   private _handleWebsocketUpgradeRequest(request: WebSocketRequest) {
     if (!this._originIsAllowed(request.origin)) {
@@ -142,7 +156,11 @@ class RTCServer {
     console.log('Player with id ' + successfulAuthResult.playerId + ' authed successfully.');
     let wsConnection = request.accept(undefined, request.origin);
     wsConnection.sendUTF(JSON.stringify({playerIdAssignment: successfulAuthResult.playerId}));
-    let peerConnection = new RTCPeerConnection(undefined as any as RTCConfiguration);
+    // These are non-standard options that are supported by the node webrtc lib we're using
+    let customPeerConfig =  {
+      portRange: this.webrtcPeerConnectionPortRange
+    };
+    let peerConnection = new RTCPeerConnection(customPeerConfig as RTCConfiguration);
     wsConnection.on('message', (message) => {
       if (message.type === 'utf8') {
         let messageObj = JSON.parse(message.utf8Data!);
@@ -177,77 +195,39 @@ class RTCServer {
     peerConnection.onicecandidate = (evt) => {
       wsConnection.sendUTF(JSON.stringify({ candidate: evt.candidate }));
     };
-    let reliableChannel: lk.BufferedRTCDataChannel;
-    let unreliableChannel: lk.BufferedRTCDataChannel;
-    function isOpen(chan: lk.BufferedRTCDataChannel) {
-      return chan && chan.readyState === 'open';
-    }
-    let thisConnHandled = false;
-    let onDataChannelOpen = () => {
-      if (!thisConnHandled && isOpen(reliableChannel) && isOpen(unreliableChannel)) {
-        thisConnHandled = true;
-        wsConnection.close();
-        let newConn = new lk.RTCPeerConnectionWithOpenDataChannels(
-          peerConnection,
-          reliableChannel,
-          unreliableChannel,
-        );
-        this._handleNewConnection(successfulAuthResult.playerId, newConn);
-      }
-    };
-    peerConnection.ondatachannel = (evt: RTCDataChannelEvent) => {
-      let dataChannel = evt.channel;
-      console.log('peerConnection.ondatachannel ' + dataChannel.label);
-      // Because we're waiting for two channels to open,
-      // it's possible for messages to arrive on one before
-      // the other is complete, so listeners wont be ready.
-      // To compensate, we buffer both channels and let the
-      // listeners call flushAndStopBuffering when they're ready
-      if (dataChannel.label === 'reliable') {
-        reliableChannel = lk.bufferRTCDataChannel(dataChannel);
-        reliableChannel.binaryType = 'arraybuffer';
-        reliableChannel.onopen = () => {
-          onDataChannelOpen();
-        };
-      } else if (dataChannel.label === 'unreliable') {
-        unreliableChannel = lk.bufferRTCDataChannel(dataChannel);
-        unreliableChannel.binaryType = 'arraybuffer';
-        dataChannel.onopen = () => {
-          onDataChannelOpen();
-        };
-      } else {
-        logError('Unexpected channel opened', dataChannel);
-      }
+    let dataChannel = peerConnection.createDataChannel('laniakea-unreliable', {negotiated: true, id: 0});
+    dataChannel.binaryType = 'arraybuffer';
+    let peerConnectionAndDataChannel = new lk.RTCPeerConnectionAndDataChannel(peerConnection, dataChannel);
+    let networkPeer = this.constructNetworkPeerFromChannel(successfulAuthResult.playerId, peerConnectionAndDataChannel);
+    dataChannel.onopen = () => {
+      wsConnection.close();
+      this._handleNewConnection(successfulAuthResult.playerId, networkPeer);
     };
   }
+  private webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange;
 }
 
 export class NetworkServer {
-  private rtcServer: RTCServer;
-  private connections = new Map<lk.PlayerId, lk.PacketPeer>();
-
   constructor(authenticatePlayer: AuthCallback) {
-    this.rtcServer = new RTCServer(authenticatePlayer);
-    this.rtcServer.onConnection.attach(({playerId, conn}) => {
-      let packetPeer = new lk.PacketPeer();
-      for (let ctorAndName of this.registeredPacketTypes) {
-        packetPeer.registerPacketType(ctorAndName[0], ctorAndName[1]);
+    this.rtcServer = new RTCServer(authenticatePlayer, (playerId, channel) => {
+      let messageRouter = new lk.MessageRouter();
+      for (let ctorAndHandler of this.registeredMessageHandlers) {
+        let handlerWithPlayerIdParamBound = (message: lk.Serializable) => ctorAndHandler[1](playerId, message);
+        messageRouter.registerHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
       }
-      for (let ctorAndHandler of this.registeredPacketHandlers) {
-        let handlerWithPlayerIdParamBound = (packet: lk.Serializable, sequenceNumber: number) => ctorAndHandler[1](playerId, packet, sequenceNumber);
-        packetPeer.registerPacketHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
-      }
-      packetPeer.attachToConnection(conn);
-      this.connections.set(playerId, packetPeer);
-      conn.onClose.attach(() => {
+      return new lk.NetworkPeer(channel, this.messageClassRegistry, messageRouter);
+    });
+    this.rtcServer.onConnection.attach(({playerId, networkPeer}) => {
+      this.connections.set(playerId, networkPeer);
+      networkPeer.onClose.attach(() => {
         this.connections.delete(playerId);
       });
       this.onConnection.post(playerId);
-      conn.flushAndStopBuffering();
     });
   }
-  public listen(serverPort: number) : Bluebird<AddressInfo> {
-    return this.rtcServer.listen(serverPort);
+
+  public listen(options: ListenOptions) : Bluebird<AddressInfo> {
+    return this.rtcServer.listen(options);
   }
   public close() {
     this.connections.clear();
@@ -259,31 +239,48 @@ export class NetworkServer {
   /*
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
-  public registerPacketType<T extends lk.Serializable>(
+  public registerMessageType<T extends lk.Serializable>(
     ctor: new(...args: any[]) => T,
-    uniquePacketTypeName: string,
+    uniqueMessageTypeName: string,
   ): void {
-    this.registeredPacketTypes.push([ctor, uniquePacketTypeName]);
+    this.messageClassRegistry.registerClass(ctor, uniqueMessageTypeName);
   }
 
-  public registerPacketHandler<T extends lk.Serializable>(
+  public registerMessageHandler<T extends lk.Serializable>(
     ctor: new(...args: any[]) => T,
-    handler: (playerId: lk.PlayerId, packet: T, sequenceNumber: number) => void,
+    handler: (playerId: lk.PlayerId, t: T) => void
   ): void {
-    this.registeredPacketHandlers.push([
-      ctor as new(...args: any[]) => lk.Serializable,
-      handler as (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]);
+    this.registeredMessageHandlers.push([
+      ctor,
+      handler as (playerId: lk.PlayerId, packet: lk.Serializable) => void]);
   }
 
-  public sendPacket(playerId: lk.PlayerId, packet: lk.Serializable, onAck?: () => void) {
+  public sendMessage(playerId: lk.PlayerId, message: lk.Serializable, onAck?: () => void) : lk.OutgoingMessage {
     let maybeConn = this.connections.get(playerId);
     if (maybeConn !== undefined) {
-      maybeConn.sendPacket(packet, onAck);
+      return maybeConn.sendMessage(message, onAck);
+    }
+    return new lk.OutgoingMessage(0, undefined as any as lk.Serializable, undefined);
+  }
+  /**
+   * Sends messages across the network
+   * @param playerId optional id of player to only flush their messages
+   */
+  public flushMessagesToNetwork(playerId?: lk.PlayerId) {
+    if (playerId !== undefined) {
+      let maybeConnection = this.connections.get(playerId);
+      if (maybeConnection !== undefined) {
+        maybeConnection.flushMessagesToNetwork();
+      }
+    } else {
+      this.connections.forEach((peer) => { peer.flushMessagesToNetwork(); });
     }
   }
 
-  private registeredPacketTypes: Array<[new(...args: any[]) => lk.Serializable, string]> = [];
-  private registeredPacketHandlers: Array<[
+  private rtcServer: RTCServer;
+  private connections = new Map<lk.PlayerId, lk.NetworkPeer>();
+  private messageClassRegistry = new lk.ClassRegistry();
+  private registeredMessageHandlers: Array<[
     new(...args: any[]) => lk.Serializable,
-    (playerId: lk.PlayerId, packet: lk.Serializable, sequenceNumber: number) => void]> = [];
+    (playerId: lk.PlayerId, packet: lk.Serializable) => void]> = [];
 }

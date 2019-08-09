@@ -2,8 +2,8 @@
 const present = require('present');
 
 import {
-  C2S_TimeSyncRequestPacket,
-  S2C_TimeSyncResponsePacket,
+  C2S_TimeSyncRequestMessage,
+  S2C_TimeSyncResponseMessage,
 } from 'laniakea-shared';
 
 import { NetworkClient } from './network-client';
@@ -19,7 +19,7 @@ interface TimeSyncSample {
  */
 export class ServerTimeEstimator {
   constructor(private networkClient: NetworkClient, private globalSimulationRateMultiplier: number) {
-    networkClient.registerPacketHandler(S2C_TimeSyncResponsePacket, (response) => this.onTimeSyncResponse(response));
+    networkClient.registerMessageHandler(S2C_TimeSyncResponseMessage, (response) => this.onTimeSyncResponse(response));
   }
 
   /**
@@ -31,9 +31,14 @@ export class ServerTimeEstimator {
     }
     let curTimeS = this.getPresentTimeS();
     if (this.nextRequestTime === undefined || curTimeS >= this.nextRequestTime) {
-      let req = new C2S_TimeSyncRequestPacket();
+      let req = new C2S_TimeSyncRequestMessage();
       req.clientTimeS = curTimeS;
-      this.networkClient.sendPacket(req);
+      let outgoingMessage = this.networkClient.sendMessage(req);
+      if (outgoingMessage !== undefined) {
+        outgoingMessage.currentPriority = Infinity;
+        outgoingMessage.ttl = 1;
+      }
+      this.networkClient.flushMessagesToNetwork();
       this.nextRequestTime = this.getNextRequestTimeJitteredS(curTimeS);
     }
   }
@@ -64,7 +69,7 @@ export class ServerTimeEstimator {
     return this.globalSimulationRateMultiplier * present() / 1000;
   }
 
-  private onTimeSyncResponse(response: S2C_TimeSyncResponsePacket) {
+  private onTimeSyncResponse(response: S2C_TimeSyncResponseMessage) {
     // We use formulae similar to https://en.wikipedia.org/wiki/Network_Time_Protocol#Clock_synchronization_algorithm
     // However we assume t2 and t1 are the same because up here in JavaScript land, and un-supported by webrtc:
     // We do not get separate network receive and respond timestamps, only one to signify the packet is handled in JS.

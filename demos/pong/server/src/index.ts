@@ -22,7 +22,10 @@ let serverEngine = new lk.ServerEngine(
 serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 initialiseServer(serverEngine);
 serverEngine.start();
-networkServer.listen(gameServerWsPort)
+networkServer.listen({
+  signalingWebsocketServerPort: gameServerWsPort,
+  webrtcPeerConnectionPortRange: { min: 11213, max: 11213 }
+})
 .then(() => {
   console.log('networkServer is listening.');
 });

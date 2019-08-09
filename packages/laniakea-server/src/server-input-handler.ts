@@ -1,18 +1,18 @@
 import { Heap } from 'typescript-collections';
 
 import {
-  C2S_InputFramePacket,
+  C2S_InputFrameMessage,
   Engine,
   InputFrame,
   PlayerId,
   ReadStream,
-  sequenceNumberIsGreaterThan,
+  SequenceNumber
 } from 'laniakea-shared';
 
 interface InputBufferHeapEntry {
   targetSimulationTimeS: number;
   inputs: InputFrame;
-  packetSequenceNumber: number;
+  messageSequenceNumber: SequenceNumber;
 }
 
 function collectionsCompare(a: number, b: number): number {
@@ -35,11 +35,11 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: 0,
       inputs: this.engine.createInputFrame(),
-      packetSequenceNumber: 0,
+      messageSequenceNumber: new SequenceNumber(),
     });
   }
 
-  public onInputFramePacket(packet: C2S_InputFramePacket, packetSequenceNumber: number) {
+  public onInputFramePacket(packet: C2S_InputFrameMessage) {
     let newFrame = this.engine.createInputFrame();
     let inputFrameDataView = new DataView(
       packet.inputFrame.buffer,
@@ -49,7 +49,7 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: packet.targetSimulationTimeS,
       inputs: newFrame,
-      packetSequenceNumber,
+      messageSequenceNumber: packet.sequenceNumber,
     });
   }
 
@@ -64,7 +64,7 @@ class InputBuffer {
     }
     // Coallescing inputs for now just means grabbing the one with the highest sequence number.
     let result = framesToCoallesce.reduce((acc: InputBufferHeapEntry|undefined, frame) => {
-      if (acc === undefined || sequenceNumberIsGreaterThan(frame.packetSequenceNumber, acc.packetSequenceNumber)) {
+      if (acc === undefined || frame.messageSequenceNumber.isGreaterThan(acc.messageSequenceNumber)) {
         return frame;
       }
       return acc;
@@ -78,7 +78,7 @@ class InputBuffer {
     this.inputHeap.add({
       targetSimulationTimeS: simulationTimeS,
       inputs: result.inputs,
-      packetSequenceNumber: result.packetSequenceNumber,
+      messageSequenceNumber: result.messageSequenceNumber,
     });
     return result.inputs;
   }
@@ -95,9 +95,9 @@ export class ServerInputHandler {
   constructor(private engine: Engine) {
   }
 
-  public onInputFramePacket(playerId: PlayerId, packet: C2S_InputFramePacket, packetSequenceNumber: number) {
+  public onInputFramePacket(playerId: PlayerId, packet: C2S_InputFrameMessage) {
     let inputBuffer = this.getOrAddPlayerInputBuffer(playerId);
-    inputBuffer.onInputFramePacket(packet, packetSequenceNumber);
+    inputBuffer.onInputFramePacket(packet);
   }
 
   public getInputFramesForSimTime(simulationTimeS: number): Map<PlayerId, InputFrame> {

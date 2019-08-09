@@ -1,16 +1,16 @@
 // tslint:disable-next-line:no-var-requires
 const present = require('present');
 import {
-  C2S_InputFramePacket,
-  C2S_TimeSyncRequestPacket,
+  C2S_InputFrameMessage,
+  C2S_TimeSyncRequestMessage,
   ContinuousInputKind,
   createEngine,
   Engine,
   measureAndSerialize,
   PlayerId,
-  registerPacketTypes,
-  S2C_FrameUpdatePacket,
-  S2C_TimeSyncResponsePacket,
+  registerMessageTypes,
+  S2C_FrameUpdateMessage,
+  S2C_TimeSyncResponseMessage,
   Serializable,
   SimluationFrameData,
 } from 'laniakea-shared';
@@ -49,21 +49,26 @@ export class ServerEngine {
       });
       this.onPlayerConnected.post(playerId);
     });
-    registerPacketTypes(networkServer.registerPacketType.bind(networkServer));
-    networkServer.registerPacketHandler(C2S_TimeSyncRequestPacket, (playerId, timeSyncRequest) => {
-      let response = new S2C_TimeSyncResponsePacket();
+    registerMessageTypes(networkServer.registerMessageType.bind(networkServer));
+    networkServer.registerMessageHandler(C2S_TimeSyncRequestMessage, (playerId, timeSyncRequest) => {
+      let response = new S2C_TimeSyncResponseMessage();
       response.clientTimeS = timeSyncRequest.clientTimeS;
       response.serverTimeS = this.getSimulationTimeS();
-      networkServer.sendPacket(playerId, response);
+      let outgoingMessage = networkServer.sendMessage(playerId, response);
+      if (outgoingMessage !== undefined) {
+        outgoingMessage.currentPriority = Infinity;
+        outgoingMessage.ttl = 1;
+      }
+      networkServer.flushMessagesToNetwork(playerId);
     });
-    networkServer.registerPacketHandler(C2S_InputFramePacket, (playerId, inputFramePacket, packetSequenceNumber) => {
+    networkServer.registerMessageHandler(C2S_InputFrameMessage, (playerId, inputFramePacket) => {
       // Discard input packets too far in the future so that we cannot be spammed with data that persists for a long time
       let futureInputTimeWindowS = 4;
       if (inputFramePacket.targetSimulationTimeS > this.currentFrame.simulationTimeS + futureInputTimeWindowS) {
         console.warn(`Discarding inputFramePacket greater than ${futureInputTimeWindowS} seconds ahead of simulation.`);
         return;
       }
-      this.inputHandler.onInputFramePacket(playerId, inputFramePacket, packetSequenceNumber);
+      this.inputHandler.onInputFramePacket(playerId, inputFramePacket);
     });
   }
 
@@ -145,21 +150,21 @@ export class ServerEngine {
     // simulation updates.
     let componentDataBuffer = new Uint8Array(measureAndSerialize(this.currentFrame.state));
     this.playerInfos.forEach((pi) => {
-      let framePacket = new S2C_FrameUpdatePacket();
-      framePacket.simulationFrameIndex = this.currentFrame.simulationFrameIndex;
-      framePacket.simulationTimeS = this.currentFrame.simulationTimeS;
+      let frameMessage = new S2C_FrameUpdateMessage();
+      frameMessage.simulationFrameIndex = this.currentFrame.simulationFrameIndex;
+      frameMessage.simulationTimeS = this.currentFrame.simulationTimeS;
       let maybeInputs = this.currentFrame.inputs.get(pi.id);
       if (maybeInputs !== undefined) {
-        framePacket.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
+        frameMessage.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
       } else {
-        framePacket.inputUsedForPlayerThisFrame = new Uint8Array(0);
+        frameMessage.inputUsedForPlayerThisFrame = new Uint8Array(0);
       }
-      framePacket.componentData = componentDataBuffer;
-      this.networkServer.sendPacket(pi.id, framePacket, () => {
-        // console.log('ACK for:', framePacket.simulationTimeS);
+      frameMessage.componentData = componentDataBuffer;
+      this.networkServer.sendMessage(pi.id, frameMessage, () => {
+        // console.log('ACK for:', frameMessage.simulationTimeS);
       });
     });
-
+    this.networkServer.flushMessagesToNetwork();
     // Schedule the next update to coincide with the start time of the next unsimulated frame.
     let nextFrameStartTimeS = this.currentFrame.simulationTimeS + this.getGameSimPeriodS();
     let nextFrameStartOffsetMS = (nextFrameStartTimeS - this.getSimulationTimeS()) * 1000;

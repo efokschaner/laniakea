@@ -13,8 +13,10 @@
   "license": "MIT",
   "devDependencies": {},
   "dependencies": {
+    "influx": "^5.4.0",
     "laniakea-client": "0.0.1",
     "laniakea-server": "0.0.1",
+    "present": "^1.0.0",
     "source-map-support": "^0.5.12",
     "websocket": "^1.0.29",
     "wrtc": "^0.4.1"

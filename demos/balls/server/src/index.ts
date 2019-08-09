@@ -57,7 +57,10 @@ initialiseLevel(serverEngine.currentFrame.state);
 serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 
 serverEngine.start();
-networkServer.listen(gameServerWsPort)
+networkServer.listen({
+  signalingWebsocketServerPort: gameServerWsPort,
+  webrtcPeerConnectionPortRange: { min: 11214, max: 11214 }
+})
 .then(() => {
   console.log('networkServer is listening.');
 });

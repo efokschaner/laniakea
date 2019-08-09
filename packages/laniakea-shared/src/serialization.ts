@@ -49,6 +49,10 @@ export class ReadStream implements SerializationStreamInterface {
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
+  public hasMoreData(): boolean {
+    return this.curOffset < this.dataView.byteLength;
+  }
+
   public readBoolean(): boolean {
     let result = this.dataView.getUint8(this.curOffset) > 0;
     this.curOffset += 1;
@@ -406,6 +410,12 @@ export class MeasureStream implements SerializationStreamInterface {
   }
 }
 
+export function measureSerializable(obj: Serializable): number {
+  let measureStream = new MeasureStream();
+  obj.serialize(measureStream);
+  return measureStream.getNumBytesWritten();
+}
+
 export function measureAndSerialize(obj: Serializable, classRegistry?: reflection.ClassRegistry): ArrayBuffer {
   let measureStream = new MeasureStream();
   obj.serialize(measureStream);
@@ -417,6 +427,19 @@ export function measureAndSerialize(obj: Serializable, classRegistry?: reflectio
 
 /* Sketch for SerializableMap class
 TODO because we need some kind of uniform support for class and non-class serialization
+That uniform support could look like this:
+
+let object;
+object = serialize<SomeClass>(object);
+let primitive;
+primitive = serialize<SomePrimitive>(primitive);
+
+// If this is a serialization it returns the passed value
+// If this is a deserialization it returns the value read from the buffer
+  // If the value is primitive, thats a new value
+  // If the value is an object, it recyles the passed object and returns it.
+
+Also maybe Serializable can be 2 interfaces, 1 for purely staticly known types, requires no RTTI and 1 for dynamic types that requires RTTI.
 
 export class SerializableMap<K, V> extends Map<K, V> implements Serializable {
   constructor(

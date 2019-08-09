@@ -1,17 +1,21 @@
+// tslint:disable-next-line:no-var-requires
+// const present = require('present');
+
+import { NetworkClient, periodicCallback, SequenceNumber } from 'laniakea-client';
+import { NetworkServer, PlayerId, Serializable, SerializationStream } from 'laniakea-server';
 import { w3cwebsocket } from 'websocket';
-(global as any).WebSocket = w3cwebsocket;
-
 import { RTCPeerConnection } from 'wrtc';
-(global as any).RTCPeerConnection = RTCPeerConnection;
+import { createMetricsCollector, MetricsCollector } from './metrics-collection';
 
-import { NetworkClient } from 'laniakea-client';
-import { NetworkServer, Serializable, SerializationStream, PlayerId } from 'laniakea-server';
+
+(global as any).WebSocket = w3cwebsocket;
+(global as any).RTCPeerConnection = RTCPeerConnection;
 
 function isBeingDebugged() {
   return typeof global.v8debug === 'object' || /--debug|--inspect/.test(process.execArgv.join(' '));
 }
 
-class TestPacket implements Serializable {
+class TestMessage implements Serializable {
   public seq = 0;
   public data = new Uint8Array();
   public serialize(stream: SerializationStream): void {
@@ -20,86 +24,234 @@ class TestPacket implements Serializable {
   }
 }
 
-
-function onPacketReceivedByServer(playerId: PlayerId, packet: TestPacket, sequenceNumber: number) : void {
+function onMessageReceivedByServer(playerId: PlayerId, message: TestMessage) : void {
   playerId;
-  packet;
-  sequenceNumber;
+  message;
 }
 
 
-function onPacketReceivedByClient(packet: TestPacket, sequenceNumber: number) : void {
-  packet;
-  sequenceNumber;
+function onMessageReceivedByClient(message: TestMessage) : void {
+  message;
 }
 
 let clientPlayerId = 0;
 
-function runTest(client: NetworkClient, server: NetworkServer) {
-  let numPackets = 100000; // larger than MAX_SEQUENCE_NUMBER_EXCLUSIVE in network code
-  let roughMTU = 1100; // close to theoretical mtu
-
-  let numAcksFromServer = 0;
-  let sendFromClientAsync = (iter: number, maxIterations: number) => {
-    let packet = new TestPacket();
-    packet.seq = iter;
-    let buffLen = Math.round(Math.random() * roughMTU);
-    packet.data = new Uint8Array(buffLen);
-    client.sendPacket(packet, function() {
-      numAcksFromServer += 1;
-    });
-    iter += 1;
-    if (iter < maxIterations) {
-      setImmediate(sendFromClientAsync, iter, maxIterations);
-    }
+/**
+ * Sends many messages with a short expiry and measures the overall
+ * "delivery" latency of some changing data being communicated
+ */
+/*
+function replicationStyleTest() {
+  // Estimated parameters
+  // 10,000 entities
+  // 10 components per entity
+  // Half components, of half entities changed per tick
+  let numMessagesServerToClientPerTick = Math.round(100 * 10 * 0.5 * 0.5);
+  // ttl for server to client
+  let ttls = [1, 2, 4, 8, 16, 32];
+  function getRandomTTL() {
+    return ttls[Math.floor(Math.random()*ttls.length)];
   }
-  setImmediate(sendFromClientAsync, 0, numPackets);
+  // 1 -> 64 bytes per component (can't do 1 because of the uint8array TestMessage)
+  let sizes = [2, 4, 8, 16, 32, 64];
+  // subtract the 2 byte overhead of the uint8array size encoding
+  sizes = sizes.map((x) => x-2);
+  function getRandomSize() {
+    return sizes[Math.floor(Math.random()*sizes.length)];
+  }
+  // 60 network ticks per second on server
+  let serverFPS = 60;
+  // 60 ticks per second on client
+  let clientFPS = 60;
+  // 64 bytes per client payload
+  let clientSize = 64;
+  // client packets last 1/2 a second
+  let clientTTL = clientFPS / 2;
 
+   let numAcksFromServer = 0;
   let numAcksFromClient = 0;
-  let sendFromServerAsync = (iter: number, maxIterations: number) => {
-    let packet = new TestPacket();
-    packet.seq = iter;
-    let buffLen = Math.round(Math.random() * roughMTU);
-    packet.data = new Uint8Array(buffLen);
-    server.sendPacket(clientPlayerId, packet, function() {
-      numAcksFromClient += 1;
-    });
-    iter += 1;
-    if (iter < maxIterations) {
-      setImmediate(sendFromServerAsync, iter, maxIterations);
+  let clientIter = 0;
+  let serverIter = 0;
+  // Ensure we send more messages than MAX_SEQUENCE_NUMBER_EXCLUSIVE in network code
+  // Let's wrap around around
+  let finishedSending = () => serverIter > ;
+
+  let clientToServerHandle = periodicCallback(() => {
+    if (!finished()) {
+      let message = new TestMessage();
+      message.seq = clientIter++;
+      message.data = new Uint8Array(clientSize);
+      let outgoingMessage = client.sendMessage(message, function() {
+        numAcksFromServer += 1;
+      });
+      outgoingMessage.ttl = undefined;
     }
-  }
-  setImmediate(sendFromServerAsync, 0, numPackets);
+    client.flushMessagesToNetwork();
+  }, 1000 / clientFPS, 'clientToServer');
+
+  // Server generates messages at 1/2 the 60 net fps
+  let serverAddMessagesThisFrame = true;
+  let serverToClientHandle = periodicCallback(() => {
+    if (!finished()) {
+      if (serverAddMessagesThisFrame) {
+        for (let i = 0; i < numMessagesServerToClientPerTick; ++i) {
+          let message = new TestMessage();
+          message.seq = serverIter++;
+          message.data = new Uint8Array(getRandomSize());
+          let outgoingMessage = server.sendMessage(clientPlayerId, message, function() {
+            numAcksFromClient += 1;
+          });
+          outgoingMessage.ttl = undefined;
+        }
+      }
+      serverAddMessagesThisFrame = !serverAddMessagesThisFrame;
+    }
+    server.flushMessagesToNetwork();
+  }, 1000 / serverFPS, 'serverToClient');
 
   let timeoutId = setTimeout(function() {
     console.error('Test timed out');
     if (!isBeingDebugged()) {
       process.exit(1);
     }
-  }, 60000);
+  }, sendDurationMS * 1.5);
 
   let intervalId = setInterval(function() {
-    console.log(`numAcksFromClient: ${numAcksFromClient}, numAcksFromServer: ${numAcksFromServer}`);
-    if (numAcksFromServer === numPackets && numAcksFromClient === numPackets) {
+    metricsCollector.collectIntegrationTestMeasurements([
+      {
+        peerName: 'client',
+        acksReceived: numAcksFromServer,
+        messagesSent: clientIter,
+      },
+      {
+        peerName: 'server',
+        acksReceived: numAcksFromClient,
+        messagesSent: serverIter,
+      },
+    ]);
+    if (finished() && numAcksFromServer === clientIter && numAcksFromClient === serverIter) {
       clearTimeout(timeoutId);
       clearInterval(intervalId);
       console.log('All acks received.');
+      clientToServerHandle.stop();
+      serverToClientHandle.stop();
       client.close();
       server.close();
-    } else {
-      // Flush acks to server
-      client.sendPacket(new TestPacket());
-      // Flush acks to client
-      server.sendPacket(clientPlayerId, new TestPacket());
+      // This is rather silly but theres a bug where the server peerconnection
+      // prevents node.js shutting down, which I haven't figured out the root cause of
+      let shutdownTimeout = setTimeout(function() {
+        console.error('Shutdown timed out');
+        if (!isBeingDebugged()) {
+          process.exit(0);
+        }
+      }, 100);
+      // Don't let the shutdown timeout itself keep node running.
+      shutdownTimeout.unref();
     }
-  }, 500);
+  }, 50);
+}
+*/
+
+
+/**
+ * Sends a steady stream of messages with no expiry and ensures they are all delivered
+ */
+function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCollector: MetricsCollector) {
+  let numAcksFromServer = 0;
+  let numAcksFromClient = 0;
+  let clientIter = 0;
+  let serverIter = 0;
+
+  // Ensure we send more messages than MAX_SEQUENCE_NUMBER_EXCLUSIVE in network code
+  let finishedSending = () => clientIter > 2 * SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
+
+  let clientToServerHandle = periodicCallback(() => {
+    if (!finishedSending()) {
+      let message = new TestMessage();
+      message.seq = clientIter++;
+      message.data = new Uint8Array(0);
+      let outgoingMessage = client.sendMessage(message, function() {
+        numAcksFromServer += 1;
+      })!;
+      outgoingMessage.ttl = undefined;
+    }
+    client.flushMessagesToNetwork();
+  }, 5, 'clientToServer');
+
+  // Server generates messages at 1/2 the net fps
+  let serverAddMessagesThisFrame = true;
+  let serverToClientHandle = periodicCallback(() => {
+    if (!finishedSending()) {
+      if (serverAddMessagesThisFrame) {
+        for (let i = 0; i < 50; ++i) {
+          let message = new TestMessage();
+          message.seq = serverIter++;
+          message.data = new Uint8Array(Math.floor(Math.random()*33));
+          let outgoingMessage = server.sendMessage(clientPlayerId, message, function() {
+            numAcksFromClient += 1;
+          });
+          outgoingMessage.ttl = undefined;
+        }
+      }
+      serverAddMessagesThisFrame = !serverAddMessagesThisFrame;
+    }
+    server.flushMessagesToNetwork();
+  }, 5, 'serverToClient');
+
+  let timeoutId = setTimeout(function() {
+    console.error('Test timed out');
+    if (!isBeingDebugged()) {
+      process.exit(1);
+    }
+  }, 1000000);
+
+  let intervalId = setInterval(function() {
+    metricsCollector.collectIntegrationTestMeasurements([
+      {
+        peerName: 'client',
+        acksReceived: numAcksFromServer,
+        messagesSent: clientIter,
+      },
+      {
+        peerName: 'server',
+        acksReceived: numAcksFromClient,
+        messagesSent: serverIter,
+      },
+    ]);
+    if (finishedSending() && numAcksFromServer === clientIter && numAcksFromClient === serverIter) {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+      console.log('All acks received.');
+      clientToServerHandle.stop();
+      serverToClientHandle.stop();
+      client.close();
+      server.close();
+      // This is rather silly but theres a bug where the server peerconnection
+      // prevents node.js shutting down, which I haven't figured out the root cause of
+      let shutdownTimeout = setTimeout(function() {
+        console.error('Shutdown timed out');
+        if (!isBeingDebugged()) {
+          process.exit(0);
+        }
+      }, 100);
+      // Don't let the shutdown timeout itself keep node running.
+      shutdownTimeout.unref();
+    }
+  }, 50);
 }
 
 async function main() {
+  let metricsCollector = await createMetricsCollector();
   let server = new NetworkServer(() => { return { playerId: clientPlayerId } });
-  server.registerPacketType(TestPacket, 'TestPacket');
-  server.registerPacketHandler(TestPacket, onPacketReceivedByServer);
-  let addressInfo = await server.listen(0);
+  server.registerMessageType(TestMessage, 'TestMessage');
+  server.registerMessageHandler(TestMessage, onMessageReceivedByServer);
+  let addressInfo = await server.listen({
+    signalingWebsocketServerPort: 0,
+    webrtcPeerConnectionPortRange: {
+      min: 11212,
+      max: 11212
+    }
+  });
   let serverHasClient = new Promise<void>((resolve) => {
     server.onConnection.attach(() => {
       resolve();
@@ -107,11 +259,11 @@ async function main() {
   });
 
   let client = new NetworkClient();
-  client.registerPacketType(TestPacket, 'TestPacket');
-  client.registerPacketHandler(TestPacket, onPacketReceivedByClient);
+  client.registerMessageType(TestMessage, 'TestMessage');
+  client.registerMessageHandler(TestMessage, onMessageReceivedByClient);
   await client.connect(`ws://127.0.0.1:${addressInfo.port}`);
   await serverHasClient;
-  runTest(client, server);
+  reliabilityTest(client, server, metricsCollector);
 }
 
 if (require.main === module) {

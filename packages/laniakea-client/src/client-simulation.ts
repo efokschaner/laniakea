@@ -5,7 +5,7 @@ import {
   InputFrame,
   PlayerId,
   ReadStream,
-  S2C_FrameUpdatePacket,
+  S2C_FrameUpdateMessage,
   SimluationFrameData,
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
@@ -156,36 +156,36 @@ export class ClientSimulation {
   /**
    * This is not meant to be called by users of library. TODO create external interface for this class.
    */
-  public onFrameUpdatePacket(framePacket: S2C_FrameUpdatePacket) {
-    let targetFrame = this.getOrInsertFrameWithoutSimulation(framePacket.simulationFrameIndex);
+  public onFrameUpdateMessage(frameMessage: S2C_FrameUpdateMessage) {
+    let targetFrame = this.getOrInsertFrameWithoutSimulation(frameMessage.simulationFrameIndex);
     if (targetFrame === undefined) {
       console.warn('Discarding update for frame that was too old. ' +
-        `simulationFrameIndex: ${framePacket.simulationFrameIndex} simulationTimeS: ${framePacket.simulationTimeS}`);
+        `simulationFrameIndex: ${frameMessage.simulationFrameIndex} simulationTimeS: ${frameMessage.simulationTimeS}`);
       return;
     }
-    targetFrame.receivedAuthoritativeSimulationTimeS = framePacket.simulationTimeS;
+    targetFrame.receivedAuthoritativeSimulationTimeS = frameMessage.simulationTimeS;
 
     targetFrame.receivedAuthoritativeInput = this.engine.createInputFrame();
-    if (framePacket.inputUsedForPlayerThisFrame.byteLength > 0) {
+    if (frameMessage.inputUsedForPlayerThisFrame.byteLength > 0) {
       let inputFrameDataView = new DataView(
-        framePacket.inputUsedForPlayerThisFrame.buffer,
-        framePacket.inputUsedForPlayerThisFrame.byteOffset,
-        framePacket.inputUsedForPlayerThisFrame.byteLength);
+        frameMessage.inputUsedForPlayerThisFrame.buffer,
+        frameMessage.inputUsedForPlayerThisFrame.byteOffset,
+        frameMessage.inputUsedForPlayerThisFrame.byteLength);
       targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
     }
     targetFrame.receivedAuthoritativeState = this.engine.createState();
-    let componentDataDataView = new DataView(framePacket.componentData.buffer, framePacket.componentData.byteOffset, framePacket.componentData.byteLength);
+    let componentDataDataView = new DataView(frameMessage.componentData.buffer, frameMessage.componentData.byteOffset, frameMessage.componentData.byteLength);
     targetFrame.receivedAuthoritativeState.serialize(new ReadStream(componentDataDataView));
 
     // Now make sure the frame is marked as dirty
-    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, framePacket.simulationFrameIndex);
+    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, frameMessage.simulationFrameIndex);
     // If this is the first frame we have received we immediately apply the authoritative state so that the
     // frame is considered useable to simulate the next frame.
-    if (this.firstEverFrameIndex === framePacket.simulationFrameIndex) {
+    if (this.firstEverFrameIndex === frameMessage.simulationFrameIndex) {
       this.applyPredictedOrAuthoritativeInputsToResolvedInputs(targetFrame);
       this.applyAuthoritativeStateToResolvedState(targetFrame);
       // Mark the NEXT frame as dirty as this frame is completely "up to date" now.
-      this.oldestDirtySimulationFrameIndex = framePacket.simulationFrameIndex + 1;
+      this.oldestDirtySimulationFrameIndex = frameMessage.simulationFrameIndex + 1;
     }
   }
 

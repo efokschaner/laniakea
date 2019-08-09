@@ -1,12 +1,13 @@
 import {
   Serializable,
   SerializationStream,
-} from '../serialization';
+} from './serialization';
+import { SequenceNumber } from './network/sequence-number';
 
-// Allow our packet name format
+// Allow our message name format
 // tslint:disable:class-name
 
-export class S2C_FrameUpdatePacket implements Serializable {
+export class S2C_FrameUpdateMessage implements Serializable {
   public simulationFrameIndex = -1;
   public simulationTimeS = -1;
   // Difficulty stems from the fact that correct construction
@@ -24,14 +25,14 @@ export class S2C_FrameUpdatePacket implements Serializable {
   }
 }
 
-export class C2S_TimeSyncRequestPacket implements Serializable {
+export class C2S_TimeSyncRequestMessage implements Serializable {
   public clientTimeS = 0;
   public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'clientTimeS');
   }
 }
 
-export class S2C_TimeSyncResponsePacket implements Serializable {
+export class S2C_TimeSyncResponseMessage implements Serializable {
   public clientTimeS = 0;
   public serverTimeS = 0;
   public serialize(stream: SerializationStream): void {
@@ -40,21 +41,23 @@ export class S2C_TimeSyncResponsePacket implements Serializable {
   }
 }
 
-export class C2S_InputFramePacket implements Serializable {
+export class C2S_InputFrameMessage implements Serializable {
   public targetSimulationTimeS = -1;
   public inputFrame!: Uint8Array;
+  public sequenceNumber = new SequenceNumber();
   public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'targetSimulationTimeS');
     stream.serializeUint8Array(this, 'inputFrame');
+    this.sequenceNumber.serialize(stream);
   }
 }
 
-export function registerPacketTypes(
+export function registerMessageTypes(
   registerCb: <T extends Serializable>(
     ctor: new(...args: any[]) => T,
     uniquePacketTypeName: string) => void) {
-  registerCb(S2C_FrameUpdatePacket, 'S2C_FrameUpdatePacket');
-  registerCb(C2S_TimeSyncRequestPacket, 'C2S_TimeSyncRequestPacket');
-  registerCb(S2C_TimeSyncResponsePacket, 'S2C_TimeSyncResponsePacket');
-  registerCb(C2S_InputFramePacket, 'C2S_InputFramePacket');
+  registerCb(S2C_FrameUpdateMessage, 'S2C_FrameUpdateMessage');
+  registerCb(C2S_TimeSyncRequestMessage, 'C2S_TimeSyncRequestMessage');
+  registerCb(S2C_TimeSyncResponseMessage, 'S2C_TimeSyncResponseMessage');
+  registerCb(C2S_InputFrameMessage, 'C2S_InputFrameMessage');
 }
