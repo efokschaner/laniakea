@@ -43,7 +43,8 @@ export class AbsoluteSequenceNumberTranslator {
 
   public getAbsoluteSequenceNumber(num: SequenceNumber): number {
     // Wrapping is detected when the new sequence number is greater than the last in wrapping terms, but smaller than the last in absolute terms.
-    let didWrap = num.isGreaterThan(this.highestSequenceNumberSeen) && num.value < this.highestSequenceNumberSeen.value;
+    let numIsGreaterThanHighestSeen = num.isGreaterThan(this.highestSequenceNumberSeen);
+    let didWrap = numIsGreaterThanHighestSeen && num.value < this.highestSequenceNumberSeen.value;
     if (didWrap) {
       this.epochCounter += 1;
       this.nearEpoch = true;
@@ -53,7 +54,9 @@ export class AbsoluteSequenceNumberTranslator {
     if (clearOfEpoch) {
       this.nearEpoch = false;
     }
-    this.highestSequenceNumberSeen = new SequenceNumber(num.value);
+    if (numIsGreaterThanHighestSeen) {
+      this.highestSequenceNumberSeen = new SequenceNumber(num.value);
+    }
     // If we're near the epoch, the top half of sequnce numbers are treated as negative
     let adjustedValue = num.value;
     if (this.nearEpoch && num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint) {
