@@ -13,13 +13,13 @@ There are many game engines that target browsers these days. To give just a few 
 
 The support for multiplayer with a browser client offered by most established engines, ranges from "severely limited" to "non-existent".
 Relatedly, certain kinds of games &mdash; or game mechanics &mdash; are typically problematic or avoided entirely in a browser-based game,
-due to the [Head-of-line blocking](https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem) that comes with HTTP/WebSocket-based communication.
+due to the [Head-of-line blocking](https://web.archive.org/web/20181107181507/https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem) that comes with HTTP/WebSocket-based communication.
 It's likely that these engines have not been able to ship a networking solution for the browser that would be on par with other platforms that have access to
 unordered, unreliable networking layers.
 
 Given the potential of WebRTC DataChannels to fulfill a similar role to UDP in traditional Game Engine architecture, and [support for WebRTC being relatively widespread](https://caniuse.com/#feat=rtcpeerconnection), I thought it would be interesting to explore whether WebRTC could improve this situation.
 
-In [this insightful article](https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#what-about-webrtc) the game networking veteran Glenn Fiedler specifically criticises WebRTC as "extremely complex", stemming from its focus on peer-to-peer networking, and states that:
+In [this insightful article](https://web.archive.org/web/20181107181507/https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#what-about-webrtc) the game networking veteran Glenn Fiedler specifically criticises WebRTC as "extremely complex", stemming from its focus on peer-to-peer networking, and states that:
 
 > game developers appreciate simplicity and desire a "WebSockets for UDP"-like approach over the complexity of WebRTC
 
@@ -35,7 +35,7 @@ Games will be able to control networking where it intersects with things like "v
 
 ### Key Features
 - Statically typed. Built with TypeScript.
-- Game state replication over webRTC Data Channels. Avoids [Head-of-line blocking](https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem).
+- Game state replication over webRTC Data Channels. Avoids [Head-of-line blocking](https://web.archive.org/web/20181107181507/https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem).
 
 ### Demo/Development
 This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
