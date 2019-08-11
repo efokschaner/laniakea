@@ -49,6 +49,10 @@ export class ReadStream implements SerializationStreamInterface {
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 
+  public getNumBytesRead(): number {
+    return this.curOffset;
+  }
+
   public hasMoreData(): boolean {
     return this.curOffset < this.dataView.byteLength;
   }
@@ -178,6 +182,11 @@ export class WriteStream implements SerializationStreamInterface {
   public readonly isWriting = true;
 
   private curOffset = 0;
+
+  public getNumBytesWritten(): number {
+    return this.curOffset;
+  }
+
   // classRegistry is optional, only required for serialisation of non-builtin types.
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }

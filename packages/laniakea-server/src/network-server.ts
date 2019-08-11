@@ -221,8 +221,9 @@ export class NetworkServer {
       this.connections.set(playerId, networkPeer);
       networkPeer.onClose.attach(() => {
         this.connections.delete(playerId);
+        this.onDisconnect.post(playerId);
       });
-      this.onConnection.post(playerId);
+      this.onConnection.post({playerId, networkPeer});
     });
   }
 
@@ -230,11 +231,13 @@ export class NetworkServer {
     return this.rtcServer.listen(options);
   }
   public close() {
+    this.connections.forEach((networkPeer) => networkPeer.close());
     this.connections.clear();
     return this.rtcServer.close();
   }
 
-  public onConnection = new SyncEvent<lk.PlayerId>();
+  public readonly onConnection = new SyncEvent<{playerId: lk.PlayerId, networkPeer: lk.NetworkPeer}>();
+  public readonly onDisconnect = new SyncEvent<lk.PlayerId>();
 
   /*
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation

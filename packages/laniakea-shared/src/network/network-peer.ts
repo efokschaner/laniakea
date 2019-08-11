@@ -51,6 +51,10 @@ export class NetworkPeer {
     this.messagePeer.flushMessagesToNetwork();
   }
 
+  public getMtuForMessage() {
+    return this.ackingPeer.getMtuForPayload();
+  }
+
   private ackingPeer = new AckingPeer(this.channel);
   private messagePeer = new MessagePeer(this.ackingPeer, this.messageClassRegistry);
 }

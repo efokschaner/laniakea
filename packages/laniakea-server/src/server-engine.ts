@@ -6,17 +6,19 @@ import {
   ContinuousInputKind,
   createEngine,
   Engine,
-  measureAndSerialize,
   PlayerId,
   registerMessageTypes,
-  S2C_FrameUpdateMessage,
   S2C_TimeSyncResponseMessage,
   Serializable,
   SimluationFrameData,
+  GenericComponent,
+  MeasureStream,
+  WriteStream,
 } from 'laniakea-shared';
 import * as tsEvents from 'ts-events';
 import { NetworkServer } from './network-server';
 import { ServerInputHandler } from './server-input-handler';
+import { FrameUpdateSender } from './frame-update-sender';
 
 export interface PlayerInfo {
   id: PlayerId;
@@ -28,8 +30,14 @@ export interface ServerEngineOptions {
   globalSimulationRateMultiplier: number;
 }
 
+interface ComponentAndSerializedData {
+  component: GenericComponent;
+  serializedData: Uint8Array;
+}
+
 export class ServerEngine {
   private playerInfos = new Map<PlayerId, PlayerInfo>();
+  private frameUpdateSenders = new Map<PlayerId, FrameUpdateSender>();
 
   public static defaultOptions: ServerEngineOptions = {
     simFPS: 30,
@@ -41,13 +49,17 @@ export class ServerEngine {
 
   constructor(private networkServer: NetworkServer, options: Partial<ServerEngineOptions>) {
     this.options = Object.assign({}, ServerEngine.defaultOptions, options);
-    networkServer.onConnection.attach((playerId) => {
+    networkServer.onConnection.attach(({playerId, networkPeer}) => {
       console.log(`Player connected: playerId = ${playerId}`);
       this.playerInfos.set(playerId, {
         id: playerId,
         displayName: playerId.toString(),
       });
+      this.frameUpdateSenders.set(playerId, new FrameUpdateSender(playerId, networkPeer));
       this.onPlayerConnected.post(playerId);
+    });
+    networkServer.onDisconnect.attach((playerId) => {
+      this.frameUpdateSenders.delete(playerId);
     });
     registerMessageTypes(networkServer.registerMessageType.bind(networkServer));
     networkServer.registerMessageHandler(C2S_TimeSyncRequestMessage, (playerId, timeSyncRequest) => {
@@ -145,25 +157,31 @@ export class ServerEngine {
       timeAmountInNeedOfSimulationS -= this.getGameSimPeriodS();
     }
 
-    // Tick networking as there's fresh frame state to send to players.
+    // Process networking as there's fresh frame state to send to players.
     // We could potentially tick networking at other times too to utilise bandwidth between
     // simulation updates.
-    let componentDataBuffer = new Uint8Array(measureAndSerialize(this.currentFrame.state));
-    this.playerInfos.forEach((pi) => {
-      let frameMessage = new S2C_FrameUpdateMessage();
-      frameMessage.simulationFrameIndex = this.currentFrame.simulationFrameIndex;
-      frameMessage.simulationTimeS = this.currentFrame.simulationTimeS;
-      let maybeInputs = this.currentFrame.inputs.get(pi.id);
-      if (maybeInputs !== undefined) {
-        frameMessage.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
-      } else {
-        frameMessage.inputUsedForPlayerThisFrame = new Uint8Array(0);
-      }
-      frameMessage.componentData = componentDataBuffer;
-      this.networkServer.sendMessage(pi.id, frameMessage, () => {
-        // console.log('ACK for:', frameMessage.simulationTimeS);
-      });
+    // Serialize all components once to save on doing so for each player
+    let aliveComponentsAndSerializedData = new Array<ComponentAndSerializedData>();
+    let measureStream = new MeasureStream();
+    let blankArray = new Uint8Array();
+    for (let c of this.currentFrame.state.withDeletedStateHidden().getAllComponents()) {
+      aliveComponentsAndSerializedData.push({component: c, serializedData: blankArray});
+      c.serialize(measureStream);
+    }
+    let componentDataBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());
+    let writeStream = new WriteStream(new DataView(componentDataBuffer));
+    for (let c of aliveComponentsAndSerializedData) {
+      let startOffset = writeStream.getNumBytesWritten();
+      c.component.serialize(writeStream);
+      let endOffset = writeStream.getNumBytesWritten();
+      c.serializedData = new Uint8Array(componentDataBuffer, startOffset, endOffset - startOffset);
+    }
+    this.frameUpdateSenders.forEach((sender) => {
+      sender.sendFrameUpdate(this.currentFrame, aliveComponentsAndSerializedData);
     });
+
+    // purgeDeletedState needs to happen after anything that cares about seeing deletion markers
+    this.currentFrame.state.purgeDeletedState();
     this.networkServer.flushMessagesToNetwork();
     // Schedule the next update to coincide with the start time of the next unsimulated frame.
     let nextFrameStartTimeS = this.currentFrame.simulationTimeS + this.getGameSimPeriodS();

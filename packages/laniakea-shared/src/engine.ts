@@ -14,6 +14,7 @@ import { ComponentKind, ComponentReflection, EntityComponentState, EntityCompone
 export enum _PlayerIdBrand {}
 export type PlayerId = number & _PlayerIdBrand;
 
+// TODO fix typo on this class name
 export class SimluationFrameData {
   constructor(
     public simulationFrameIndex: number,
@@ -70,6 +71,9 @@ export interface Engine {
    * using the simulation provided by the registered systems.
    */
   stepSimulation(timeDeltaS: number, previousFrame: SimluationFrameData, nextFrame: SimluationFrameData): void;
+
+  // TODO don't give access to componentReflection once we have a better generalised type-id/reflection/serialzed
+  componentReflection: ComponentReflection;
 }
 
 export function createEngine(): Engine {
@@ -78,7 +82,8 @@ export function createEngine(): Engine {
 
 class EngineImpl implements Engine {
   private continuousInputTypes = new ClassRegistry();
-  private componentReflection = new ComponentReflection();
+  // TODO don't give access to componentReflection once we have a better generalised type-id/reflection/serialzed
+  public componentReflection = new ComponentReflection();
   private systems: System[] = [];
 
   public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: ContinuousInputKind): void {

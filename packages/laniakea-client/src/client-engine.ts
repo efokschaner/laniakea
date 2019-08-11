@@ -10,9 +10,11 @@ import {
   periodicCallback,
   PeriodicCallbackHandle,
   registerMessageTypes,
-  S2C_FrameUpdateMessage,
   Serializable,
   SequenceNumber,
+  S2C_FrameDeletionsMessage,
+  S2C_FrameComponentStateMessage,
+  S2C_FrameInputsUsedMessage,
 } from 'laniakea-shared';
 import { SyncEvent } from 'ts-events';
 import { ClientSimulation } from './client-simulation';
@@ -52,8 +54,16 @@ export class ClientEngine {
       this.engine);
     registerMessageTypes(this.networkClient.registerMessageType.bind(this.networkClient));
     this.networkClient.registerMessageHandler(
-      S2C_FrameUpdateMessage,
-      this.clientSimulation.onFrameUpdateMessage.bind(this.clientSimulation),
+      S2C_FrameInputsUsedMessage,
+      this.clientSimulation.onFrameInputsUsedMessage.bind(this.clientSimulation),
+    );
+    this.networkClient.registerMessageHandler(
+      S2C_FrameComponentStateMessage,
+      this.clientSimulation.onFramecomponentStateMessage.bind(this.clientSimulation),
+    );
+    this.networkClient.registerMessageHandler(
+      S2C_FrameDeletionsMessage,
+      this.clientSimulation.onFrameDeletionsMessage.bind(this.clientSimulation),
     );
     this.networkClient.onConnected.attach((playerId) => {
       this.playerId = playerId;

@@ -1,14 +1,22 @@
 import {
   CyclicBuffer,
   Engine,
-  EntityComponentState,
   InputFrame,
   PlayerId,
   ReadStream,
-  S2C_FrameUpdateMessage,
   SimluationFrameData,
+  S2C_FrameDeletionsMessage,
+  EntityId,
+  GenericComponent,
+  S2C_FrameInputsUsedMessage,
+  S2C_FrameComponentStateMessage,
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
+
+interface ComponentAndSerializedData {
+  component: GenericComponent;
+  serializedData: Uint8Array;
+}
 
 export class ClientSimluationFrameData {
   constructor(
@@ -32,11 +40,19 @@ export class ClientSimluationFrameData {
   public receivedAuthoritativeInput?: InputFrame;
 
   /**
-   * For now this is the entire EntityComponentState
-   * As we make frame updates less monolithic it may become an array of partial state updates.
-   * Input will be separate to state etc.
+   * Authoritative data regarding component state that we have been told about
    */
-  public receivedAuthoritativeState?: EntityComponentState;
+  public receivedAuthoritativeComponentData = new Array<ComponentAndSerializedData>();
+
+  /**
+   * Authoritative data regarding deleted entities
+   */
+  public receivedEntityDeletions = new Array<EntityId>();
+
+  /**
+   * Authoritative data regarding deleted components
+   */
+  public receivedComponentDeletions = new Array<number>();
 }
 
 /**
@@ -153,10 +169,24 @@ export class ClientSimulation {
     return upperBound + 1;
   }
 
+  private markFrameAsDirty(frameIndex: number) {
+    // Now make sure the frame is marked as dirty
+    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, frameIndex);
+    // If this is the first frame we have received we immediately apply the authoritative state so that the
+    // frame is considered useable to simulate the next frame.
+    if (this.firstEverFrameIndex === frameIndex) {
+      let targetFrame = this.frames.getElement(frameIndex)!;
+      this.applyPredictedOrAuthoritativeInputsToResolvedInputs(targetFrame);
+      this.applyAuthoritativeStateToResolvedState(targetFrame);
+      // Mark the NEXT frame as dirty as this frame is completely "up to date" now.
+      this.oldestDirtySimulationFrameIndex = frameIndex + 1;
+    }
+  }
+
   /**
    * This is not meant to be called by users of library. TODO create external interface for this class.
    */
-  public onFrameUpdateMessage(frameMessage: S2C_FrameUpdateMessage) {
+  public onFrameInputsUsedMessage(frameMessage: S2C_FrameInputsUsedMessage) {
     let targetFrame = this.getOrInsertFrameWithoutSimulation(frameMessage.simulationFrameIndex);
     if (targetFrame === undefined) {
       console.warn('Discarding update for frame that was too old. ' +
@@ -173,20 +203,59 @@ export class ClientSimulation {
         frameMessage.inputUsedForPlayerThisFrame.byteLength);
       targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
     }
-    targetFrame.receivedAuthoritativeState = this.engine.createState();
-    let componentDataDataView = new DataView(frameMessage.componentData.buffer, frameMessage.componentData.byteOffset, frameMessage.componentData.byteLength);
-    targetFrame.receivedAuthoritativeState.serialize(new ReadStream(componentDataDataView));
 
-    // Now make sure the frame is marked as dirty
-    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, frameMessage.simulationFrameIndex);
-    // If this is the first frame we have received we immediately apply the authoritative state so that the
-    // frame is considered useable to simulate the next frame.
-    if (this.firstEverFrameIndex === frameMessage.simulationFrameIndex) {
-      this.applyPredictedOrAuthoritativeInputsToResolvedInputs(targetFrame);
-      this.applyAuthoritativeStateToResolvedState(targetFrame);
-      // Mark the NEXT frame as dirty as this frame is completely "up to date" now.
-      this.oldestDirtySimulationFrameIndex = frameMessage.simulationFrameIndex + 1;
+    this.markFrameAsDirty(frameMessage.simulationFrameIndex);
+  }
+
+  /**
+   * This is not meant to be called by users of library. TODO create external interface for this class.
+   */
+  public onFramecomponentStateMessage(frameComponentStateMessage: S2C_FrameComponentStateMessage) {
+    let targetFrame = this.getOrInsertFrameWithoutSimulation(frameComponentStateMessage.simulationFrameIndex);
+    if (targetFrame === undefined) {
+      console.warn('Discarding update for frame that was too old. ' +
+        `simulationFrameIndex: ${frameComponentStateMessage.simulationFrameIndex} simulationTimeS: ${frameComponentStateMessage.simulationTimeS}`);
+      return;
     }
+    targetFrame.receivedAuthoritativeSimulationTimeS = frameComponentStateMessage.simulationTimeS;
+
+    let componentData = frameComponentStateMessage.componentData;
+    let dataView = new DataView(componentData.buffer, componentData.byteOffset, componentData.byteLength);
+    let readStream = new ReadStream(dataView);
+    // TODO remove this brittle offset that assumes the data is 13 bytes past the start of the component
+    let dataOffsetInComponent = 13;
+    while (readStream.hasMoreData()) {
+      let startOffset = readStream.getNumBytesRead();
+      // TODO remove this brittle "peek" that assumes the first 32 bits of component are kindid
+      let componentKindId = dataView.getUint32(startOffset);
+      let component = this.engine.componentReflection.constructComponent(componentKindId, 0, 0);
+      component.serialize(readStream);
+      let endOffset = readStream.getNumBytesRead();
+      let serializedData = new Uint8Array(componentData.buffer, componentData.byteOffset + startOffset + dataOffsetInComponent, endOffset - startOffset);
+      targetFrame.receivedAuthoritativeComponentData.push({component, serializedData})
+    }
+
+    this.markFrameAsDirty(frameComponentStateMessage.simulationFrameIndex);
+  }
+
+  /**
+   * This is not meant to be called by users of library. TODO create external interface for this class.
+   */
+  public onFrameDeletionsMessage(frameDeletionsMessage: S2C_FrameDeletionsMessage) {
+    let targetFrameIndex = frameDeletionsMessage.simulationFrameIndex;
+    let targetFrame = this.getOrInsertFrameWithoutSimulation(targetFrameIndex);
+    if (targetFrame === undefined) {
+      // We never want to ignore deletions, the best we can do is insert them in to the oldest frame we do have.
+      targetFrameIndex = this.getOldestInitializedFrameIndex()!;
+      targetFrame = this.frames.getElement(targetFrameIndex)!;
+    } else {
+      targetFrame.receivedAuthoritativeSimulationTimeS = frameDeletionsMessage.simulationTimeS;
+    }
+
+    targetFrame.receivedComponentDeletions = targetFrame.receivedComponentDeletions.concat(frameDeletionsMessage.deletedComponentIds);
+    targetFrame.receivedEntityDeletions = targetFrame.receivedEntityDeletions.concat(frameDeletionsMessage.deletedEntityIds);
+
+    this.markFrameAsDirty(targetFrameIndex);
   }
 
   /**
@@ -267,7 +336,6 @@ export class ClientSimulation {
     this.applyPredictedOrAuthoritativeInputsToResolvedInputs(nextFrame);
     this.engine.stepSimulation(1 / this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
     this.applyAuthoritativeStateToResolvedState(nextFrame);
-    nextFrame.resolvedFrameData.state.purgeDeletedState();
     // By copying the data to itself, we quantize the state, which ensures that the values being
     // passed in to the next step will match more closely those that the client will receive
     // on the network, as well as the client performing the same operation on itself to create
@@ -347,9 +415,24 @@ export class ClientSimulation {
   }
 
   private applyAuthoritativeStateToResolvedState(frame: ClientSimluationFrameData): void {
-    if (frame.receivedAuthoritativeState !== undefined) {
-      this.engine.copySimulationState(frame.receivedAuthoritativeState, frame.resolvedFrameData.state);
+    let state = frame.resolvedFrameData.state;
+    for (let c of frame.receivedAuthoritativeComponentData) {
+      // TODO make this less dirty
+      // Beacause component data is mutable, and because we're handing the simulation our own
+      // authoritative copy of the state, we first re-deserialize from the pristine data buffer.
+      let readStream = new ReadStream(new DataView(c.serializedData.buffer, c.serializedData.byteOffset, c.serializedData.byteLength));
+      c.component.getData().serialize(readStream);
+      state.upsertComponent(c.component);
     }
+    for (let i = 0; i < frame.receivedComponentDeletions.length; i += 2) {
+      let kindId = frame.receivedComponentDeletions[i];
+      let componentId = frame.receivedComponentDeletions[i + 1];
+      state.deleteComponentWithKindId(kindId, componentId);
+    }
+    for (let entityId of frame.receivedEntityDeletions) {
+      state.deleteEntity(entityId);
+    }
+    state.purgeDeletedState();
   }
 
   private frames: CyclicBuffer<ClientSimluationFrameData>;
