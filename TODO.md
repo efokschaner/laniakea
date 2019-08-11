@@ -13,8 +13,6 @@
 - [ ] Explore capnproto ts as a networking + gamestate option. As evident from Button replication, ideal network format is quite likely not the ideal memory format.
       Therefore it may still be desirable to have separate representations even if capnproto makes sense for either of them.
 - [ ] Explore use of conventional web frameworks for 2D UI, with databindings to game state.
-- [ ] Maybe eliminate BufferedRTCDataChannel if we just have handlers ready before the connection attempt?
-- [ ] Maybe eliminate reliable RTCDataChannel as reliable can be implemented on top of unreliable with our protocol.
 - [ ] Graphs / stats from network. Maybe expose for use by other systems.
 - [ ] Review and move xxhashjs.d.ts typings to xxhashjs or DefinitelyTyped.
 - [ ] Review and move box-intersect.d.ts typings to box-intersect or DefinitelyTyped.
