@@ -123,7 +123,10 @@ export class ComponentReplicationChooser {
       }
       componentsThatFit.push(component.latestState);
       combinedLengthOfComponentsThatFit = lengthIncludingNextComponent;
-      component.ackState = AckState.SENT;
+      // Only if component is unsent do we mark it as sent. Acked components can get sent but should not raise their AckState to sent.
+      if (component.ackState === AckState.UNSENT) {
+        component.ackState = AckState.SENT;
+      }
       // If we're less than 8 bytes from the maxLength, it's good enough
       // We're probably not going to find a small enough message to squeeze in, so break out
       if(combinedLengthOfComponentsThatFit > (maxBytesOfComponentData - 8)) {
