@@ -1,4 +1,5 @@
 - [ ] Consider whether we should abandon component IDs and instead make kindId + entityId the only primary key.
+      We can still have a ComponentId type to facilitate code that wants it, it should just be a kindId + entityId concatenated.
 - [ ] Finish up implementation of entity and component deletion so we can release resources and
       make state packets stop growing indefinitely.
 - [ ] Make ComponentKindIds (possibly all TypeIDs) only 1 or 2 bytes on the wire, by sending a dictionary in a handshake.
