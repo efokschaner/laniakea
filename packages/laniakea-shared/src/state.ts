@@ -402,7 +402,17 @@ export class EntityComponentStateImpl implements EntityComponentState {
   }
 
   public insertComponent(component: GenericComponent) {
-    this.entityIdToComponents.get(component.getOwnerId())!.set(component.getKindId(), component.getId());
+    // We need to check the entity for a component of the same type with a different id.
+    // This is needed because componentId's are separate to entityIds which means that there can already be
+    // a component of this type for the entity, which we need to replace before we add a new one.
+    // TODO if we remove the separate unique componentId we will not have this weird case because there would be
+    // no distinction between 2 components of the same type for the same entity, they would necessarily be the same id / component.
+    let entityComponents = this.entityIdToComponents.get(component.getOwnerId())!;
+    let maybePriorComponentId = entityComponents.get(component.getKindId());
+    if (maybePriorComponentId !== undefined) {
+      this.getComponentsByKindId(component.getKindId()).delete(maybePriorComponentId);
+    }
+    entityComponents.set(component.getKindId(), component.getId());
     this.getComponentsByKindId(component.getKindId()).set(component.getId(), component);
   }
 
