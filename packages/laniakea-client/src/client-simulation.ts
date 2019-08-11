@@ -189,7 +189,7 @@ export class ClientSimulation {
   public onFrameInputsUsedMessage(frameMessage: S2C_FrameInputsUsedMessage) {
     let targetFrame = this.getOrInsertFrameWithoutSimulation(frameMessage.simulationFrameIndex);
     if (targetFrame === undefined) {
-      console.warn('Discarding update for frame that was too old. ' +
+      console.warn('Discarding S2C_FrameInputsUsedMessage for frame that was too old. ' +
         `simulationFrameIndex: ${frameMessage.simulationFrameIndex} simulationTimeS: ${frameMessage.simulationTimeS}`);
       return;
     }
@@ -213,7 +213,7 @@ export class ClientSimulation {
   public onFramecomponentStateMessage(frameComponentStateMessage: S2C_FrameComponentStateMessage) {
     let targetFrame = this.getOrInsertFrameWithoutSimulation(frameComponentStateMessage.simulationFrameIndex);
     if (targetFrame === undefined) {
-      console.warn('Discarding update for frame that was too old. ' +
+      console.warn('Discarding S2C_FrameComponentStateMessage for frame that was too old. ' +
         `simulationFrameIndex: ${frameComponentStateMessage.simulationFrameIndex} simulationTimeS: ${frameComponentStateMessage.simulationTimeS}`);
       return;
     }
