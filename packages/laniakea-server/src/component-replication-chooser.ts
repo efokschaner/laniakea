@@ -12,6 +12,8 @@ const PRIORITY_GROWTH_FACTOR = {
   [AckState.ACKED]: 1
 }
 
+const MINUMUM_SEND_PRIORITY = PRIORITY_GROWTH_FACTOR[AckState.UNSENT] / 2;
+
 /**
  * These are an arbitrarily named pair of markers that allow us
  * to detect dead components.
@@ -77,6 +79,7 @@ export class ComponentReplicationChooser {
     }
     return componentReplicationState;
   }
+
   private updateFromCurrentState(currentState: Array<ComponentAndSerializedData>) {
     this.currentFrameMarker = otherAliveMarker(this.currentFrameMarker);
     for (let c of currentState) {
@@ -92,12 +95,13 @@ export class ComponentReplicationChooser {
       this.componentReplicationStates.delete(deadComponent);
     }
   }
+
   private getComponentsSortedByPriority(): Array<ComponentReplicationState> {
     return Array.from(
       this.componentReplicationStates.values()
     ).filter(
       // Filter lower priority items to reduce the amount of sorting work
-      (x) => x.currentPriority >= PRIORITY_GROWTH_FACTOR[AckState.UNSENT] / 2
+      (x) => x.currentPriority >= MINUMUM_SEND_PRIORITY
     ).sort(
       (a, b) => b.currentPriority - a.currentPriority
     );
