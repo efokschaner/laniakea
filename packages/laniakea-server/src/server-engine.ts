@@ -10,7 +10,7 @@ import {
   registerMessageTypes,
   S2C_TimeSyncResponseMessage,
   Serializable,
-  SimluationFrameData,
+  SimulationFrameData,
   GenericComponent,
   MeasureStream,
   WriteStream,
@@ -90,7 +90,7 @@ export class ServerEngine {
 
   // TODO, encapsulate engine
   public engine: Engine = createEngine();
-  public currentFrame: SimluationFrameData = this.engine.createSimulationFrame();
+  public currentFrame: SimulationFrameData = this.engine.createSimulationFrame();
 
   public getGameSimPeriodS() { return 1 / this.options.simFPS; }
 

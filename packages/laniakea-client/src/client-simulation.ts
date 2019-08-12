@@ -4,7 +4,7 @@ import {
   InputFrame,
   PlayerId,
   ReadStream,
-  SimluationFrameData,
+  SimulationFrameData,
   S2C_FrameDeletionsMessage,
   EntityId,
   GenericComponent,
@@ -18,9 +18,9 @@ interface ComponentAndSerializedData {
   serializedData: Uint8Array;
 }
 
-export class ClientSimluationFrameData {
+export class ClientSimulationFrameData {
   constructor(
-    public resolvedFrameData: SimluationFrameData,
+    public resolvedFrameData: SimulationFrameData,
   ) {
   }
 
@@ -81,7 +81,7 @@ export class ClientSimulation {
     private serverTimeEstimator: ServerTimeEstimator,
     private engine: Engine) {
     let numberOfFramesToRetain = Math.round(secondsOfHistoryToRetain * simFPS);
-    this.frames = new CyclicBuffer<ClientSimluationFrameData>(numberOfFramesToRetain);
+    this.frames = new CyclicBuffer<ClientSimulationFrameData>(numberOfFramesToRetain);
   }
 
   private playerId?: PlayerId = undefined;
@@ -122,7 +122,7 @@ export class ClientSimulation {
    * "next" being the next frame after current.
    * Returns undefined if we do not yet have enough data from the server to simulate any frames.
    */
-  public getSimulationFrames(simulationTimeS: number): { current: SimluationFrameData, next: SimluationFrameData } | undefined {
+  public getSimulationFrames(simulationTimeS: number): { current: SimulationFrameData, next: SimulationFrameData } | undefined {
     this.doSimulationWork(simulationTimeS);
     let successorFrameIndex =  this.getSuccessorFrameForSimTime(simulationTimeS);
     if (successorFrameIndex === undefined) {
@@ -330,7 +330,7 @@ export class ClientSimulation {
     }
   }
 
-  private simulateOneFrame(previousFrame: ClientSimluationFrameData, nextFrame: ClientSimluationFrameData) {
+  private simulateOneFrame(previousFrame: ClientSimulationFrameData, nextFrame: ClientSimulationFrameData) {
     // Approximate the server behaviour where one frame's inputs are applied to next
     // in the absence of any other changes.
     nextFrame.resolvedFrameData.inputs = previousFrame.resolvedFrameData.inputs;
@@ -345,10 +345,10 @@ export class ClientSimulation {
     this.engine.copySimulationState(nextFrame.resolvedFrameData.state, nextFrame.resolvedFrameData.state);
   }
 
-  private insertNewFrame(frameIndex: number): ClientSimluationFrameData {
+  private insertNewFrame(frameIndex: number): ClientSimulationFrameData {
     let newFrame = this.engine.createSimulationFrame();
     newFrame.simulationFrameIndex = frameIndex;
-    let newClientFrame = new ClientSimluationFrameData(newFrame);
+    let newClientFrame = new ClientSimulationFrameData(newFrame);
     // In situations where the renderer is not ticking the simulation, eg. because the tab is not focused
     // The simulation can get so far behind that we can end up expiring the last known good frame outside our
     // cyclic buffer in which case our simulation mechanism breaks.
@@ -372,7 +372,7 @@ export class ClientSimulation {
    * Returns undefined if frameIndex is so far in the past that it is no longer available.
    * @param frameIndex
    */
-  private getOrInsertFrameWithoutSimulation(frameIndex: number): ClientSimluationFrameData | undefined  {
+  private getOrInsertFrameWithoutSimulation(frameIndex: number): ClientSimulationFrameData | undefined  {
     if (this.largestInitializedFrameIndex !== undefined) {
       if (this.largestInitializedFrameIndex >= frameIndex) {
         // We either already have the frame or it has been discarded
@@ -400,7 +400,7 @@ export class ClientSimulation {
     return result;
   }
 
-  private applyPredictedOrAuthoritativeInputsToResolvedInputs(frame: ClientSimluationFrameData) {
+  private applyPredictedOrAuthoritativeInputsToResolvedInputs(frame: ClientSimulationFrameData) {
     if (frame.receivedAuthoritativeSimulationTimeS !== undefined) {
       frame.resolvedFrameData.simulationTimeS = frame.receivedAuthoritativeSimulationTimeS;
     }
@@ -415,7 +415,7 @@ export class ClientSimulation {
     }
   }
 
-  private applyAuthoritativeStateToResolvedState(frame: ClientSimluationFrameData): void {
+  private applyAuthoritativeStateToResolvedState(frame: ClientSimulationFrameData): void {
     let state = frame.resolvedFrameData.state;
     for (let c of frame.receivedAuthoritativeComponentData) {
       // TODO make this less dirty
@@ -436,7 +436,7 @@ export class ClientSimulation {
     state.purgeDeletedState();
   }
 
-  private frames: CyclicBuffer<ClientSimluationFrameData>;
+  private frames: CyclicBuffer<ClientSimulationFrameData>;
 
   /**
    * An integer that represents the oldest simulation frame for which we have received modifications

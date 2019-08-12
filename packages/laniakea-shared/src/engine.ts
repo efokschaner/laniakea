@@ -15,7 +15,7 @@ export enum _PlayerIdBrand {}
 export type PlayerId = number & _PlayerIdBrand;
 
 // TODO fix typo on this class name
-export class SimluationFrameData {
+export class SimulationFrameData {
   constructor(
     public simulationFrameIndex: number,
     public simulationTimeS: number,
@@ -64,13 +64,13 @@ export interface Engine {
   copyInputFrame(src: InputFrame, dst: InputFrame): void;
   createState(): EntityComponentState;
   copySimulationState(src: EntityComponentState, dst: EntityComponentState): void;
-  createSimulationFrame(): SimluationFrameData;
+  createSimulationFrame(): SimulationFrameData;
 
   /**
    * Runs 1 simulation step with duration of timeDeltaS to produce nextFrame from previousFrame
    * using the simulation provided by the registered systems.
    */
-  stepSimulation(timeDeltaS: number, previousFrame: SimluationFrameData, nextFrame: SimluationFrameData): void;
+  stepSimulation(timeDeltaS: number, previousFrame: SimulationFrameData, nextFrame: SimulationFrameData): void;
 
   // TODO don't give access to componentReflection once we have a better generalised type-id/reflection/serialzed
   componentReflection: ComponentReflection;
@@ -125,14 +125,14 @@ class EngineImpl implements Engine {
     dst.serialize(readStream);
   }
 
-  public createSimulationFrame(): SimluationFrameData {
+  public createSimulationFrame(): SimulationFrameData {
     let state = new EntityComponentStateImpl(this.componentReflection);
     let inputs = new Map<PlayerId, InputFrame>();
-    let frame = new SimluationFrameData(-1, 0, inputs, state);
+    let frame = new SimulationFrameData(-1, 0, inputs, state);
     return frame;
   }
 
-  public stepSimulation(timeDeltaS: number, previousFrame: SimluationFrameData, nextFrame: SimluationFrameData): void {
+  public stepSimulation(timeDeltaS: number, previousFrame: SimulationFrameData, nextFrame: SimulationFrameData): void {
     nextFrame.simulationFrameIndex = previousFrame.simulationFrameIndex + 1;
     nextFrame.simulationTimeS = previousFrame.simulationTimeS + timeDeltaS;
     this.copySimulationState(previousFrame.state, nextFrame.state);

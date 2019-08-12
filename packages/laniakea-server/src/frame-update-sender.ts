@@ -5,7 +5,7 @@ import {
   NetworkPeer,
   OutgoingMessage,
   PlayerId,
-  SimluationFrameData,
+  SimulationFrameData,
   WriteStream,
   S2C_FrameDeletionsMessage,
   S2C_FrameComponentStateMessage,
@@ -25,7 +25,7 @@ export class FrameUpdateSender {
   ) {
   }
 
-  public sendFrameUpdate(currentFrame: SimluationFrameData, componentsAndSerializedData: Array<ComponentAndSerializedData>) {
+  public sendFrameUpdate(currentFrame: SimulationFrameData, componentsAndSerializedData: Array<ComponentAndSerializedData>) {
     this.sendFrameInputsUsedMessage(currentFrame);
     this.sendFrameComponentStateMessage(currentFrame, componentsAndSerializedData);
     // Deletions are a separate message that is sent with no expiry to ensure they eventually arrive
@@ -36,7 +36,7 @@ export class FrameUpdateSender {
   private lastOutgoingInputsUsedMessage?: OutgoingMessage;
   private lastOutgoingComponentStateMessage?: OutgoingMessage;
 
-  private sendFrameInputsUsedMessage(currentFrame: SimluationFrameData) {
+  private sendFrameInputsUsedMessage(currentFrame: SimulationFrameData) {
     let inputsUsedMessage = new S2C_FrameInputsUsedMessage();
     inputsUsedMessage.simulationFrameIndex = currentFrame.simulationFrameIndex;
     inputsUsedMessage.simulationTimeS = currentFrame.simulationTimeS;
@@ -54,7 +54,7 @@ export class FrameUpdateSender {
     this.lastOutgoingInputsUsedMessage = outgoingMessage;
   }
 
-  private sendFrameComponentStateMessage(currentFrame: SimluationFrameData, componentsAndSerializedData: ComponentAndSerializedData[]) {
+  private sendFrameComponentStateMessage(currentFrame: SimulationFrameData, componentsAndSerializedData: ComponentAndSerializedData[]) {
     let componentStateMessage = new S2C_FrameComponentStateMessage();
     componentStateMessage.simulationFrameIndex = currentFrame.simulationFrameIndex;
     componentStateMessage.simulationTimeS = currentFrame.simulationTimeS;
@@ -77,7 +77,7 @@ export class FrameUpdateSender {
     this.lastOutgoingComponentStateMessage = outgoingMessage;
   }
 
-  private sendDeletionsMessage(currentFrame: SimluationFrameData) {
+  private sendDeletionsMessage(currentFrame: SimulationFrameData) {
     let deletionsMessage = new S2C_FrameDeletionsMessage();
     deletionsMessage.simulationFrameIndex = currentFrame.simulationFrameIndex;
     deletionsMessage.simulationTimeS = currentFrame.simulationTimeS;
