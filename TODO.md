@@ -5,6 +5,7 @@
       Relates to ComponentId changes.
 - [ ] Make ComponentKindIds (possibly all TypeIDs) only 1 or 2 bytes on the wire, by sending a dictionary in a handshake.
 - [ ] Rename OutgoingMessage which conflicts with a type in http module.
+- [ ] Reduce extrapolation for objects that can't be so safely extrapolated. Potentially by completing "local perception filters" rendering strategy.
 - [ ] Automatic / manual bandwidth control. WebRTC has congestion control built-in. However we can potentially use more bandwidth than we do currently,
       and if bandwidth does get restricted, we can potentially save doing unnecessary network work in the application if a packet isnt able to be sent.
 - [ ] Use inter-frame times to send more state sync packets. This ties in with above.
