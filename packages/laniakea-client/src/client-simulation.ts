@@ -231,7 +231,8 @@ export class ClientSimulation {
       let component = this.engine.componentReflection.constructComponent(componentKindId, 0, 0);
       component.serialize(readStream);
       let endOffset = readStream.getNumBytesRead();
-      let serializedData = new Uint8Array(componentData.buffer, componentData.byteOffset + startOffset + dataOffsetInComponent, endOffset - startOffset);
+      let startOfDataOffset = startOffset + dataOffsetInComponent;
+      let serializedData = new Uint8Array(componentData.buffer, componentData.byteOffset + startOfDataOffset, endOffset - startOfDataOffset);
       targetFrame.receivedAuthoritativeComponentData.push({component, serializedData})
     }
 
