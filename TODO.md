@@ -1,13 +1,11 @@
 - [ ] Consider whether we should abandon component IDs and instead make kindId + entityId the only primary key.
       We can still have a ComponentId type to facilitate code that wants it, it should just be a kindId + entityId concatenated.
 - [ ] ComponentKindId should be on the GenericComponent interface but should not be a stored member within the component impl itself, because it is redundant with the type of the object itself.
-- [ ] Finish up implementation of entity and component deletion so we can release resources and
-      make state packets stop growing indefinitely.
-- [ ] Rename OutgoingMessage which conflicts with a type in http module.
-- [ ] Make ComponentKindIds (possibly all TypeIDs) only 1 or 2 bytes on the wire, by sending a dictionary in a handshake.
-- [ ] Add leading underscores to private members (for JavaScript consumers' sake).
 - [ ] Make Component wrapper class more like Entity wrapper class, the wrapper should not be our wire format, and possibly not our storage format. Reduces replication size.
-- [ ] MTU/bandwidth aware replication (currently sends all state every frame).
+      Relates to ComponentId changes.
+- [ ] Make ComponentKindIds (possibly all TypeIDs) only 1 or 2 bytes on the wire, by sending a dictionary in a handshake.
+- [ ] Rename OutgoingMessage which conflicts with a type in http module.
+- [ ] Add leading underscores to private members (for JavaScript consumers' sake).
 - [ ] Use inter-frame times to send more state sync packets. This ties in with above.
 - [ ] Automatic reconnection (as our connection is over UDP this is more about flushing and re-syncing simulation).
 - [ ] Explore capnproto ts as a networking + gamestate option. As evident from Button replication, ideal network format is quite likely not the ideal memory format.
