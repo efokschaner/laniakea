@@ -127,6 +127,7 @@ export class ComponentReplicationChooser {
       if (component.ackState === AckState.UNSENT) {
         component.ackState = AckState.SENT;
       }
+      component.currentPriority = 0;
       // If we're less than 8 bytes from the maxLength, it's good enough
       // We're probably not going to find a small enough message to squeeze in, so break out
       if(combinedLengthOfComponentsThatFit > (maxBytesOfComponentData - 8)) {
