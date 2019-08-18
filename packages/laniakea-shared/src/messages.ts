@@ -1,9 +1,9 @@
+import { ComponentId, EntityId } from './ids';
+import { SequenceNumber } from './network/sequence-number';
 import {
   Serializable,
   SerializationStream,
 } from './serialization';
-import { SequenceNumber } from './network/sequence-number';
-import { EntityId, ComponentId } from './ids';
 
 // Allow our message name format
 // tslint:disable:class-name
@@ -38,7 +38,7 @@ export class S2C_FrameComponentStateMessage implements Serializable {
   }
 }
 
-function serializeUint32Array(stream: SerializationStream, arr: Array<number>) {
+function serializeUint32Array(stream: SerializationStream, arr: number[]) {
   let lengthObj = {val: arr.length};
   stream.serializeUint32(lengthObj, 'val');
   let uint8Arr = {val: new Uint8Array(0)};

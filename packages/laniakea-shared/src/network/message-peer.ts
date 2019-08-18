@@ -2,14 +2,13 @@
 const present = require('present');
 
 import { SyncEvent } from 'ts-events';
-import { CyclicBuffer } from '../cyclic-buffer';
 import { ClassRegistry } from '../class-registry';
+import { CyclicBuffer } from '../cyclic-buffer';
 import { measureSerializable, ReadStream, Serializable, SerializationStream, WriteStream } from '../serialization';
 import { AckingPeer } from './acking-peer';
 import { AbsoluteSequenceNumberTranslator, SequenceNumber } from './sequence-number';
 
-
-let receiveWindowWarningLastLogTime: number|undefined = undefined;
+let receiveWindowWarningLastLogTime: number|undefined;
 function logWarningAboutReceiveWindow() {
   let nowMS = present();
   if (receiveWindowWarningLastLogTime === undefined || nowMS > receiveWindowWarningLastLogTime + 1000) {
@@ -26,7 +25,7 @@ function logWarningAboutReceiveWindow() {
 export class WireMessage implements Serializable {
   public sequenceNumber = new SequenceNumber();
   public message!: Serializable;
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     this.sequenceNumber.serialize(stream);
     stream.serializeSerializable(this, 'message');
   }
@@ -54,7 +53,7 @@ class OutgoingMessageChannel {
   constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
 
-  public sendMessage(message: Serializable, onAck?: () => void) : OutgoingMessage {
+  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
     let outboundMessage = new OutgoingMessage(this.getNextOutboundAbsoluteSequenceNumber(), message, onAck);
     this.messages.push(outboundMessage);
     return outboundMessage;
@@ -102,11 +101,11 @@ class OutgoingMessageChannel {
     let maxLength = this.ackingPeer.getMtuForPayload();
     let messagesThatFit = new Array<OutgoingMessage>();
     let combinedLengthOfMessagesThatFit = 0;
-    for(let message of this.messages) {
+    for (let message of this.messages) {
       let lengthIncludingNextMessage = combinedLengthOfMessagesThatFit + message.serializedLength;
       // Don't test length on the first message
       // If the first sendable message is too large, accept it and let webrtc deal with fragmentation
-      if (messagesThatFit.length != 0 && (lengthIncludingNextMessage > maxLength)) {
+      if (messagesThatFit.length !== 0 && (lengthIncludingNextMessage > maxLength)) {
         // Skip this message as it would take us over the size limit
         continue;
       }
@@ -119,7 +118,7 @@ class OutgoingMessageChannel {
       message.currentPriority = 0;
       // If we're less than 8 bytes from the maxLength, it's good enough
       // We're probably not going to find a small enough message to squeeze in, so break out
-      if(combinedLengthOfMessagesThatFit > (maxLength - 8)) {
+      if (combinedLengthOfMessagesThatFit > (maxLength - 8)) {
         break;
       }
     }
@@ -162,7 +161,7 @@ class IncomingMessageChannel {
 
   private handleIncomingPacket(payload: Uint8Array) {
     let readStream = new ReadStream(new DataView(payload.buffer, payload.byteOffset, payload.byteLength), this.classRegistry);
-    while(readStream.hasMoreData()) {
+    while (readStream.hasMoreData()) {
       let wireMessage = new WireMessage();
       wireMessage.serialize(readStream);
       let absoluteSequenceNumber = this.absoluteSequenceNumberTranslator.getAbsoluteSequenceNumber(wireMessage.sequenceNumber);
@@ -177,7 +176,6 @@ class IncomingMessageChannel {
   private messageAlreadyReceivedBuffer = new CyclicBuffer<boolean>(SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE / 4);
 }
 
-
 /**
  * Messages are unordered, prioritized individually,
  * and can be given a TTL / marked expired to limit reliability.
@@ -189,7 +187,7 @@ export class MessagePeer {
   constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
   public onMessageReceived = this.incomingMessageChannel.onMessageReceived;
-  public sendMessage(message: Serializable, onAck?: () => void) : OutgoingMessage {
+  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
     return this.outgoingMessageChannel.sendMessage(message, onAck);
   }
   public flushMessagesToNetwork() {

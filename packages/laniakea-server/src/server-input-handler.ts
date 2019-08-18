@@ -6,7 +6,7 @@ import {
   PlayerId,
   ReadStream,
   SequenceNumber,
-  SimulationEngine
+  SimulationEngine,
 } from 'laniakea-shared';
 
 interface InputBufferHeapEntry {

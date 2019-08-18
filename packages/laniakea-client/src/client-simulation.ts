@@ -1,18 +1,18 @@
 import {
+  ComponentAndSerializedData,
+  ComponentId,
   CyclicBuffer,
+  DeletedTag,
+  EntityId,
+  GenericComponent,
   InputFrame,
   PlayerId,
   ReadStream,
-  SimulationFrameData,
-  S2C_FrameDeletionsMessage,
-  EntityId,
-  GenericComponent,
-  S2C_FrameInputsUsedMessage,
   S2C_FrameComponentStateMessage,
-  ComponentId,
-  DeletedTag,
-  ComponentAndSerializedData,
+  S2C_FrameDeletionsMessage,
+  S2C_FrameInputsUsedMessage,
   SimulationEngine,
+  SimulationFrameData,
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
 
@@ -228,7 +228,7 @@ export class ClientSimulation {
       let endOffset = readStream.getNumBytesRead();
       let serializedData = new Uint8Array(allComponentsBuffer.buffer, allComponentsBuffer.byteOffset + startOffset, endOffset - startOffset);
       let component = new GenericComponent(componentId, componentData);
-      targetFrame.receivedAuthoritativeComponentData.push({component, serializedData})
+      targetFrame.receivedAuthoritativeComponentData.push({component, serializedData});
     }
 
     this.markFrameAsDirty(frameComponentStateMessage.simulationFrameIndex);

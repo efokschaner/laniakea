@@ -1,4 +1,4 @@
-import { Serializable, SerializationStream } from "../serialization";
+import { Serializable, SerializationStream } from '../serialization';
 
 // Because JS's % operator returns negative values
 // for modulus of negative numbers,
@@ -50,7 +50,8 @@ export class AbsoluteSequenceNumberTranslator {
       this.nearEpoch = true;
     }
     // We are clear of the wrapping region we transition from the first half of the sequence range to the second half
-    let clearOfEpoch = num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint && this.highestSequenceNumberSeen.value < AbsoluteSequenceNumberTranslator.halfwayPoint;
+    let clearOfEpoch = (num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint &&
+      this.highestSequenceNumberSeen.value < AbsoluteSequenceNumberTranslator.halfwayPoint);
     if (clearOfEpoch) {
       this.nearEpoch = false;
     }

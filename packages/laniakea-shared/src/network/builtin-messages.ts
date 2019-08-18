@@ -1,6 +1,8 @@
+import { ShortTypeId, TypeId } from '../class-registry';
 import { Serializable, SerializationStream } from '../serialization';
-import { TypeId, ShortTypeId } from '../class-registry';
 
+// Allow our message name format
+// tslint:disable:class-name
 
 export class S2C_BuiltinHandshakeMessage implements Serializable {
   public classRegistryDictionary = new Array<[TypeId, ShortTypeId]>();

@@ -23,7 +23,7 @@ initialiseServer(serverEngine);
 serverEngine.start();
 serverEngine.listen({
   signalingWebsocketServerPort: gameServerWsPort,
-  webrtcPeerConnectionPortRange: { min: 11213, max: 11213 }
+  webrtcPeerConnectionPortRange: { min: 11213, max: 11213 },
 })
 .then(() => {
   console.log('Server is listening.');

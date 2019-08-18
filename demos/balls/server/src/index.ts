@@ -57,7 +57,7 @@ serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 serverEngine.start();
 serverEngine.listen({
   signalingWebsocketServerPort: gameServerWsPort,
-  webrtcPeerConnectionPortRange: { min: 11214, max: 11214 }
+  webrtcPeerConnectionPortRange: { min: 11214, max: 11214 },
 })
 .then(() => {
   console.log('Server is listening.');

@@ -1,5 +1,5 @@
-import { ComponentId, ComponentTypeId, EntityId, EntityIdGenerator } from './ids';
 import { ClassRegistry } from './class-registry';
+import { ComponentId, ComponentTypeId, EntityId, EntityIdGenerator } from './ids';
 import { Serializable, SerializationStream } from './serialization';
 
 /**
@@ -41,7 +41,7 @@ export class DeletedTag implements Serializable {
  */
 export class EntityComponentDb {
   constructor(
-    private componentTypes: Array<ComponentTypeId>,
+    private componentTypes: ComponentTypeId[],
     private classRegistry: ClassRegistry) {
     for (let componentTypeId of this.componentTypes) {
       this.componentTypeIdToComponents.set(componentTypeId, new Map());
@@ -84,7 +84,7 @@ export class EntityComponentDb {
    */
   public releaseEntity(entityId: EntityId): void {
     let componentsOfEntityId = this.entityIdToComponents.get(entityId)!;
-    for (let [componentTypeId, ] of componentsOfEntityId) {
+    for (let [componentTypeId ] of componentsOfEntityId) {
       this.componentTypeIdToComponents.get(componentTypeId)!.delete(entityId);
     }
     this.entityIdToComponents.delete(entityId);
@@ -159,7 +159,7 @@ export class EntityComponentDb {
 
   public releaseDeletedState(): void {
     let deletedTagComponents = this.componentTypeIdToComponents.get(this.deletedTagTypeInfo.shortTypeId)!;
-    for (let [ownerId, ] of deletedTagComponents!) {
+    for (let [ownerId ] of deletedTagComponents!) {
       // Releasing the entity releases its deleted tag too
       this.releaseEntity(ownerId);
     }

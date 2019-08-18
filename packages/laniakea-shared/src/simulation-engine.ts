@@ -1,10 +1,10 @@
 import { ClassRegistry, TypeInfo, TypeName } from './class-registry';
+import { PlayerId, StepParams, System } from './engine';
+import { DeletedTag } from './entity-component-db';
+import { ComponentTypeId } from './ids';
 import { InputFrame } from './input';
 import { measureAndSerialize, ReadStream, Serializable } from './serialization';
 import { EntityComponentState, EntityComponentStateImpl } from './state';
-import { ComponentTypeId } from './ids';
-import { DeletedTag } from './entity-component-db';
-import { StepParams, PlayerId, System } from './engine';
 
 export class SimulationFrameData {
   constructor(

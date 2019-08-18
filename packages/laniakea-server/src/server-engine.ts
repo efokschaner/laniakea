@@ -3,25 +3,25 @@ const present = require('present');
 import {
   C2S_InputFrameMessage,
   C2S_TimeSyncRequestMessage,
+  ClassRegistry,
+  ComponentAndSerializedData,
   Engine,
+  MeasureStream,
   PlayerId,
   registerMessageTypes,
   S2C_TimeSyncResponseMessage,
   Serializable,
-  SimulationFrameData,
-  MeasureStream,
-  WriteStream,
-  TypeName,
-  ClassRegistry,
-  ComponentAndSerializedData,
-  System,
   SimulationEngine,
+  SimulationFrameData,
+  System,
+  TypeName,
+  WriteStream,
 } from 'laniakea-shared';
-import * as tsEvents from 'ts-events';
-import { NetworkServer, AuthCallback, ListenOptions } from './network-server';
-import { ServerInputHandler } from './server-input-handler';
-import { FrameUpdateSender } from './frame-update-sender';
 import { AddressInfo } from 'net';
+import * as tsEvents from 'ts-events';
+import { FrameUpdateSender } from './frame-update-sender';
+import { AuthCallback, ListenOptions, NetworkServer } from './network-server';
+import { ServerInputHandler } from './server-input-handler';
 
 export interface PlayerInfo {
   id: PlayerId;
@@ -113,7 +113,7 @@ export class ServerEngine implements Engine {
     this.updateLoop();
   }
 
-  public listen(options: ListenOptions) : Promise<AddressInfo> {
+  public listen(options: ListenOptions): Promise<AddressInfo> {
     return this.networkServer.listen(options);
   }
 
@@ -180,7 +180,7 @@ export class ServerEngine implements Engine {
     let measureStream = new MeasureStream();
     let blankArray = new Uint8Array();
     for (let c of this.currentFrame.state.getEntityComponentDb().getAllComponents()) {
-      if(!c.isDeleted) {
+      if (!c.isDeleted) {
         aliveComponentsAndSerializedData.push({component: c, serializedData: blankArray});
         c.data.serialize(measureStream);
       }

@@ -42,7 +42,7 @@ export class NetworkPeer {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void) : OutgoingMessage {
+  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
     return this.messagePeer.sendMessage(message, onAck);
   }
 

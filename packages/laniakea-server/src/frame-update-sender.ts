@@ -1,17 +1,17 @@
 import {
+  ComponentAndSerializedData,
+  ComponentId,
   DeletedTag,
   measureAndSerialize,
+  measureSerializable,
   NetworkPeer,
   OutgoingMessage,
   PlayerId,
+  S2C_FrameComponentStateMessage,
+  S2C_FrameDeletionsMessage,
+  S2C_FrameInputsUsedMessage,
   SimulationFrameData,
   WriteStream,
-  S2C_FrameDeletionsMessage,
-  S2C_FrameComponentStateMessage,
-  S2C_FrameInputsUsedMessage,
-  ComponentId,
-  measureSerializable,
-  ComponentAndSerializedData
 } from 'laniakea-shared';
 import { ComponentReplicationChooser } from './component-replication-chooser';
 
@@ -24,7 +24,7 @@ export class FrameUpdateSender {
   ) {
   }
 
-  public sendFrameUpdate(currentFrame: SimulationFrameData, componentsAndSerializedData: Array<ComponentAndSerializedData>) {
+  public sendFrameUpdate(currentFrame: SimulationFrameData, componentsAndSerializedData: ComponentAndSerializedData[]) {
     this.sendFrameInputsUsedMessage(currentFrame);
     this.sendFrameComponentStateMessage(currentFrame, componentsAndSerializedData);
     // Deletions are a separate message that is sent with no expiry to ensure they eventually arrive
@@ -42,8 +42,7 @@ export class FrameUpdateSender {
     let maybeInputs = currentFrame.inputs.get(this.ourPlayerId);
     if (maybeInputs !== undefined) {
       inputsUsedMessage.inputUsedForPlayerThisFrame = new Uint8Array(measureAndSerialize(maybeInputs));
-    }
-    else {
+    } else {
       inputsUsedMessage.inputUsedForPlayerThisFrame = new Uint8Array(0);
     }
     let outgoingMessage = this.networkPeer.sendMessage(inputsUsedMessage);
@@ -64,7 +63,11 @@ export class FrameUpdateSender {
     let componentsToSend = this.chooser.getComponentsToSend(componentsAndSerializedData, maxBytesComponentData);
     let componentBufferLen = componentsToSend.reduce((acc, next) => acc + SIZE_OF_COMPONENT_ID + next.serializedData.byteLength, 0);
     componentStateMessage.componentData = new Uint8Array(componentBufferLen);
-    let writeStream = new WriteStream(new DataView(componentStateMessage.componentData.buffer, componentStateMessage.componentData.byteOffset, componentStateMessage.componentData.byteLength));
+    let writeStream = new WriteStream(
+      new DataView(
+        componentStateMessage.componentData.buffer,
+        componentStateMessage.componentData.byteOffset,
+        componentStateMessage.componentData.byteLength));
     componentsToSend.forEach((c) => {
       c.component.id.serialize(writeStream);
       c.component.data.serialize(writeStream);
@@ -91,7 +94,7 @@ export class FrameUpdateSender {
           deletionsMessage.deletedComponentIds.push(component.id);
         }
       }
-      if ((component.data as Object).constructor === DeletedTag) {
+      if ((component.data as {}).constructor === DeletedTag) {
         deletionsMessage.deletedEntityIds.push(component.id.ownerId);
       }
     }

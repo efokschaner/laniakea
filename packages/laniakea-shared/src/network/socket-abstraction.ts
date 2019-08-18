@@ -15,7 +15,7 @@ export interface LikeRTCDataChannelOrWebSocket {
 export class RTCPeerConnectionAndDataChannel implements LikeRTCDataChannelOrWebSocket {
   constructor(private peerConnection: RTCPeerConnection, private dataChannel: RTCDataChannel) {
   }
-  close(): void {
+  public close(): void {
     this.dataChannel.close();
     this.peerConnection.close();
     delete this.dataChannel;
@@ -30,21 +30,7 @@ export class RTCPeerConnectionAndDataChannel implements LikeRTCDataChannelOrWebS
   set onmessage(cb: ((ev: MessageEvent) => any) | null) {
     this.dataChannel.onmessage = cb;
   }
-  send(data: ArrayBuffer): void {
+  public send(data: ArrayBuffer): void {
     this.dataChannel.send(data);
   }
 }
-
-function verifyAbstraction(a: LikeRTCDataChannelOrWebSocket) {
-  a;
-}
-
-function verifyWebSocket(s: WebSocket) {
-  verifyAbstraction(s);
-}
-verifyWebSocket;
-
-function verifyRTCDataChannel(d: RTCDataChannel) {
-  verifyAbstraction(d);
-}
-verifyRTCDataChannel;

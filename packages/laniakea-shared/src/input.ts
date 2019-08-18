@@ -1,12 +1,11 @@
-import { ClassRegistry, ShortTypeId, TypeInfo, TypeId } from './class-registry';
+import { ClassRegistry, ShortTypeId, TypeId, TypeInfo } from './class-registry';
 import { Serializable, SerializationStream } from './serialization';
-
 
 export class InputFrame implements Serializable {
   private continuousInputs = new Map<TypeId, Serializable>();
 
   constructor(
-    private continuousInputTypes: Array<TypeInfo>,
+    private continuousInputTypes: TypeInfo[],
     private classRegistry: ClassRegistry) {
     for (let continuousInputType of this.continuousInputTypes) {
       this.continuousInputs.set(

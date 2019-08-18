@@ -5,9 +5,9 @@ let dbName = 'network_integration_test_db';
 let measurementName = 'integration_test_stats';
 
 export interface IntegrationTestMeasurement {
-  acksReceived: number,
-  messagesSent: number,
-  peerName: string
+  acksReceived: number;
+  messagesSent: number;
+  peerName: string;
 }
 
 let integrationTestStatsSchema =  {
@@ -19,8 +19,8 @@ let integrationTestStatsSchema =  {
   tags: [
     'peerName',
     'pid',
-    'sessionStartTimeISO8601'
-  ]
+    'sessionStartTimeISO8601',
+  ],
 };
 
 export class MetricsCollector {
@@ -32,8 +32,8 @@ export class MetricsCollector {
       host: '127.0.0.1',
       database: dbName,
       schema: [
-        integrationTestStatsSchema
-      ]
+        integrationTestStatsSchema,
+      ],
     });
   }
 
@@ -43,13 +43,13 @@ export class MetricsCollector {
         return {
           fields: {
             acksReceived: m.acksReceived,
-            messagesSent: m.messagesSent
+            messagesSent: m.messagesSent,
           },
           tags: {
             peerName: m.peerName,
             pid: String(process.pid),
             sessionStartTimeISO8601: this.sessionStartTimeISOString,
-          }
+          },
         };
       }));
     } catch (error) {
@@ -65,7 +65,7 @@ export class MetricsCollector {
         duration: '24h',
         replication: 1,
         isDefault: true,
-        database: dbName
+        database: dbName,
       });
     }
   }

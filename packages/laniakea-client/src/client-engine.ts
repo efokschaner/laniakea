@@ -1,21 +1,21 @@
 import {
   C2S_InputFrameMessage,
+  ClassRegistry,
   Engine,
   InputFrame,
   measureAndSerialize,
-  PlayerId,
   periodicCallback,
   PeriodicCallbackHandle,
+  PlayerId,
   registerMessageTypes,
-  Serializable,
-  SequenceNumber,
-  S2C_FrameDeletionsMessage,
   S2C_FrameComponentStateMessage,
+  S2C_FrameDeletionsMessage,
   S2C_FrameInputsUsedMessage,
-  TypeName,
-  ClassRegistry,
+  SequenceNumber,
+  Serializable,
+  SimulationEngine,
   System,
-  SimulationEngine
+  TypeName,
 } from 'laniakea-shared';
 import { SyncEvent } from 'ts-events';
 import { ClientSimulation } from './client-simulation';
@@ -131,7 +131,6 @@ export class ClientEngine implements Engine {
 
   public playerId?: PlayerId = undefined;
   private classRegistry = new ClassRegistry();
-
 
   private readonly simulationEngine = new SimulationEngine(this.classRegistry);
   private networkClient: NetworkClient;

@@ -1,12 +1,11 @@
 // tslint:disable-next-line:no-var-requires
 // const present = require('present');
 
-import { NetworkClient, periodicCallback, SequenceNumber, ClassRegistry } from 'laniakea-client';
+import { ClassRegistry, NetworkClient, periodicCallback, SequenceNumber } from 'laniakea-client';
 import { NetworkServer, PlayerId, Serializable, SerializationStream } from 'laniakea-server';
 import { w3cwebsocket } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
 import { createMetricsCollector, MetricsCollector } from './metrics-collection';
-
 
 (global as any).WebSocket = w3cwebsocket;
 (global as any).RTCPeerConnection = RTCPeerConnection;
@@ -24,14 +23,12 @@ class TestMessage implements Serializable {
   }
 }
 
-function onMessageReceivedByServer(playerId: PlayerId, message: TestMessage) : void {
-  playerId;
-  message;
+function onMessageReceivedByServer(_: PlayerId, __: TestMessage): void {
+  // Noop
 }
 
-
-function onMessageReceivedByClient(message: TestMessage) : void {
-  message;
+function onMessageReceivedByClient(_: TestMessage): void {
+  // Noop
 }
 
 let clientPlayerId = 0 as PlayerId;
@@ -152,7 +149,6 @@ function replicationStyleTest() {
 }
 */
 
-
 /**
  * Sends a steady stream of messages with no expiry and ensures they are all delivered
  */
@@ -170,7 +166,7 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
       let message = new TestMessage();
       message.seq = clientIter++;
       message.data = new Uint8Array(0);
-      let outgoingMessage = client.sendMessage(message, function() {
+      let outgoingMessage = client.sendMessage(message, () => {
         numAcksFromServer += 1;
       })!;
       outgoingMessage.ttl = undefined;
@@ -186,8 +182,8 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
         for (let i = 0; i < 50; ++i) {
           let message = new TestMessage();
           message.seq = serverIter++;
-          message.data = new Uint8Array(Math.floor(Math.random()*33));
-          let outgoingMessage = server.sendMessage(clientPlayerId, message, function() {
+          message.data = new Uint8Array(Math.floor(Math.random() * 33));
+          let outgoingMessage = server.sendMessage(clientPlayerId, message, () => {
             numAcksFromClient += 1;
           });
           outgoingMessage.ttl = undefined;
@@ -198,14 +194,14 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
     server.flushMessagesToNetwork();
   }, 5, 'serverToClient');
 
-  let timeoutId = setTimeout(function() {
+  let timeoutId = setTimeout(() => {
     console.error('Test timed out');
     if (!isBeingDebugged()) {
       process.exit(1);
     }
   }, 1000000);
 
-  let intervalId = setInterval(function() {
+  let intervalId = setInterval(() => {
     metricsCollector.collectIntegrationTestMeasurements([
       {
         peerName: 'client',
@@ -228,7 +224,7 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
       server.close();
       // This is rather silly but theres a bug where the server peerconnection
       // prevents node.js shutting down, which I haven't figured out the root cause of
-      let shutdownTimeout = setTimeout(function() {
+      let shutdownTimeout = setTimeout(() => {
         console.error('Shutdown timed out');
         if (!isBeingDebugged()) {
           process.exit(0);
@@ -242,15 +238,15 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
 
 async function main() {
   let metricsCollector = await createMetricsCollector();
-  let server = new NetworkServer(new ClassRegistry(), () => { return { playerId: clientPlayerId } });
+  let server = new NetworkServer(new ClassRegistry(), () => ({ playerId: clientPlayerId }));
   server.registerMessageType(TestMessage, 'TestMessage');
   server.registerMessageHandler(TestMessage, onMessageReceivedByServer);
   let addressInfo = await server.listen({
     signalingWebsocketServerPort: 0,
     webrtcPeerConnectionPortRange: {
       min: 11212,
-      max: 11212
-    }
+      max: 11212,
+    },
   });
   let serverHasClient = new Promise<void>((resolve) => {
     server.onConnection.attach(() => {

@@ -9,7 +9,7 @@
 // some cognitive burden.... Hmmm
 
 import * as reflection from './class-registry';
-import { ShortTypeId, GenericConstructor } from './class-registry';
+import { GenericConstructor, ShortTypeId } from './class-registry';
 
 export interface Serializable {
   serialize(stream: SerializationStream): void;
@@ -128,7 +128,7 @@ export class ReadStream implements SerializationStreamInterface {
       throw new Error('Can not serialize arbitrary type without a classRegistry.');
     }
     let typeId = this.dataView.getUint16(this.curOffset) as ShortTypeId;
-    this.curOffset +=2;
+    this.curOffset += 2;
     let result = this.classRegistry.getTypeInfoByShortTypeId(typeId)!.construct() as Serializable;
     result.serialize(this);
     return result;

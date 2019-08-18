@@ -73,7 +73,7 @@ export class NetworkClient {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void) : lk.OutgoingMessage|undefined {
+  public sendMessage(message: Serializable, onAck?: () => void): lk.OutgoingMessage|undefined {
     // Don't send messages before the handshake is complete
     if (this.handshakeFulfillment === undefined && this.networkPeer !== undefined) {
       return this.networkPeer.sendMessage(message, onAck);
@@ -110,7 +110,7 @@ export class NetworkClient {
     }
   }
   private connectToRTCServer(serverWsUrl: string): Promise<NetworkPeerAndPlayerId> {
-    let websocketForCleanup: WebSocket | undefined = undefined;
+    let websocketForCleanup: WebSocket | undefined;
     let assignedPlayerId: lk.PlayerId | undefined;
     return new Promise<{ websocket: WebSocket, peerConnection: RTCPeerConnection }>((resolve, reject) => {
       let peerConnection = new RTCPeerConnection(undefined);
@@ -136,8 +136,8 @@ export class NetworkClient {
       };
       websocket.onopen = (openEvent) => {
         console.log('wsClient.onopen', openEvent);
-        resolve({ websocket, peerConnection })
-      }
+        resolve({ websocket, peerConnection });
+      };
       websocket.onclose = (closeEvent) => {
         console.log('wsClient.onclose', closeEvent);
         reject(new Error(closeEvent.code + ' ' + closeEvent.reason));
@@ -176,7 +176,7 @@ export class NetworkClient {
           } else {
             resolve({
               assignedPlayerId,
-              networkPeer
+              networkPeer,
             });
           }
         };

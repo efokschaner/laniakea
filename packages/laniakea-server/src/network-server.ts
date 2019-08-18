@@ -51,15 +51,14 @@ export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthRe
   return { playerId: parseInt(creds.name, 10) as lk.PlayerId };
 }
 
-
 export interface WebrtcPeerConnectionPortRange {
-  min?: number, // defaults to 0
-  max?: number // defaults to 65535
+  min?: number; // defaults to 0
+  max?: number; // defaults to 65535
 }
 
 export interface ListenOptions {
-  signalingWebsocketServerPort: number,
-  webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange
+  signalingWebsocketServerPort: number;
+  webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange;
 }
 
 // Handles authentication + establishment of the webRTC conn via WebSockets
@@ -71,7 +70,7 @@ class RTCServer {
   constructor(
     private authenticatePlayer: AuthCallback,
     // The purpose of this callback is to ensure that message handlers are attached to the opening channel asap before incoming messages arrive
-    private constructNetworkPeerFromChannel: (playerId: lk.PlayerId, l: lk.LikeRTCDataChannelOrWebSocket) => lk.NetworkPeer
+    private constructNetworkPeerFromChannel: (playerId: lk.PlayerId, l: lk.LikeRTCDataChannelOrWebSocket) => lk.NetworkPeer,
   ) {
     this.httpServer = http.createServer((_request, response) => {
       response.writeHead(404);
@@ -83,7 +82,7 @@ class RTCServer {
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions) : Promise<AddressInfo> {
+  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions): Promise<AddressInfo> {
     this.webrtcPeerConnectionPortRange = webrtcPeerConnectionPortRange;
     return new Promise((resolve, reject) => {
       this.httpServer.listen(signalingWebsocketServerPort, () => {
@@ -158,7 +157,7 @@ class RTCServer {
     wsConnection.sendUTF(JSON.stringify({playerIdAssignment: successfulAuthResult.playerId}));
     // These are non-standard options that are supported by the node webrtc lib we're using
     let customPeerConfig =  {
-      portRange: this.webrtcPeerConnectionPortRange
+      portRange: this.webrtcPeerConnectionPortRange,
     };
     let peerConnection = new RTCPeerConnection(customPeerConfig as RTCConfiguration);
     wsConnection.on('message', (message) => {
@@ -207,7 +206,6 @@ class RTCServer {
   private webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange;
 }
 
-
 export class NetworkServer {
   constructor(private classRegistry: lk.ClassRegistry, authenticatePlayer: AuthCallback) {
     this.rtcServer = new RTCServer(authenticatePlayer, (playerId, channel) => {
@@ -238,7 +236,7 @@ export class NetworkServer {
     });
   }
 
-  public listen(options: ListenOptions) : Promise<AddressInfo> {
+  public listen(options: ListenOptions): Promise<AddressInfo> {
     return this.rtcServer.listen(options);
   }
   public close() {
@@ -264,14 +262,14 @@ export class NetworkServer {
 
   public registerMessageHandler<T extends lk.Serializable>(
     ctor: new(...args: any[]) => T,
-    handler: (playerId: lk.PlayerId, t: T) => void
+    handler: (playerId: lk.PlayerId, t: T) => void,
   ): void {
     this.registeredMessageHandlers.push([
       ctor,
       handler as (playerId: lk.PlayerId, packet: lk.Serializable) => void]);
   }
 
-  public sendMessage(playerId: lk.PlayerId, message: lk.Serializable, onAck?: () => void) : lk.OutgoingMessage {
+  public sendMessage(playerId: lk.PlayerId, message: lk.Serializable, onAck?: () => void): lk.OutgoingMessage {
     let maybeConn = this.connections.get(playerId);
     if (maybeConn !== undefined) {
       return maybeConn.sendMessage(message, onAck);

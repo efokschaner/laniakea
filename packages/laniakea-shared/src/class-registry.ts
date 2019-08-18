@@ -1,6 +1,6 @@
 import * as XXH from 'xxhashjs';
-import { NominalType } from './nominal-type';
 import { S2C_BuiltinHandshakeMessage } from './network/builtin-messages';
+import { NominalType } from './nominal-type';
 
 const XXHASH_SEED = 0;
 
@@ -33,7 +33,7 @@ export class TypeInfo {
     public konstructor: GenericConstructor) {
   }
 
-  construct(...args: any[]): {} {
+  public construct(...args: any[]): {} {
     return new this.konstructor(...args);
   }
 }
@@ -56,11 +56,11 @@ export class ClassRegistry {
     return this.shortTypeIdToTypeInfo[shortTypeId];
   }
 
-  public getTypeInfoByTypeName(typeName: TypeName) : TypeInfo | undefined {
+  public getTypeInfoByTypeName(typeName: TypeName): TypeInfo | undefined {
     return this.typeIdToTypeInfo.get(ClassRegistry.getTypeIdFromTypeName(typeName));
   }
 
-  public getTypeInfoByConstructor(konstructor: GenericConstructor) : TypeInfo | undefined {
+  public getTypeInfoByConstructor(konstructor: GenericConstructor): TypeInfo | undefined {
     return this.constructorToTypeInfo.get(konstructor);
   }
 
@@ -76,7 +76,7 @@ export class ClassRegistry {
    * Dump the entire type mapping to allow us to send it to others
    */
   public getTypeIdToShortTypeIdMapping(): Array<[TypeId, ShortTypeId]> {
-    return Array.from(this.typeIdToTypeInfo.entries()).map(([t,info]) => [t, info.shortTypeId]);
+    return Array.from(this.typeIdToTypeInfo.entries()).map(([t, info]) => [t, info.shortTypeId]);
   }
 
   /**
@@ -84,7 +84,7 @@ export class ClassRegistry {
    */
   public setTypeIdToShortTypeIdMapping(mapping: Array<[TypeId, ShortTypeId]>) {
     this.shortTypeIdToTypeInfo = new Array<TypeInfo>();
-    for(let [typeId, shortTypeId] of mapping) {
+    for (let [typeId, shortTypeId] of mapping) {
       let typeInfo = this.typeIdToTypeInfo.get(typeId)!;
       typeInfo.shortTypeId = shortTypeId;
       this.shortTypeIdToTypeInfo[shortTypeId] = typeInfo;
@@ -100,7 +100,7 @@ export class ClassRegistry {
       typeId,
       shortTypeId,
       typeName,
-      konstructor
+      konstructor,
     );
     this.typeIdToTypeInfo.set(typeId, typeInfo);
     this.shortTypeIdToTypeInfo[shortTypeId] = typeInfo;

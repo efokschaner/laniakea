@@ -1,6 +1,6 @@
+import { MAX_SHORT_TYPE_ID_EXCLUSIVE, ShortTypeId } from './class-registry';
 import { NominalType } from './nominal-type';
 import { Serializable, SerializationStream } from './serialization';
-import { ShortTypeId, MAX_SHORT_TYPE_ID_EXCLUSIVE } from './class-registry';
 
 /**
  * The id of the type of a component
@@ -26,7 +26,7 @@ export class ComponentId implements Serializable {
   }
 
   public equals(other: ComponentId) {
-    return this.ownerId === other.ownerId && this.typeId == other.typeId;
+    return this.ownerId === other.ownerId && this.typeId === other.typeId;
   }
 
   public serialize(stream: SerializationStream): void {
@@ -60,7 +60,7 @@ export class EntityIdGenerator implements Serializable {
     return ++this.lastEntityId as EntityId;
   }
 
-  serialize(stream: SerializationStream): void {
+  public serialize(stream: SerializationStream): void {
     stream.serializeFloat64(this, 'lastEntityId');
   }
 

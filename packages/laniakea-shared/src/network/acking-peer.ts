@@ -1,12 +1,11 @@
 // tslint:disable-next-line:no-var-requires
 const present = require('present');
 
-import { SyncEvent } from "ts-events";
-import { CyclicBuffer } from "../cyclic-buffer";
-import { measureAndSerialize, measureSerializable, ReadStream, Serializable, SerializationStream } from "../serialization";
-import { SequenceNumber } from "./sequence-number";
-import { LikeRTCDataChannelOrWebSocket } from "./socket-abstraction";
-
+import { SyncEvent } from 'ts-events';
+import { CyclicBuffer } from '../cyclic-buffer';
+import { measureAndSerialize, measureSerializable, ReadStream, Serializable, SerializationStream } from '../serialization';
+import { SequenceNumber } from './sequence-number';
+import { LikeRTCDataChannelOrWebSocket } from './socket-abstraction';
 
 let ACK_BITFIELD_BYTES = 4;
 
