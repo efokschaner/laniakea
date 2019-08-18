@@ -5261,9 +5261,10 @@ multimatch@^2.0.0, multimatch@^2.1.0:
     arrify "^1.0.0"
     minimatch "^3.0.0"
 
-"multiview@https://github.com/efokschaner/multiview.git#use-tree-kill":
-  version "2.5.3"
-  resolved "https://github.com/efokschaner/multiview.git#5e4f5ec4f9dfb67077dc50a302db30635352c913"
+multiview@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/multiview/-/multiview-3.0.0.tgz#a4bddd895c64c70f689e00330b313c60aec8eeb7"
+  integrity sha512-mm5+j26uADm+nO6DYp78tLDBwA11VW4NI3juAug/m/OJVyN5RRqvQ5UEsnHH4b+/QORt+sARlfiuW4g6rdjtHA==
   dependencies:
     columns "0.8.0"
     event-transmitter "2.0.0"
