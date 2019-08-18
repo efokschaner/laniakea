@@ -3,7 +3,7 @@ import {
   SerializationStream,
 } from './serialization';
 import { SequenceNumber } from './network/sequence-number';
-import { EntityId } from './state';
+import { EntityId, ComponentId } from './ids';
 
 // Allow our message name format
 // tslint:disable:class-name
@@ -60,13 +60,22 @@ export class S2C_FrameDeletionsMessage implements Serializable {
   public simulationFrameIndex = -1;
   public simulationTimeS = -1;
   // Components of deleted entitys are redundant and therefore are not included in deletedComponentIds
-  public deletedComponentIds = new Array<number>();
+  public deletedComponentIds = new Array<ComponentId>();
   public deletedEntityIds = new Array<EntityId>();
 
   public serialize(stream: SerializationStream): void {
     stream.serializeUint32(this, 'simulationFrameIndex');
     stream.serializeFloat64(this, 'simulationTimeS');
-    serializeUint32Array(stream, this.deletedComponentIds);
+    stream.serializeUint16(this.deletedComponentIds, 'length');
+    for (let i = 0; i < this.deletedComponentIds.length; ++i) {
+      if (stream.isWriting) {
+        this.deletedComponentIds[i].serialize(stream);
+      } else {
+        let componentId = new ComponentId();
+        componentId.serialize(stream);
+        this.deletedComponentIds[i] = componentId;
+      }
+    }
     serializeUint32Array(stream, this.deletedEntityIds);
   }
 }

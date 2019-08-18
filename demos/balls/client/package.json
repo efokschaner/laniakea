@@ -10,7 +10,6 @@
   "author": "efokschaner",
   "license": "MIT",
   "devDependencies": {
-    "@types/bluebird": "^3.5.5",
     "@types/dat.gui": "^0.7.2",
     "@types/webvr-api": "^0.0.35",
     "ts-loader": "^6.0.1",
@@ -19,7 +18,6 @@
   },
   "dependencies": {
     "autoprefixer": "^9.3.1",
-    "bluebird": "^3.5.0",
     "caniuse-db": "^1.0.30000652",
     "colors": "^1.1.0",
     "css-loader": "^1.0.1",

@@ -1,6 +1,5 @@
 import {
   CyclicBuffer,
-  Engine,
   InputFrame,
   PlayerId,
   ReadStream,
@@ -10,13 +9,12 @@ import {
   GenericComponent,
   S2C_FrameInputsUsedMessage,
   S2C_FrameComponentStateMessage,
+  ComponentId,
+  DeletedTag,
+  ComponentAndSerializedData,
+  SimulationEngine,
 } from 'laniakea-shared';
 import { ServerTimeEstimator } from './server-time-estimator';
-
-interface ComponentAndSerializedData {
-  component: GenericComponent;
-  serializedData: Uint8Array;
-}
 
 export class ClientSimulationFrameData {
   constructor(
@@ -52,7 +50,7 @@ export class ClientSimulationFrameData {
   /**
    * Authoritative data regarding deleted components
    */
-  public receivedComponentDeletions = new Array<number>();
+  public receivedComponentDeletions = new Array<ComponentId>();
 }
 
 /**
@@ -79,7 +77,7 @@ export class ClientSimulation {
     secondsOfHistoryToRetain: number,
     private simFPS: number,
     private serverTimeEstimator: ServerTimeEstimator,
-    private engine: Engine) {
+    private engine: SimulationEngine) {
     let numberOfFramesToRetain = Math.round(secondsOfHistoryToRetain * simFPS);
     this.frames = new CyclicBuffer<ClientSimulationFrameData>(numberOfFramesToRetain);
   }
@@ -153,8 +151,7 @@ export class ClientSimulation {
     let initialUpperBound = this.largestInitializedFrameIndex;
     let upperBound = initialUpperBound;
     while (lowerBound <= upperBound) {
-      // tslint:disable-next-line:no-bitwise
-      let middleIndex: number = lowerBound + (upperBound - lowerBound >> 1);
+      let middleIndex: number = Math.floor(lowerBound + ((upperBound - lowerBound) / 2));
       let midValue = this.frames.getElement(middleIndex)!.resolvedFrameData.simulationTimeS;
       if (midValue > simulationTimeS) {
         upperBound = middleIndex - 1;
@@ -219,20 +216,18 @@ export class ClientSimulation {
     }
     targetFrame.receivedAuthoritativeSimulationTimeS = frameComponentStateMessage.simulationTimeS;
 
-    let componentData = frameComponentStateMessage.componentData;
-    let dataView = new DataView(componentData.buffer, componentData.byteOffset, componentData.byteLength);
+    let allComponentsBuffer = frameComponentStateMessage.componentData;
+    let dataView = new DataView(allComponentsBuffer.buffer, allComponentsBuffer.byteOffset, allComponentsBuffer.byteLength);
     let readStream = new ReadStream(dataView);
-    // TODO remove this brittle offset that assumes the data is 13 bytes past the start of the component
-    let dataOffsetInComponent = 13;
     while (readStream.hasMoreData()) {
+      let componentId = new ComponentId();
+      componentId.serialize(readStream);
+      let componentData = this.engine.constructComponentData(componentId.typeId);
       let startOffset = readStream.getNumBytesRead();
-      // TODO remove this brittle "peek" that assumes the first 32 bits of component are kindid
-      let componentKindId = dataView.getUint32(startOffset);
-      let component = this.engine.componentReflection.constructComponent(componentKindId, 0, 0);
-      component.serialize(readStream);
+      componentData.serialize(readStream);
       let endOffset = readStream.getNumBytesRead();
-      let startOfDataOffset = startOffset + dataOffsetInComponent;
-      let serializedData = new Uint8Array(componentData.buffer, componentData.byteOffset + startOfDataOffset, endOffset - startOfDataOffset);
+      let serializedData = new Uint8Array(allComponentsBuffer.buffer, allComponentsBuffer.byteOffset + startOffset, endOffset - startOffset);
+      let component = new GenericComponent(componentId, componentData);
       targetFrame.receivedAuthoritativeComponentData.push({component, serializedData})
     }
 
@@ -337,6 +332,7 @@ export class ClientSimulation {
     this.applyPredictedOrAuthoritativeInputsToResolvedInputs(nextFrame);
     this.engine.stepSimulation(1 / this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
     this.applyAuthoritativeStateToResolvedState(nextFrame);
+    nextFrame.resolvedFrameData.state.releaseDeletedState();
     // By copying the data to itself, we quantize the state, which ensures that the values being
     // passed in to the next step will match more closely those that the client will receive
     // on the network, as well as the client performing the same operation on itself to create
@@ -417,23 +413,27 @@ export class ClientSimulation {
 
   private applyAuthoritativeStateToResolvedState(frame: ClientSimulationFrameData): void {
     let state = frame.resolvedFrameData.state;
+    let ecdb = state.getEntityComponentDb();
     for (let c of frame.receivedAuthoritativeComponentData) {
       // TODO make this less dirty
       // Beacause component data is mutable, and because we're handing the simulation our own
       // authoritative copy of the state, we first re-deserialize from the pristine data buffer.
       let readStream = new ReadStream(new DataView(c.serializedData.buffer, c.serializedData.byteOffset, c.serializedData.byteLength));
-      c.component.getData().serialize(readStream);
-      state.upsertComponent(c.component);
+      c.component.data.serialize(readStream);
+      // Receiving a component update for an entity implies that the server thinks it's alive this frame.
+      // Therefore if the entity was marked for deletion, unmark it
+      let maybeDeletedTag = state.getComponent(DeletedTag, c.component.id.ownerId);
+      if (maybeDeletedTag !== undefined) {
+        ecdb.releaseComponent(maybeDeletedTag.getId());
+      }
+      ecdb.setComponent(c.component.id, c.component.data);
     }
-    for (let i = 0; i < frame.receivedComponentDeletions.length; i += 2) {
-      let kindId = frame.receivedComponentDeletions[i];
-      let componentId = frame.receivedComponentDeletions[i + 1];
-      state.deleteComponentWithKindId(kindId, componentId);
+    for (let componentId of frame.receivedComponentDeletions) {
+      ecdb.deleteComponent(componentId);
     }
     for (let entityId of frame.receivedEntityDeletions) {
-      state.deleteEntity(entityId);
+      ecdb.deleteEntity(entityId);
     }
-    state.purgeDeletedState();
   }
 
   private frames: CyclicBuffer<ClientSimulationFrameData>;

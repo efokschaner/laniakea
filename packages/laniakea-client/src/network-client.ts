@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import * as lk from 'laniakea-shared';
 import { NetworkPeer, Serializable } from 'laniakea-shared';
 import { SyncEvent, VoidSyncEvent } from 'ts-events';
@@ -13,16 +12,33 @@ interface NetworkPeerAndPlayerId {
 }
 
 export class NetworkClient {
-  constructor() {
+  constructor(private classRegistry: lk.ClassRegistry) {
+    this.registerMessageHandler(lk.S2C_BuiltinHandshakeMessage, (message) => {
+      if (this.handshakeFulfillment !== undefined) {
+        this.classRegistry.setTypeIdToShortTypeIdMapping(message.classRegistryDictionary);
+        this.isConnected = true;
+        this.handshakeFulfillment.resolve();
+        this.onConnected.post(this.assignedPlayerId!);
+        this.handshakeFulfillment = undefined;
+      } else {
+        console.error('Unexpected S2C_BuiltinHandshakeMessage');
+      }
+    });
   }
 
-  public connect(serverWsUrl: string): Bluebird<void> {
+  public connect(serverWsUrl: string): Promise<void> {
+    let handshakePromise = new Promise<void>((resolve, reject) => {
+      this.handshakeFulfillment = {resolve, reject};
+    });
     return this.connectToRTCServer(serverWsUrl).then((connectResult) => {
       this.networkPeer = connectResult.networkPeer;
+      this.assignedPlayerId = connectResult.assignedPlayerId;
       this.networkPeer.onClose.attach(() => this.handleDisconnect());
-      this.isConnected = true;
-      this.onConnected.post(connectResult.assignedPlayerId);
-    }).tapCatch(() => this.handleDisconnect());
+      return handshakePromise;
+    }).catch((e) => {
+      this.handleDisconnect();
+      throw e;
+    });
   }
 
   public close() {
@@ -43,7 +59,7 @@ export class NetworkClient {
     ctor: new(...args: any[]) => T,
     uniqueMessageTypeName: string,
   ): void {
-    this.messageClassRegistry.registerClass(ctor, uniqueMessageTypeName);
+    this.classRegistry.registerClass(ctor, uniqueMessageTypeName);
   }
 
   public registerMessageHandler<T extends Serializable>(
@@ -58,7 +74,8 @@ export class NetworkClient {
    * and can be given a TTL / marked expired to limit reliability.
    */
   public sendMessage(message: Serializable, onAck?: () => void) : lk.OutgoingMessage|undefined {
-    if (this.networkPeer !== undefined) {
+    // Don't send messages before the handshake is complete
+    if (this.handshakeFulfillment === undefined && this.networkPeer !== undefined) {
       return this.networkPeer.sendMessage(message, onAck);
     }
     return undefined;
@@ -72,22 +89,30 @@ export class NetworkClient {
     }
   }
 
-  private messageClassRegistry = new lk.ClassRegistry();
   private messageRouter = new lk.MessageRouter();
   private networkPeer?: lk.NetworkPeer;
+  private assignedPlayerId?: lk.PlayerId;
+  private handshakeFulfillment?: { resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: any) => void };
 
   private handleDisconnect() {
     if (this.networkPeer) {
       this.networkPeer.close();
     }
     this.networkPeer = undefined;
+    if (this.handshakeFulfillment) {
+      this.handshakeFulfillment.reject(new Error('Disconnected'));
+    }
+    this.handshakeFulfillment = undefined;
+    let wasConnected = this.isConnected;
     this.isConnected = false;
-    this.onDisconnected.post();
+    if (wasConnected) {
+      this.onDisconnected.post();
+    }
   }
-  private connectToRTCServer(serverWsUrl: string): Bluebird<NetworkPeerAndPlayerId> {
+  private connectToRTCServer(serverWsUrl: string): Promise<NetworkPeerAndPlayerId> {
     let websocketForCleanup: WebSocket | undefined = undefined;
-    let assignedPlayerId: number | undefined;
-    return new Bluebird<{ websocket: WebSocket, peerConnection: RTCPeerConnection }>((resolve, reject) => {
+    let assignedPlayerId: lk.PlayerId | undefined;
+    return new Promise<{ websocket: WebSocket, peerConnection: RTCPeerConnection }>((resolve, reject) => {
       let peerConnection = new RTCPeerConnection(undefined);
       let websocket = new WebSocket(serverWsUrl);
       websocketForCleanup = websocket;
@@ -124,7 +149,7 @@ export class NetworkClient {
         console.log('websocket.onerror', error);
       };
     }).then(({ websocket, peerConnection }) => {
-      return new Bluebird<NetworkPeerAndPlayerId>((resolve, reject) => {
+      return new Promise<NetworkPeerAndPlayerId>((resolve, reject) => {
         // send any ice candidates to the other peer
         peerConnection.onicecandidate = (evt) => {
           websocket.send(JSON.stringify({ candidate: evt.candidate }));
@@ -143,7 +168,7 @@ export class NetworkClient {
         let dataChannel = peerConnection.createDataChannel('laniakea-unreliable', {negotiated: true, id: 0});
         dataChannel.binaryType = 'arraybuffer';
         let peerConnectionAndDataChannel = new lk.RTCPeerConnectionAndDataChannel(peerConnection, dataChannel);
-        let networkPeer = new NetworkPeer(peerConnectionAndDataChannel, this.messageClassRegistry, this.messageRouter);
+        let networkPeer = new NetworkPeer(peerConnectionAndDataChannel, this.classRegistry, this.messageRouter);
         dataChannel.onopen = () => {
           if (assignedPlayerId === undefined) {
             // This should never happen as playerId should be transmitted before rtc stuff.

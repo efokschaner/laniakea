@@ -1,6 +1,5 @@
 import {
   DeletedTag,
-  GenericComponent,
   measureAndSerialize,
   NetworkPeer,
   OutgoingMessage,
@@ -9,14 +8,14 @@ import {
   WriteStream,
   S2C_FrameDeletionsMessage,
   S2C_FrameComponentStateMessage,
-  S2C_FrameInputsUsedMessage
+  S2C_FrameInputsUsedMessage,
+  ComponentId,
+  measureSerializable,
+  ComponentAndSerializedData
 } from 'laniakea-shared';
 import { ComponentReplicationChooser } from './component-replication-chooser';
 
-export interface ComponentAndSerializedData {
-  component: GenericComponent;
-  serializedData: Uint8Array;
-}
+let SIZE_OF_COMPONENT_ID = measureSerializable(new ComponentId());
 
 export class FrameUpdateSender {
   constructor(
@@ -60,13 +59,15 @@ export class FrameUpdateSender {
     componentStateMessage.simulationTimeS = currentFrame.simulationTimeS;
     // The smaller the message, the more likely it will fit in with other messages
     // For now, lets allocate half of our MTU for component replication
+    // The final size will be larger once we add the component Ids to the message.
     let maxBytesComponentData = Math.round(this.networkPeer.getMtuForMessage() / 2);
     let componentsToSend = this.chooser.getComponentsToSend(componentsAndSerializedData, maxBytesComponentData);
-    let componentBufferLen = componentsToSend.reduce((acc, next) => acc + (next.serializedData.byteLength), 0);
+    let componentBufferLen = componentsToSend.reduce((acc, next) => acc + SIZE_OF_COMPONENT_ID + next.serializedData.byteLength, 0);
     componentStateMessage.componentData = new Uint8Array(componentBufferLen);
     let writeStream = new WriteStream(new DataView(componentStateMessage.componentData.buffer, componentStateMessage.componentData.byteOffset, componentStateMessage.componentData.byteLength));
     componentsToSend.forEach((c) => {
-      c.component.serialize(writeStream);
+      c.component.id.serialize(writeStream);
+      c.component.data.serialize(writeStream);
     });
     let outgoingMessage = this.networkPeer.sendMessage(componentStateMessage, () => {
       this.chooser.onComponentsAcked(componentsToSend);
@@ -81,18 +82,17 @@ export class FrameUpdateSender {
     let deletionsMessage = new S2C_FrameDeletionsMessage();
     deletionsMessage.simulationFrameIndex = currentFrame.simulationFrameIndex;
     deletionsMessage.simulationTimeS = currentFrame.simulationTimeS;
-    for (let component of currentFrame.state.getAllComponents()) {
-      if (component.isDeleted()) {
-        let maybeDeletedTag = currentFrame.state.getComponentOfEntity(DeletedTag, component.getOwnerId());
+    for (let component of currentFrame.state.getEntityComponentDb().getAllComponents()) {
+      if (component.isDeleted) {
+        let maybeDeletedTag = currentFrame.state.getComponent(DeletedTag, component.id.ownerId);
         if (maybeDeletedTag === undefined) {
           // The owning entity is not deleted so add this component.
           // TODO, eliminate the kindId once componentId is a combo of entityId and KindId
-          deletionsMessage.deletedComponentIds.push(component.getKindId());
-          deletionsMessage.deletedComponentIds.push(component.getId());
+          deletionsMessage.deletedComponentIds.push(component.id);
         }
       }
-      if ((component.getData() as Object).constructor === DeletedTag) {
-        deletionsMessage.deletedEntityIds.push(component.getOwnerId());
+      if ((component.data as Object).constructor === DeletedTag) {
+        deletionsMessage.deletedEntityIds.push(component.id.ownerId);
       }
     }
     this.networkPeer.sendMessage(deletionsMessage);

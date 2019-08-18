@@ -1,5 +1,5 @@
 import { SyncEvent } from 'ts-events';
-import { ClassRegistry } from '../reflection';
+import { ClassRegistry } from '../class-registry';
 import { Serializable } from '../serialization';
 import { AckingPeer } from './acking-peer';
 import { MessagePeer, OutgoingMessage } from './message-peer';
@@ -9,12 +9,11 @@ import { LikeRTCDataChannelOrWebSocket } from './socket-abstraction';
 /*
  * This class does the recoupling of different networking subsystems,
  * to remove boilerplate from client and server.
- * Manages the network state that persists across connections.
  */
 export class NetworkPeer {
   constructor(
     private channel: LikeRTCDataChannelOrWebSocket,
-    private messageClassRegistry: ClassRegistry,
+    private classRegistry: ClassRegistry,
     private messageRouter: MessageRouter) {
     channel.onerror = (error) => {
       console.error('channel error:', error);
@@ -56,5 +55,5 @@ export class NetworkPeer {
   }
 
   private ackingPeer = new AckingPeer(this.channel);
-  private messagePeer = new MessagePeer(this.ackingPeer, this.messageClassRegistry);
+  private messagePeer = new MessagePeer(this.ackingPeer, this.classRegistry);
 }

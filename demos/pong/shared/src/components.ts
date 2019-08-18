@@ -56,7 +56,7 @@ export class PlayerInfo implements lk.Serializable {
 }
 
 export class HumanPlayerId implements lk.Serializable {
-  public playerId: lk.PlayerId = 0;
+  public playerId = 0 as lk.PlayerId;
   public serialize(stream: lk.SerializationStream): void {
     stream.serializeUint32(this, 'playerId');
   }
@@ -73,7 +73,7 @@ export class Paddle implements lk.Serializable {
     stream.serializeUint8(this, 'moveIntent');
   }
   public playerIndex: number = 0;
-  public wallPersistentId: lk.ComponentId = 0; // Which wall it's attached to
+  public wallPersistentId: number = 0; // Which wall it's attached to
   // WallSpace is 1D interval (0 -> 1), from endA to endB of the wall
   public positionInWallSpace = 0.5;
   public velocityInWallSpace = 0;
@@ -147,16 +147,16 @@ export class BotSpawner implements lk.Serializable {
 }
 
 export function registerComponents(engine: lk.Engine) {
-  engine.registerComponentType(Position2, 'Position2' as lk.ComponentKind);
-  engine.registerComponentType(Orientation, 'Orientation' as lk.ComponentKind);
-  engine.registerComponentType(PlayerInfo, 'PlayerInfo' as lk.ComponentKind);
-  engine.registerComponentType(HumanPlayerId, 'HumanPlayerId' as lk.ComponentKind);
-  engine.registerComponentType(Paddle, 'Paddle' as lk.ComponentKind);
-  engine.registerComponentType(WallVertex, 'WallVertex' as lk.ComponentKind);
-  engine.registerComponentType(PolarLerp2D, 'PolarLerp2D' as lk.ComponentKind);
-  engine.registerComponentType(EntityScheduledDeletion, 'EntityScheduledDeletion' as lk.ComponentKind);
-  engine.registerComponentType(BallMovement, 'BallMovement' as lk.ComponentKind);
-  engine.registerComponentType(BallSpawner, 'BallSpawner' as lk.ComponentKind);
-  engine.registerComponentType(Final2Players, 'Final2Players' as lk.ComponentKind);
-  engine.registerComponentType(BotSpawner, 'BotSpawner' as lk.ComponentKind);
+  engine.registerComponentType(Position2, 'Position2');
+  engine.registerComponentType(Orientation, 'Orientation');
+  engine.registerComponentType(PlayerInfo, 'PlayerInfo');
+  engine.registerComponentType(HumanPlayerId, 'HumanPlayerId');
+  engine.registerComponentType(Paddle, 'Paddle');
+  engine.registerComponentType(WallVertex, 'WallVertex');
+  engine.registerComponentType(PolarLerp2D, 'PolarLerp2D');
+  engine.registerComponentType(EntityScheduledDeletion, 'EntityScheduledDeletion');
+  engine.registerComponentType(BallMovement, 'BallMovement');
+  engine.registerComponentType(BallSpawner, 'BallSpawner');
+  engine.registerComponentType(Final2Players, 'Final2Players');
+  engine.registerComponentType(BotSpawner, 'BotSpawner');
 }

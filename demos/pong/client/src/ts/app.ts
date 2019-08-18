@@ -56,14 +56,14 @@ let clientSettings = new ClientSettings(window.localStorage);
 let clientEngine = new lk.ClientEngine({simFPS, globalSimulationRateMultiplier});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
-registerComponents(clientEngine.engine);
+registerComponents(clientEngine);
 
-clientEngine.engine.addSystem(new InputHandlerSystem());
-clientEngine.engine.addSystem(new PolarLerp2DProcessor());
-clientEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
-clientEngine.engine.addSystem(new PaddleMovementSystem());
-clientEngine.engine.addSystem(new PaddlePositionSyncSystem());
-clientEngine.engine.addSystem(new BallMovementSystem(false));
+clientEngine.addSystem(new InputHandlerSystem());
+clientEngine.addSystem(new PolarLerp2DProcessor());
+clientEngine.addSystem(new EntityScheduledDeletionProcessor());
+clientEngine.addSystem(new PaddleMovementSystem());
+clientEngine.addSystem(new PaddlePositionSyncSystem());
+clientEngine.addSystem(new BallMovementSystem(false));
 
 // tslint:disable-next-line:no-unused-expression
 new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {

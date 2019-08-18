@@ -43,8 +43,7 @@ function getOrCreateFinal2Players(state: lk.EntityComponentState): lk.Component<
     return component;
   }
   let newComponent = new Final2Players();
-  let newEntity = state.createEntity([newComponent]);
-  return newEntity.getComponent(Final2Players)!;
+  return state.createEntity().setComponent(newComponent);
 }
 
 function calculatePersistentVertexIndices(numPlayers: number): number[] {
@@ -239,7 +238,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // Remove scheduled deletion of vertices that are alive but scheduled for deletion.
   for (let existingVertex of existingVertices) {
     if (alivePersistentIndicesSet.has(existingVertex.wallVertex.getData().persistentIndex)) {
-      let maybeScheduledDeletion = state.getComponentOfEntity(EntityScheduledDeletion, existingVertex.wallVertex.getOwnerId());
+      let maybeScheduledDeletion = existingVertex.wallVertex.getOwner().getComponent(EntityScheduledDeletion);
       if (maybeScheduledDeletion !== undefined) {
         maybeScheduledDeletion.delete();
       }
@@ -251,10 +250,9 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     let vertexToInsert = new WallVertex();
     vertexToInsert.persistentIndex = persistentIndex;
     let vertPos = new Position2();
-    state.createEntity([
-      vertexToInsert,
-      vertPos,
-    ]);
+    let e = state.createEntity();
+    e.setComponent(vertexToInsert);
+    e.setComponent(vertPos);
   }
 
   // After insertions, fix the visual indices of all the vertices and fix the positions of the ones we've just created.
@@ -277,7 +275,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     let vert = existingVerticesMap.get(persistentIndex)!;
     let scheduledDeletion = new EntityScheduledDeletion();
     scheduledDeletion.deletionTimeS = entityDeletionTime;
-    state.addComponent(vert.wallVertex.getOwnerId(), scheduledDeletion);
+    vert.wallVertex.getOwner().setComponent(scheduledDeletion);
   }
 
   // Sort them by the order of their appearance in the total ordering.
@@ -373,7 +371,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       // Scale the duration by the angle we'll move through.
       // We know angleDelta is less than PI due the shortest path logic above.
       lerp.durationS = THREE.Math.lerp(lerpMinDurationS, lerpMaxDurationS, Math.abs(angleDelta) / Math.PI);
-      state.addComponent(maybeObj.position.getOwnerId(), lerp);
+      maybeObj.position.getOwner().setComponent(lerp);
     }
   }
 
@@ -388,12 +386,13 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       newPaddle.wallPersistentId = playerData.playerIndex;
       // TODO Technically a Paddle's position is entirely slaved to its wallposition stuff and does not need replication
       // Consider revisiting this once we have controlled replication.
-      let newPosition = new Position2();
-      let newOrientation = new Orientation();
-      state.createEntity([newPaddle, newPosition, newOrientation]);
+      let paddleEntity = state.createEntity();
+      paddleEntity.setComponent(newPaddle);
+      paddleEntity.setComponent(new Position2());
+      paddleEntity.setComponent(new Orientation());
     } else if (!playerData.alive && maybePaddle !== undefined) {
       // This player needs their paddle deleted.
-      state.deleteEntity(maybePaddle.getOwnerId());
+      maybePaddle.getOwner().delete();
     }
   }
 }

@@ -8,7 +8,8 @@
 // all TS-ish? But the data members would become accessors, so still
 // some cognitive burden.... Hmmm
 
-import * as reflection from './reflection';
+import * as reflection from './class-registry';
+import { ShortTypeId, GenericConstructor } from './class-registry';
 
 export interface Serializable {
   serialize(stream: SerializationStream): void;
@@ -126,9 +127,9 @@ export class ReadStream implements SerializationStreamInterface {
     if (this.classRegistry === undefined) {
       throw new Error('Can not serialize arbitrary type without a classRegistry.');
     }
-    let kindId = this.dataView.getUint32(this.curOffset);
-    this.curOffset += 4;
-    let result = this.classRegistry.construct(kindId, []) as Serializable;
+    let typeId = this.dataView.getUint16(this.curOffset) as ShortTypeId;
+    this.curOffset +=2;
+    let result = this.classRegistry.getTypeInfoByShortTypeId(typeId)!.construct() as Serializable;
     result.serialize(this);
     return result;
   }
@@ -233,8 +234,7 @@ export class WriteStream implements SerializationStreamInterface {
 
   public writeStringUTF16(value: string): void {
     let strLenBytes = value.length * 2;
-    // tslint:disable-next-line:no-bitwise
-    if (strLenBytes >= 1 << 8) {
+    if (strLenBytes >= 2 ** 8) {
       throw new Error("Don't serialize such a large string...");
     }
     this.dataView.setUint8(this.curOffset, strLenBytes);
@@ -246,8 +246,7 @@ export class WriteStream implements SerializationStreamInterface {
   }
   public writeUint8Array(value: Uint8Array): void {
     let buffLenBytes = value.length;
-    // tslint:disable-next-line:no-bitwise
-    if (buffLenBytes >= 1 << 16) {
+    if (buffLenBytes >= 2 ** 16) {
       throw new Error("Don't serialize such a large buffer...");
     }
     this.dataView.setUint16(this.curOffset, buffLenBytes);
@@ -261,9 +260,9 @@ export class WriteStream implements SerializationStreamInterface {
     if (this.classRegistry === undefined) {
       throw new Error('Can not serialize arbitrary type without a classRegistry.');
     }
-    let kindId = this.classRegistry.getKindIdFromConstructor(value.constructor as reflection.GenericConstructor)!;
-    this.dataView.setUint32(this.curOffset, kindId);
-    this.curOffset += 4;
+    let typeId = this.classRegistry.getTypeInfoByConstructor(value.constructor as GenericConstructor)!.shortTypeId;
+    this.dataView.setUint16(this.curOffset, typeId);
+    this.curOffset += 2;
     value.serialize(this);
   }
 
@@ -354,8 +353,7 @@ export class MeasureStream implements SerializationStreamInterface {
 
   public writeStringUTF16(value: string): void {
     let strLenBytes = value.length * 2;
-    // tslint:disable-next-line:no-bitwise
-    if (strLenBytes >= 1 << 8) {
+    if (strLenBytes >= 2 ** 8) {
       throw new Error("Don't serialize such a large string...");
     }
     this.curOffset += 1;
@@ -363,8 +361,7 @@ export class MeasureStream implements SerializationStreamInterface {
   }
   public writeUint8Array(value: Uint8Array): void {
     let buffLenBytes = value.length;
-    // tslint:disable-next-line:no-bitwise
-    if (buffLenBytes >= 1 << 16) {
+    if (buffLenBytes >= 2 ** 16) {
       throw new Error("Don't serialize such a large buffer...");
     }
     this.curOffset += 2;
@@ -372,7 +369,7 @@ export class MeasureStream implements SerializationStreamInterface {
   }
 
   public writeSerializable(value: Serializable): void {
-    this.curOffset += 4;
+    this.curOffset += 2;
     value.serialize(this);
   }
 

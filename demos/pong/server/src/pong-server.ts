@@ -17,18 +17,18 @@ import {
 } from 'lk-demo-pong-shared';
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
-  registerComponents(serverEngine.engine);
+  registerComponents(serverEngine);
 
-  serverEngine.engine.addSystem(new BotSpawnerSystem());
-  serverEngine.engine.addSystem(new LevelGeometrySystem());
-  serverEngine.engine.addSystem(new InputHandlerSystem());
-  serverEngine.engine.addSystem(new BotLogic());
-  serverEngine.engine.addSystem(new BallSpawnerSystem());
-  serverEngine.engine.addSystem(new PolarLerp2DProcessor());
-  serverEngine.engine.addSystem(new EntityScheduledDeletionProcessor());
-  serverEngine.engine.addSystem(new PaddleMovementSystem());
-  serverEngine.engine.addSystem(new PaddlePositionSyncSystem());
-  serverEngine.engine.addSystem(new BallMovementSystem(true));
+  serverEngine.addSystem(new BotSpawnerSystem());
+  serverEngine.addSystem(new LevelGeometrySystem());
+  serverEngine.addSystem(new InputHandlerSystem());
+  serverEngine.addSystem(new BotLogic());
+  serverEngine.addSystem(new BallSpawnerSystem());
+  serverEngine.addSystem(new PolarLerp2DProcessor());
+  serverEngine.addSystem(new EntityScheduledDeletionProcessor());
+  serverEngine.addSystem(new PaddleMovementSystem());
+  serverEngine.addSystem(new PaddlePositionSyncSystem());
+  serverEngine.addSystem(new BallMovementSystem(true));
 
   serverEngine.onPlayerConnected.attach((playerId) => {
     let state = serverEngine.currentFrame.state;
@@ -42,6 +42,8 @@ export function initialiseServer(serverEngine: lk.ServerEngine) {
     newPlayerInfo.playerIndex = players.length + 1;
     let newHumanPlayerId = new HumanPlayerId();
     newHumanPlayerId.playerId = playerId;
-    state.createEntity([newPlayerInfo, newHumanPlayerId]);
+    let newHumanPlayer = state.createEntity();
+    newHumanPlayer.setComponent(newPlayerInfo);
+    newHumanPlayer.setComponent(newHumanPlayerId);
   });
 }

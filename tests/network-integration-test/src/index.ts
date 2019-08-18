@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-var-requires
 // const present = require('present');
 
-import { NetworkClient, periodicCallback, SequenceNumber } from 'laniakea-client';
+import { NetworkClient, periodicCallback, SequenceNumber, ClassRegistry } from 'laniakea-client';
 import { NetworkServer, PlayerId, Serializable, SerializationStream } from 'laniakea-server';
 import { w3cwebsocket } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
@@ -34,7 +34,7 @@ function onMessageReceivedByClient(message: TestMessage) : void {
   message;
 }
 
-let clientPlayerId = 0;
+let clientPlayerId = 0 as PlayerId;
 
 /**
  * Sends many messages with a short expiry and measures the overall
@@ -242,7 +242,7 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
 
 async function main() {
   let metricsCollector = await createMetricsCollector();
-  let server = new NetworkServer(() => { return { playerId: clientPlayerId } });
+  let server = new NetworkServer(new ClassRegistry(), () => { return { playerId: clientPlayerId } });
   server.registerMessageType(TestMessage, 'TestMessage');
   server.registerMessageHandler(TestMessage, onMessageReceivedByServer);
   let addressInfo = await server.listen({
@@ -258,7 +258,7 @@ async function main() {
     });
   });
 
-  let client = new NetworkClient();
+  let client = new NetworkClient(new ClassRegistry());
   client.registerMessageType(TestMessage, 'TestMessage');
   client.registerMessageHandler(TestMessage, onMessageReceivedByClient);
   await client.connect(`ws://127.0.0.1:${addressInfo.port}`);

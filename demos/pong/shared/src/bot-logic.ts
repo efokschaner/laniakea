@@ -122,7 +122,7 @@ export class BotLogic implements lk.System {
         continue;
       }
       // All players with no human player ID are implicitly bots.
-      let maybeHumanId = state.getComponentOfEntity(HumanPlayerId, playerInfo.getOwnerId());
+      let maybeHumanId = playerInfo.getOwner().getComponent(HumanPlayerId);
       if (maybeHumanId !== undefined) {
         // Not a bot
         continue;

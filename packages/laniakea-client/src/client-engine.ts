@@ -1,8 +1,5 @@
-import * as Bluebird from 'bluebird';
 import {
   C2S_InputFrameMessage,
-  ContinuousInputKind,
-  createEngine,
   Engine,
   InputFrame,
   measureAndSerialize,
@@ -15,6 +12,10 @@ import {
   S2C_FrameDeletionsMessage,
   S2C_FrameComponentStateMessage,
   S2C_FrameInputsUsedMessage,
+  TypeName,
+  ClassRegistry,
+  System,
+  SimulationEngine
 } from 'laniakea-shared';
 import { SyncEvent } from 'ts-events';
 import { ClientSimulation } from './client-simulation';
@@ -35,7 +36,7 @@ export interface ClientEngineOptions {
 // TODO, probably in concert with renaming "Engine"
 // Have ClientEngine and ServerEngine share an interface, probably called Engine.
 // Interface allows common configuration / registration code across client and server.
-export class ClientEngine {
+export class ClientEngine implements Engine {
   public static defaultOptions: ClientEngineOptions = {
     simFPS: 30,
     globalSimulationRateMultiplier: 1.0,
@@ -45,13 +46,13 @@ export class ClientEngine {
 
   constructor(options: Partial<ClientEngineOptions>) {
     this.options = Object.assign({}, ClientEngine.defaultOptions, options);
-    this.networkClient = new NetworkClient();
+    this.networkClient = new NetworkClient(this.classRegistry);
     this.serverTimeEstimator = new ServerTimeEstimator(this.networkClient, this.options.globalSimulationRateMultiplier);
     this.clientSimulation = new ClientSimulation(
       this.options.secondsOfSimulationFramesToRetain,
       this.options.simFPS,
       this.serverTimeEstimator,
-      this.engine);
+      this.simulationEngine);
     registerMessageTypes(this.networkClient.registerMessageType.bind(this.networkClient));
     this.networkClient.registerMessageHandler(
       S2C_FrameInputsUsedMessage,
@@ -72,8 +73,23 @@ export class ClientEngine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputKind: string): void {
-    this.engine.registerContinuousInputType(inputType, inputKind as ContinuousInputKind);
+  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputTypeName: TypeName): void {
+    this.simulationEngine.registerContinuousInputType(inputType, inputTypeName);
+  }
+
+  public registerComponentType<T extends Serializable>(componentType: new() => T, componentTypeName: TypeName): void {
+    this.simulationEngine.registerComponentType(componentType, componentTypeName);
+    // TODO. If we want to support adding a component type after we have started to create simulation frames,
+    // we'll need to rebuild all the frames here
+    // For now we'll just assume all components are registered prior to connecting to the server.
+  }
+
+  public addSystem(system: System): void {
+    this.simulationEngine.addSystem(system);
+  }
+
+  public removeSystem(system: System): void {
+    this.simulationEngine.removeSystem(system);
   }
 
   public getCurrentContinuousInput<T extends Serializable>(inputType: new() => T): T|undefined {
@@ -88,7 +104,7 @@ export class ClientEngine {
    * server + serverless modes, we should consider passing the server info in to the constructor.
    * @param serverWsUrl
    */
-  public connectToServer(serverWsUrl: string): Bluebird<void> {
+  public connectToServer(serverWsUrl: string): Promise<void> {
     return this.networkClient.connect(serverWsUrl);
   }
 
@@ -99,7 +115,7 @@ export class ClientEngine {
   }
 
   public start() {
-    this.currentInputFrame = this.engine.createInputFrame();
+    this.currentInputFrame = this.simulationEngine.createInputFrame();
     this.updateServerTimeEstimatorHandle = periodicCallback(this.serverTimeEstimator.update.bind(this.serverTimeEstimator), 50, 'updateServerTimeEstimator');
     this.animationFrameReqeuestHandle = requestAnimationFrame(this.renderLoop.bind(this));
     this.updateInputHandle = periodicCallback(this.updateInput.bind(this), 1000 / 60, 'updateInputHandler');
@@ -114,10 +130,10 @@ export class ClientEngine {
   }
 
   public playerId?: PlayerId = undefined;
+  private classRegistry = new ClassRegistry();
 
-  // TODO make private
-  public readonly engine: Engine = createEngine();
 
+  private readonly simulationEngine = new SimulationEngine(this.classRegistry);
   private networkClient: NetworkClient;
   private serverTimeEstimator: ServerTimeEstimator;
   public readonly clientSimulation: ClientSimulation;

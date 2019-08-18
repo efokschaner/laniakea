@@ -10,11 +10,8 @@
   },
   "author": "efokschaner",
   "license": "MIT",
-  "devDependencies": {
-    "@types/bluebird": "^3.5.5"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "bluebird": "^3.5.0",
     "laniakea-shared": "^0.0.1",
     "ts-events": "^3.2.0"
   }

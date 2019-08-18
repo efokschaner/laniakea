@@ -3,7 +3,7 @@ const present = require('present');
 
 import { SyncEvent } from 'ts-events';
 import { CyclicBuffer } from '../cyclic-buffer';
-import { ClassRegistry } from '../reflection';
+import { ClassRegistry } from '../class-registry';
 import { measureSerializable, ReadStream, Serializable, SerializationStream, WriteStream } from '../serialization';
 import { AckingPeer } from './acking-peer';
 import { AbsoluteSequenceNumberTranslator, SequenceNumber } from './sequence-number';
@@ -51,7 +51,7 @@ export class OutgoingMessage {
 }
 
 class OutgoingMessageChannel {
-  constructor(private ackingPeer: AckingPeer, private messageClassRegistry: ClassRegistry) {
+  constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
 
   public sendMessage(message: Serializable, onAck?: () => void) : OutgoingMessage {
@@ -127,7 +127,7 @@ class OutgoingMessageChannel {
       logWarningAboutReceiveWindow();
     }
     let combinedMessageBuffer = new ArrayBuffer(combinedLengthOfMessagesThatFit);
-    let writeStream = new WriteStream(new DataView(combinedMessageBuffer), this.messageClassRegistry);
+    let writeStream = new WriteStream(new DataView(combinedMessageBuffer), this.classRegistry);
     messagesThatFit.forEach((m) => {
       m.wireMessage.serialize(writeStream);
     });
@@ -155,13 +155,13 @@ class OutgoingMessageChannel {
 }
 
 class IncomingMessageChannel {
-  constructor(private ackingPacketPeer: AckingPeer, private messageClassRegistry: ClassRegistry) {
+  constructor(private ackingPacketPeer: AckingPeer, private classRegistry: ClassRegistry) {
     this.ackingPacketPeer.onPacketReceived.attach(this.handleIncomingPacket.bind(this));
   }
   public onMessageReceived = new SyncEvent<Serializable>();
 
   private handleIncomingPacket(payload: Uint8Array) {
-    let readStream = new ReadStream(new DataView(payload.buffer, payload.byteOffset, payload.byteLength), this.messageClassRegistry);
+    let readStream = new ReadStream(new DataView(payload.buffer, payload.byteOffset, payload.byteLength), this.classRegistry);
     while(readStream.hasMoreData()) {
       let wireMessage = new WireMessage();
       wireMessage.serialize(readStream);
@@ -183,10 +183,10 @@ class IncomingMessageChannel {
  * and can be given a TTL / marked expired to limit reliability.
  */
 export class MessagePeer {
-  private outgoingMessageChannel = new OutgoingMessageChannel(this.ackingPeer, this.messageClassRegistry);
-  private incomingMessageChannel = new IncomingMessageChannel(this.ackingPeer, this.messageClassRegistry);
+  private outgoingMessageChannel = new OutgoingMessageChannel(this.ackingPeer, this.classRegistry);
+  private incomingMessageChannel = new IncomingMessageChannel(this.ackingPeer, this.classRegistry);
 
-  constructor(private ackingPeer: AckingPeer, private messageClassRegistry: ClassRegistry) {
+  constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
   public onMessageReceived = this.incomingMessageChannel.onMessageReceived;
   public sendMessage(message: Serializable, onAck?: () => void) : OutgoingMessage {

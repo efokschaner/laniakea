@@ -16,12 +16,12 @@ import {
 
 function initialiseLevel(state: lk.EntityComponentState) {
   let gridSideLength = 100;
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 1, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, -1, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, 1), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(0, 0, -1), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(1, 0, 0), gridSideLength)]);
-  state.createEntity([new WallPlane(new THREE.Vector3(-1, 0, 0), gridSideLength)]);
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(0, 1, 0), gridSideLength));
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(0, -1, 0), gridSideLength));
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(0, 0, 1), gridSideLength));
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(0, 0, -1), gridSideLength));
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(1, 0, 0), gridSideLength));
+  state.createEntity().setComponent(new WallPlane(new THREE.Vector3(-1, 0, 0), gridSideLength));
 
   let gridSideNumItems = 4;
   for (let i = 0; i < gridSideNumItems; ++i) {
@@ -34,33 +34,31 @@ function initialiseLevel(state: lk.EntityComponentState) {
         THREE.Math.randFloatSpread(velocityVal),
         THREE.Math.randFloatSpread(velocityVal));
       let pos = new THREE.Vector3(x, 0, z);
-      state.createEntity([
-        new Position(pos.x, pos.y, pos.z),
-        new Velocity(velocity.x, velocity.y, velocity.z),
-        new BallShape(pos, 16.0),
-      ]);
+      let ball = state.createEntity();
+      ball.setComponent(new Position(pos.x, pos.y, pos.z));
+      ball.setComponent(new Velocity(velocity.x, velocity.y, velocity.z));
+      ball.setComponent(new BallShape(pos, 16.0));
     }
   }
 }
 
-const networkServer = new lk.NetworkServer(lk.INSECURE_AuthCallback);
 let serverEngine = new lk.ServerEngine(
-  networkServer,
+  lk.INSECURE_AuthCallback,
   {
     simFPS,
   },
 );
 
-initialiseEngine(serverEngine.engine);
+initialiseEngine(serverEngine);
 initialiseLevel(serverEngine.currentFrame.state);
 
 serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 
 serverEngine.start();
-networkServer.listen({
+serverEngine.listen({
   signalingWebsocketServerPort: gameServerWsPort,
   webrtcPeerConnectionPortRange: { min: 11214, max: 11214 }
 })
 .then(() => {
-  console.log('networkServer is listening.');
+  console.log('Server is listening.');
 });

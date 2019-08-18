@@ -39,14 +39,14 @@ class ThreeRenderer implements lk.RenderingSystem {
   private floorMesh = new THREE.Mesh(this.floorGeometry, this.floorMaterial);
 
   private lineMaterial = new THREE.LineBasicMaterial( { color: 0x080808, linewidth: 0.4 } );
-  private rendererWalls = new Map<lk.ComponentId, THREE.Line>();
+  private rendererWalls = new Map<lk.EntityId, THREE.Line>();
 
   private allyColor = 0x3030ff;
   private allyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.allyColor, emissive: this.allyColor, emissiveIntensity: 0.6 });
   private enemyColor = 0xff2b2b;
   private enemyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.enemyColor, emissive: this.enemyColor, emissiveIntensity: 0.6 });
   private paddleGeometry = new THREE.BoxBufferGeometry(1, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
-  private rendererPaddles = new Map<lk.ComponentId, THREE.Mesh>();
+  private rendererPaddles = new Map<lk.EntityId, THREE.Mesh>();
 
   private ballGeometry = new THREE.BoxBufferGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
   private ballMaterial = new THREE.MeshLambertMaterial( { color: 0x080808 } );
@@ -162,35 +162,35 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     let midFrameLerpFactor = (targetSimTimeS - nearestFrames.current.simulationTimeS) /
                              (nearestFrames.next.simulationTimeS - nearestFrames.current.simulationTimeS);
-    let interpolatedPositions = new Map<lk.ComponentId, Position2>();
+    let interpolatedPositions = new Map<lk.EntityId, Position2>();
     // Loop through the current frame for positions, if there are positions in the next frame that are not in the current
     // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
     // their current pos as the value.
     for (let currentFramePos of nearestFrames.current.state.getComponents(Position2)) {
       // TODO Vector2.clone() signature should actually return a "this" type but doesn't.
       let interpolatedPosition = currentFramePos.getData().clone() as Position2;
-      let maybeNextFramePos = nearestFrames.next.state.getComponent(Position2, currentFramePos.getId());
+      let maybeNextFramePos = nearestFrames.next.state.getComponent(Position2, currentFramePos.getId().ownerId);
       if (maybeNextFramePos !== undefined) {
         interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);
       }
-      interpolatedPositions.set(currentFramePos.getId(), interpolatedPosition);
+      interpolatedPositions.set(currentFramePos.getId().ownerId, interpolatedPosition);
     }
     // Now do the same for orientations.
     // Note we use lerp not slerp as we expect sub-frame quaternion differences to be small / less in need of a more expensive slerp.
-    let interpolatedOrientations = new Map<lk.ComponentId, Orientation>();
+    let interpolatedOrientations = new Map<lk.EntityId, Orientation>();
     let scratchOrientation = new THREE.Vector4();
     let scratchNextFrameOrientation = new THREE.Vector4();
     for (let currentFrameOrientation of nearestFrames.current.state.getComponents(Orientation)) {
       let currentData = currentFrameOrientation.getData();
       scratchOrientation.set(currentData.x, currentData.y, currentData.z, currentData.w);
-      let maybeNextFrameOrientation = nearestFrames.next.state.getComponent(Orientation, currentFrameOrientation.getId());
+      let maybeNextFrameOrientation = nearestFrames.next.state.getComponent(Orientation, currentFrameOrientation.getId().ownerId);
       if (maybeNextFrameOrientation !== undefined) {
         let nextFrameOrientation = maybeNextFrameOrientation.getData();
         scratchNextFrameOrientation.set(nextFrameOrientation.x, nextFrameOrientation.y, nextFrameOrientation.z, nextFrameOrientation.w);
         scratchOrientation.lerp(scratchNextFrameOrientation, midFrameLerpFactor);
       }
       interpolatedOrientations.set(
-        currentFrameOrientation.getId(),
+        currentFrameOrientation.getId().ownerId,
         new Orientation(scratchOrientation.x, scratchOrientation.y, scratchOrientation.z, scratchOrientation.w),
       );
     }
@@ -211,14 +211,14 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     for (let i = 0; i < sortedVertexPositions.length; ++i) {
       let [vertex, pos] = sortedVertexPositions[i];
-      let vertexPos = interpolatedPositions.get(pos.getId())!;
+      let vertexPos = interpolatedPositions.get(pos.getId().ownerId)!;
       let nextVertIndex = (i + 1) % sortedVertexPositions.length;
-      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex][1].getId())!;
-      let maybeLine = this.rendererWalls.get(vertex.getId());
+      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex][1].getId().ownerId)!;
+      let maybeLine = this.rendererWalls.get(vertex.getId().ownerId);
       let wallGeometry = new THREE.Geometry();
       if (maybeLine === undefined) {
         maybeLine = new THREE.Line(undefined, this.lineMaterial);
-        this.rendererWalls.set(vertex.getId(), maybeLine);
+        this.rendererWalls.set(vertex.getId().ownerId, maybeLine);
         this.scene.add(maybeLine);
       }
       let floorZ = this.floorMesh.position.z;
@@ -247,15 +247,15 @@ class ThreeRenderer implements lk.RenderingSystem {
     let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
     let foundOurPaddle = false;
     for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
-      let paddleOrientationData = interpolatedOrientations.get(paddleOrientation.getId())!;
-      let maybeObj = this.rendererPaddles.get(paddle.getId());
+      let paddleOrientationData = interpolatedOrientations.get(paddleOrientation.getId().ownerId)!;
+      let maybeObj = this.rendererPaddles.get(paddle.getId().ownerId);
       if (maybeObj === undefined) {
         maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
         maybeObj.castShadow = true;
-        this.rendererPaddles.set(paddle.getId(), maybeObj);
+        this.rendererPaddles.set(paddle.getId().ownerId, maybeObj);
         this.scene.add(maybeObj);
       }
-      let pos = interpolatedPositions.get(paddlePos.getId())!;
+      let pos = interpolatedPositions.get(paddlePos.getId().ownerId)!;
       maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * Paddle.lengthAsProportionOfWallLength;
       maybeObj.scale.x = Math.max(0.001, maybeObj.scale.x) // Don't allow 0 scale
       maybeObj.position.x = pos.x;
@@ -298,14 +298,14 @@ class ThreeRenderer implements lk.RenderingSystem {
       ball.visible = false;
     }
     for (let [ballPosition] of state.getAspect(Position2, BallMovement)) {
-      let maybeBall = this.rendererBalls.get(ballPosition.getOwnerId());
+      let maybeBall = this.rendererBalls.get(ballPosition.getId().ownerId);
       if (maybeBall === undefined) {
         maybeBall = new THREE.Mesh(this.ballGeometry, this.ballMaterial);
         maybeBall.castShadow = true;
-        this.rendererBalls.set(ballPosition.getOwnerId(), maybeBall);
+        this.rendererBalls.set(ballPosition.getId().ownerId, maybeBall);
         this.scene.add(maybeBall);
       }
-      let ballPosData = interpolatedPositions.get(ballPosition.getId())!;
+      let ballPosData = interpolatedPositions.get(ballPosition.getId().ownerId)!;
       maybeBall.position.x = ballPosData.x;
       maybeBall.position.y = ballPosData.y;
       maybeBall.visible = true;

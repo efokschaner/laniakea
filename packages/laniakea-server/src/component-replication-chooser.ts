@@ -1,4 +1,4 @@
-import { ComponentId, GenericComponent } from 'laniakea-shared';
+import { ComponentId, ComponentAndSerializedData, NumericComponentId } from 'laniakea-shared';
 
 enum AckState {
   UNSENT,
@@ -39,11 +39,6 @@ function byteArraysAreEqual(a: Uint8Array, b: Uint8Array) {
   return true;
 }
 
-interface ComponentAndSerializedData {
-  component: GenericComponent;
-  serializedData: Uint8Array;
-}
-
 class ComponentReplicationState {
   constructor(
     public componentId: ComponentId,
@@ -60,13 +55,14 @@ class ComponentReplicationState {
 export class ComponentReplicationChooser {
 
   private currentFrameMarker = AliveMarker.FOO;
-  private componentReplicationStates = new Map<ComponentId, ComponentReplicationState>();
+  private componentReplicationStates = new Map<NumericComponentId, ComponentReplicationState>();
 
   private upsertComponentReplicationState(componentId: ComponentId, latestState: ComponentAndSerializedData): ComponentReplicationState {
-    let componentReplicationState = this.componentReplicationStates.get(componentId);
+    let componentIdKey = componentId.asNumericId();
+    let componentReplicationState = this.componentReplicationStates.get(componentIdKey);
     if (componentReplicationState === undefined) {
       componentReplicationState = new ComponentReplicationState(componentId, this.currentFrameMarker, latestState);
-      this.componentReplicationStates.set(componentId, componentReplicationState);
+      this.componentReplicationStates.set(componentIdKey, componentReplicationState);
     } else {
       // Set the alive marker as we accessed the component this frame.
       componentReplicationState.aliveMarker = this.currentFrameMarker;
@@ -83,7 +79,7 @@ export class ComponentReplicationChooser {
   private updateFromCurrentState(currentState: Array<ComponentAndSerializedData>) {
     this.currentFrameMarker = otherAliveMarker(this.currentFrameMarker);
     for (let c of currentState) {
-      this.upsertComponentReplicationState(c.component.getId(), c);
+      this.upsertComponentReplicationState(c.component.id, c);
     }
     let deadComponents = new Array<ComponentId>();
     for (let componentReplicationState of this.componentReplicationStates.values()) {
@@ -92,7 +88,7 @@ export class ComponentReplicationChooser {
       }
     }
     for (let deadComponent of deadComponents) {
-      this.componentReplicationStates.delete(deadComponent);
+      this.componentReplicationStates.delete(deadComponent.asNumericId());
     }
   }
 
@@ -139,7 +135,7 @@ export class ComponentReplicationChooser {
 
   public onComponentsAcked(components: Array<ComponentAndSerializedData>) {
     for (let c of components) {
-      let maybeComponentReplicationState = this.componentReplicationStates.get(c.component.getId());
+      let maybeComponentReplicationState = this.componentReplicationStates.get(c.component.id.asNumericId());
       if (maybeComponentReplicationState !== undefined) {
         if (byteArraysAreEqual(maybeComponentReplicationState.latestState.serializedData, c.serializedData)) {
           maybeComponentReplicationState.ackState = AckState.ACKED;

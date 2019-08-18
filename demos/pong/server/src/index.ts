@@ -10,9 +10,8 @@ import {
 
 import { initialiseServer } from './pong-server';
 
-const networkServer = new lk.NetworkServer(lk.INSECURE_AuthCallback);
 let serverEngine = new lk.ServerEngine(
-  networkServer,
+  lk.INSECURE_AuthCallback,
   {
     simFPS,
     globalSimulationRateMultiplier,
@@ -22,10 +21,10 @@ let serverEngine = new lk.ServerEngine(
 serverEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 initialiseServer(serverEngine);
 serverEngine.start();
-networkServer.listen({
+serverEngine.listen({
   signalingWebsocketServerPort: gameServerWsPort,
   webrtcPeerConnectionPortRange: { min: 11213, max: 11213 }
 })
 .then(() => {
-  console.log('networkServer is listening.');
+  console.log('Server is listening.');
 });

@@ -23,8 +23,8 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
 
   private cameraController: OrbitControls;
   private activeCameraLerp?: (currentWallTimeMS: number) => void;
-  private rendererSpheres: Map<lk.ComponentId, THREE.Mesh> = new Map();
-  private rendererWalls: Map<lk.ComponentId, THREE.Mesh> = new Map();
+  private rendererSpheres: Map<lk.EntityId, THREE.Mesh> = new Map();
+  private rendererWalls: Map<lk.EntityId, THREE.Mesh> = new Map();
 
   private focusObject(object: THREE.Object3D) {
     let originalTargetPos = this.cameraController.target.clone();
@@ -112,27 +112,27 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
     let state = nearestFrames.current.state;
 
     for (let ball of state.getComponents(BallShape)!) {
-      let maybeObj = this.rendererSpheres.get(ball.getId());
+      let maybeObj = this.rendererSpheres.get(ball.getId().ownerId);
       if (maybeObj === undefined) {
         let geometry = new THREE.SphereBufferGeometry(ball.getData().radius, 32, 24);
         let material = new THREE.MeshLambertMaterial( { color: 0x0055ff, wireframe: false } );
         maybeObj = new THREE.Mesh( geometry, material );
         maybeObj.castShadow = true;
-        this.rendererSpheres.set(ball.getId(), maybeObj);
+        this.rendererSpheres.set(ball.getId().ownerId, maybeObj);
         this.scene.add(maybeObj);
       }
       maybeObj.position.copy(ball.getData().center);
     }
 
     for (let wall of state.getComponents(WallPlane)!) {
-      let maybeObj = this.rendererWalls.get(wall.getId());
+      let maybeObj = this.rendererWalls.get(wall.getId().ownerId);
       let wallData = wall.getData();
       if (maybeObj === undefined) {
         let geometry = new THREE.PlaneBufferGeometry(1, 1, 16, 16);
         let material = new THREE.MeshLambertMaterial( { color: 0xdddddd, wireframe: false } );
         maybeObj = new THREE.Mesh( geometry, material );
         maybeObj.receiveShadow = true;
-        this.rendererWalls.set(wall.getId(), maybeObj);
+        this.rendererWalls.set(wall.getId().ownerId, maybeObj);
         this.scene.add(maybeObj);
       }
       let widthAndHeight = 2 * wallData.constant;

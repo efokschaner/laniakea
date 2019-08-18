@@ -69,7 +69,7 @@ export class EntityScheduledDeletionProcessor implements lk.System {
     for (let schedule of state.getComponents(EntityScheduledDeletion)!) {
       let scheduleData = schedule.getData();
       if (scheduleData.deletionTimeS <= simulationTimeS) {
-        state.deleteEntity(schedule.getOwnerId());
+        schedule.getOwner().delete();
       }
     }
   }
@@ -86,7 +86,7 @@ export class BallMovementSystem implements lk.System {
     // For calculating collisions we want all wall vertices that existed on previous frame and this frame.
     let vertsToConsider = new Array<{prev: lk.Component<Position2>, next: lk.Component<Position2>, visualIndex: number, persistentIndex: number}>();
     for (let [prevVert, prevPos] of previousFrameState.getAspect(WallVertex, Position2)) {
-      let maybeNextPos = state.getComponent(Position2, prevPos.getId());
+      let maybeNextPos = state.getComponent(Position2, prevPos.getId().ownerId);
       if (maybeNextPos !== undefined) {
         vertsToConsider.push({
           prev: prevPos,
@@ -137,7 +137,7 @@ export class BallMovementSystem implements lk.System {
       Array.from(
         state.getComponents(Paddle),
       ).map(
-        (p) => [p.getData().wallPersistentId, p] as [number, lk.Component<Paddle>],
+        (p) => [p.getData().wallPersistentId, p],
       ),
     );
 
@@ -172,7 +172,7 @@ export class BallMovementSystem implements lk.System {
               if (this.isServer) {
                 let playerInfo = Array.from(state.getComponents(PlayerInfo)).find((pi) => pi.getData().playerIndex === paddleData.playerIndex)!;
                 playerInfo.getData().alive = false;
-                state.deleteEntity(ballMovement.getOwnerId());
+                ballMovement.getOwner().delete();
               }
             }
           }
@@ -207,8 +207,7 @@ function getOrCreateBallSpawner(state: lk.EntityComponentState): lk.Component<Ba
     return spawner;
   }
   let spawnerComponent = new BallSpawner();
-  let newEntity = state.createEntity([spawnerComponent]);
-  return newEntity.getComponent(BallSpawner)!;
+  return state.createEntity().setComponent(spawnerComponent);
 }
 
 export class BallSpawnerSystem implements lk.System {
@@ -227,7 +226,9 @@ export class BallSpawnerSystem implements lk.System {
       ballMovement.velocity.x = 1;
       ballMovement.velocity.rotateAround(new THREE.Vector2(), Math.random() * 2 * Math.PI);
       ballMovement.velocity.setLength(initialBallVelocityMagnitude);
-      state.createEntity([ballPos, ballMovement]);
+      let ball = state.createEntity();
+      ball.setComponent(ballPos);
+      ball.setComponent(ballMovement);
     }
   }
 }
@@ -331,8 +332,7 @@ function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<Bot
     return spawner;
   }
   let spawnerComponent = new BotSpawner();
-  let newEntity = state.createEntity([spawnerComponent]);
-  return newEntity.getComponent(BotSpawner)!;
+  return state.createEntity().setComponent(spawnerComponent);
 }
 
 export class BotSpawnerSystem implements lk.System {
@@ -346,7 +346,7 @@ export class BotSpawnerSystem implements lk.System {
       spawner.getData().lastBotSpawnTimeS = simulationTimeS;
       let newPlayerInfo = new PlayerInfo();
       newPlayerInfo.playerIndex = players.length + 1;
-      state.createEntity([newPlayerInfo]);
+      state.createEntity().setComponent(newPlayerInfo);
     }
   }
 }

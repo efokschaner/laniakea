@@ -2,11 +2,11 @@ import { Heap } from 'typescript-collections';
 
 import {
   C2S_InputFrameMessage,
-  Engine,
   InputFrame,
   PlayerId,
   ReadStream,
-  SequenceNumber
+  SequenceNumber,
+  SimulationEngine
 } from 'laniakea-shared';
 
 interface InputBufferHeapEntry {
@@ -30,7 +30,7 @@ function compareTargetSimulationTimeS(a: InputBufferHeapEntry, b: InputBufferHea
 }
 
 class InputBuffer {
-  constructor(private engine: Engine) {
+  constructor(private engine: SimulationEngine) {
     // Initialise with an empty input at t-zero
     this.inputHeap.add({
       targetSimulationTimeS: 0,
@@ -92,7 +92,7 @@ class InputBuffer {
  * Receives input packets and processes them so that they can be consumed per simulation frame.
  */
 export class ServerInputHandler {
-  constructor(private engine: Engine) {
+  constructor(private engine: SimulationEngine) {
   }
 
   public onInputFramePacket(playerId: PlayerId, packet: C2S_InputFrameMessage) {

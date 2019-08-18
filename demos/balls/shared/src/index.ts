@@ -125,10 +125,10 @@ export class BallShape extends THREE.Sphere implements lk.Serializable {
 }
 
 export function initialiseEngine(engine: lk.Engine) {
-  engine.registerComponentType(Position, 'Position' as lk.ComponentKind);
-  engine.registerComponentType(Velocity, 'Velocity' as lk.ComponentKind);
-  engine.registerComponentType(WallPlane, 'WallPlane' as lk.ComponentKind);
-  engine.registerComponentType(BallShape, 'BallShape' as lk.ComponentKind);
+  engine.registerComponentType(Position, 'Position');
+  engine.registerComponentType(Velocity, 'Velocity');
+  engine.registerComponentType(WallPlane, 'WallPlane');
+  engine.registerComponentType(BallShape, 'BallShape');
   // Apply gravity
   /*
   engine.addSystem(new class implements lk.System {

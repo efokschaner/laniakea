@@ -24,7 +24,7 @@ interface HTMLHyperlinkElementUtils {
 
 let clientEngine = new lk.ClientEngine({simFPS});
 
-initialiseEngine(clientEngine.engine);
+initialiseEngine(clientEngine);
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 

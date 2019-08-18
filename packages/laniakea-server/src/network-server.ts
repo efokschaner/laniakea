@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import * as http from 'http';
 import * as lk from 'laniakea-shared';
 import { AddressInfo } from 'net';
@@ -14,7 +13,7 @@ function logError(message: any, ...optionalParams: any[]) {
 }
 
 export interface AuthSuccessResult {
-  playerId: number;
+  playerId: lk.PlayerId;
 }
 
 function isAuthSuccessResult(x: any): x is AuthSuccessResult {
@@ -49,7 +48,7 @@ export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthRe
       reason: 'Unauthorized',
     };
   }
-  return { playerId: parseInt(creds.name, 10) };
+  return { playerId: parseInt(creds.name, 10) as lk.PlayerId };
 }
 
 
@@ -72,7 +71,8 @@ class RTCServer {
   constructor(
     private authenticatePlayer: AuthCallback,
     // The purpose of this callback is to ensure that message handlers are attached to the opening channel asap before incoming messages arrive
-    private constructNetworkPeerFromChannel: (playerId: lk.PlayerId, l: lk.LikeRTCDataChannelOrWebSocket) => lk.NetworkPeer) {
+    private constructNetworkPeerFromChannel: (playerId: lk.PlayerId, l: lk.LikeRTCDataChannelOrWebSocket) => lk.NetworkPeer
+  ) {
     this.httpServer = http.createServer((_request, response) => {
       response.writeHead(404);
       response.end();
@@ -83,9 +83,9 @@ class RTCServer {
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions) : Bluebird<AddressInfo> {
+  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions) : Promise<AddressInfo> {
     this.webrtcPeerConnectionPortRange = webrtcPeerConnectionPortRange;
-    return new Bluebird((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.httpServer.listen(signalingWebsocketServerPort, () => {
         let address = this.httpServer.address();
         console.log('HTTP server is listening on ', address);
@@ -97,7 +97,7 @@ class RTCServer {
     });
   }
   public close() {
-    return new Bluebird((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.wsServer.on('close', (_connection, _closeReason, _description) => {
         if (this.wsServer.connections.length === 0) {
           resolve();
@@ -207,30 +207,43 @@ class RTCServer {
   private webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange;
 }
 
+
 export class NetworkServer {
-  constructor(authenticatePlayer: AuthCallback) {
+  constructor(private classRegistry: lk.ClassRegistry, authenticatePlayer: AuthCallback) {
     this.rtcServer = new RTCServer(authenticatePlayer, (playerId, channel) => {
       let messageRouter = new lk.MessageRouter();
       for (let ctorAndHandler of this.registeredMessageHandlers) {
         let handlerWithPlayerIdParamBound = (message: lk.Serializable) => ctorAndHandler[1](playerId, message);
         messageRouter.registerHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
       }
-      return new lk.NetworkPeer(channel, this.messageClassRegistry, messageRouter);
+      return new lk.NetworkPeer(channel, this.classRegistry, messageRouter);
     });
     this.rtcServer.onConnection.attach(({playerId, networkPeer}) => {
-      this.connections.set(playerId, networkPeer);
       networkPeer.onClose.attach(() => {
-        this.connections.delete(playerId);
-        this.onDisconnect.post(playerId);
+        this.handShakingConnections.delete(playerId);
+        let wasConnected = this.connections.delete(playerId);
+        if (wasConnected) {
+          this.onDisconnect.post(playerId);
+        }
       });
-      this.onConnection.post({playerId, networkPeer});
+      this.handShakingConnections.set(playerId, networkPeer);
+      let handshakeMessage = new lk.S2C_BuiltinHandshakeMessage();
+      handshakeMessage.classRegistryDictionary = this.classRegistry.getTypeIdToShortTypeIdMapping();
+      networkPeer.sendMessage(handshakeMessage, () => {
+        this.handShakingConnections.delete(playerId);
+        this.connections.set(playerId, networkPeer);
+        this.onConnection.post({playerId, networkPeer});
+      });
+      networkPeer.flushMessagesToNetwork();
     });
   }
 
-  public listen(options: ListenOptions) : Bluebird<AddressInfo> {
+  public listen(options: ListenOptions) : Promise<AddressInfo> {
     return this.rtcServer.listen(options);
   }
   public close() {
+    this.handShakingConnections.forEach((networkPeer) => networkPeer.close());
+    this.handShakingConnections.clear();
     this.connections.forEach((networkPeer) => networkPeer.close());
     this.connections.clear();
     return this.rtcServer.close();
@@ -246,7 +259,7 @@ export class NetworkServer {
     ctor: new(...args: any[]) => T,
     uniqueMessageTypeName: string,
   ): void {
-    this.messageClassRegistry.registerClass(ctor, uniqueMessageTypeName);
+    this.classRegistry.registerClass(ctor, uniqueMessageTypeName);
   }
 
   public registerMessageHandler<T extends lk.Serializable>(
@@ -277,12 +290,13 @@ export class NetworkServer {
       }
     } else {
       this.connections.forEach((peer) => { peer.flushMessagesToNetwork(); });
+      this.handShakingConnections.forEach((peer) => { peer.flushMessagesToNetwork(); });
     }
   }
 
   private rtcServer: RTCServer;
+  private handShakingConnections = new Map<lk.PlayerId, lk.NetworkPeer>();
   private connections = new Map<lk.PlayerId, lk.NetworkPeer>();
-  private messageClassRegistry = new lk.ClassRegistry();
   private registeredMessageHandlers: Array<[
     new(...args: any[]) => lk.Serializable,
     (playerId: lk.PlayerId, packet: lk.Serializable) => void]> = [];
