@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 
-// Utility to keep the size + aspect ratio of the renderer
-// synchronised with the size of the parent element
+/**
+ * Utility to keep the size + aspect ratio of the renderer
+ * synchronised with the size of the parent element
+ */
 export class RendererSizeUpdater {
   private prevSize = { clientWidth: 0, clientHeight: 0 };
 

@@ -188,7 +188,10 @@ export class WriteStream implements SerializationStreamInterface {
     return this.curOffset;
   }
 
-  // classRegistry is optional, only required for serialisation of non-builtin types.
+  /**
+   * @param dataView
+   * @param classRegistry optional, only required for serialization of variant types.
+   */
   constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
   }
 

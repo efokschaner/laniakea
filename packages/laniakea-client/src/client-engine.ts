@@ -33,9 +33,10 @@ export interface ClientEngineOptions {
   secondsOfSimulationFramesToRetain: number;
 }
 
-// TODO, probably in concert with renaming "Engine"
-// Have ClientEngine and ServerEngine share an interface, probably called Engine.
-// Interface allows common configuration / registration code across client and server.
+/**
+ * The main class for game clients.
+ * Brings together all the client-side systems in the engine.
+ */
 export class ClientEngine implements Engine {
   public static defaultOptions: ClientEngineOptions = {
     simFPS: 30,

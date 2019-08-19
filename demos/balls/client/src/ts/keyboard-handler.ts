@@ -1,7 +1,10 @@
 import { ClientEngine, Serializable } from 'laniakea-client';
 import { ButtonState } from 'lk-demo-pong-shared';
 
-// Boilerplate keyboard handler. TODO extract to some kind of demo-utils package when we split demos out.
+/**
+ * Boilerplate keyboard handler.
+ * TODO extract to some kind of demo-utils package?
+ */
 export class KeyboardHandler<T extends Serializable & {buttonStates: Map<number, ButtonState>}> {
   /**
    * @param buttonMappingCallback accepts https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key

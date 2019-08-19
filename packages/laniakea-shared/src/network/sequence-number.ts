@@ -1,8 +1,9 @@
 import { Serializable, SerializationStream } from '../serialization';
 
-// Because JS's % operator returns negative values
-// for modulus of negative numbers,
-// which we don't want.
+/**
+ * modulo which produces positive values for negative numbers.
+ * JS's % operator returns negative values for modulus of negative numbers, which we don't want.
+ */
 function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }

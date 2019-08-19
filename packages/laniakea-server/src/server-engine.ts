@@ -33,6 +33,10 @@ export interface ServerEngineOptions {
   globalSimulationRateMultiplier: number;
 }
 
+/**
+ * The main class for game servers.
+ * Binds together all the server-side parts of the engine.
+ */
 export class ServerEngine implements Engine {
   public static defaultOptions: ServerEngineOptions = {
     simFPS: 30,

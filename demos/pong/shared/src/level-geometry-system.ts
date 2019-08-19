@@ -14,15 +14,18 @@ import {
   WallVertex,
 } from './components';
 
-// Because JS's % operator returns negative values
-// for modulus of negative numbers,
-// which we don't want.
+/**
+ * modulo which produces positive values for negative numbers.
+ * JS's % operator returns negative values for modulus of negative numbers, which we don't want.
+ */
 function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
 
-// Quick and dirty seedable PRNG to get deterministic results.
-// From https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+/**
+ * Quick and dirty seedable PRNG to get deterministic results.
+ * From https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+ */
 class DeterministicPRNG {
   // seed may be any number other than zero or a multiple of PI
   constructor(public seed: number) {
