@@ -32,12 +32,16 @@ function isAuthFailureResult(x: any): x is AuthFailureResult {
 
 export type AuthResult = AuthSuccessResult | AuthFailureResult;
 
-// An AuthCallback should authenticate the player making the incoming
-// WebSocket connection (by inspecting the http.IncomingMessage).
-// If the WebSocket authenticates, the negotiation of webRTC can begin.
+/**
+ * An AuthCallback should authenticate the player making the incoming
+ * WebSocket connection (by inspecting the http.IncomingMessage).
+ * If the WebSocket authenticates, the negotiation of webRTC can begin.
+ */
 export type AuthCallback = (req: http.IncomingMessage) => AuthResult;
 
-// For demo purposes only, do not use in production
+/**
+ * For demo purposes only, do not use in production
+ */
 export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthResult {
   let creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
@@ -61,7 +65,9 @@ export interface ListenOptions {
   webrtcPeerConnectionPortRange?: WebrtcPeerConnectionPortRange;
 }
 
-// Handles authentication + establishment of the webRTC conn via WebSockets
+/**
+ * Handles authentication + establishment of the webRTC conn via WebSockets
+ */
 class RTCServer {
   public readonly onConnection = new SyncEvent<{playerId: lk.PlayerId, networkPeer: lk.NetworkPeer}>();
   private connections = new Map<lk.PlayerId, lk.NetworkPeer>();
