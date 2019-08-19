@@ -12,7 +12,8 @@
     "demo:server": "cd demos/pong/server && yarn run start",
     "lerna": "./node_modules/.bin/lerna",
     "tslint": "lerna exec -- tslint --project .",
-    "tslint:fix": "lerna exec -- tslint --project . --fix"
+    "tslint:fix": "lerna exec -- tslint --project . --fix",
+    "typedoc": "typedoc --options typedoc.json packages"
   },
   "devDependencies": {
     "lerna": "^3.14.1",
@@ -20,10 +21,13 @@
     "rimraf": "^2.6.3",
     "split": "^1.0.1",
     "tslint": "^5.16.0",
+    "typedoc": "^0.15.0",
+    "typedoc-plugin-lerna-packages": "^0.1.6",
     "typescript": "^3.4.5"
   },
   "workspaces": [
-    "demos/**/*",
+    "demos/balls/*",
+    "demos/pong/*",
     "packages/*",
     "tests/*"
   ],

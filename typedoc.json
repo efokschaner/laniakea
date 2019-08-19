@@ -1,0 +1,11 @@
+{
+  "ignoreCompilerErrors": true,
+  "gitRevision": "master",
+  "mode": "modules",
+  "module": "commonjs",
+  "name": "Laniakea",
+  "out": "docs",
+  "plugin": ["typedoc-plugin-lerna-packages"],
+  "target": "es2015",
+  "tsconfig": "tsconfig.common.json"
+}

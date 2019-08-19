@@ -37,11 +37,9 @@ Games will be able to control networking where it intersects with things like "v
 - Statically typed. Built with TypeScript.
 - Game state replication over webRTC Data Channels. Avoids [Head-of-line blocking](https://web.archive.org/web/20181107181507/https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem).
 
-### Demo/Development
-This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
-We'll assume you have `node` and `yarn` installed. I'm using `node v10.15.3` and `yarn v1.16.0` in case it matters.
-
-To get started:
+### Demo
+Assuming you have `node v10.15.3` and `yarn v1.16.0` installed.
+To see the demo:
 ```
 yarn run bootstrap
 yarn run build
@@ -50,7 +48,21 @@ yarn run demo
 ```
 While it's running open <http://127.0.0.1:8080> to see the demo. Try opening 2 browser tabs!
 
+### Learn More
+Perhaps check out the [demo n-player pong implementation](./demos/pong), or check out the [API docs](https://efokschaner.github.io/laniakea).
 
+### Development Notes
+This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
+We'll assume you have `node` and `yarn` installed. I'm using `node v10.15.3` and `yarn v1.16.0` in case it matters.
+
+#### Linting
+```
+yarn run tslint:fix
+```
+#### Build docs
+```
+yarn run typedoc
+```
 #### Going Nuclear with package upgrades
 ```
 yarn run lerna exec --concurrency 1 'yarn upgrade --latest'

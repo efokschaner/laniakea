@@ -1,0 +1,813 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>ServerEngine | Laniakea</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">Laniakea</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="../modules/laniakea_server.html">laniakea-server</a>
+				</li>
+				<li>
+					<a href="laniakea_server.serverengine.html">ServerEngine</a>
+				</li>
+			</ul>
+			<h1>Class ServerEngine</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>The main class for game servers.
+						Binds together all the server-side parts of the engine.</p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">ServerEngine</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel">
+				<h3>Implements</h3>
+				<ul class="tsd-hierarchy">
+					<li><span class="tsd-signature-type">Engine</span></li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#authenticateplayer" class="tsd-kind-icon">authenticate<wbr>Player</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#currentframe" class="tsd-kind-icon">current<wbr>Frame</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#frameupdatesenders" class="tsd-kind-icon">frame<wbr>Update<wbr>Senders</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#inputhandler" class="tsd-kind-icon">input<wbr>Handler</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#networkserver" class="tsd-kind-icon">network<wbr>Server</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#onplayerconnected" class="tsd-kind-icon">on<wbr>Player<wbr>Connected</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#options" class="tsd-kind-icon">options</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#playerinfos" class="tsd-kind-icon">player<wbr>Infos</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#presenttimetosimulationtimedeltas" class="tsd-kind-icon">present<wbr>Time<wbr>ToSimulation<wbr>Time<wbr>DeltaS</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#simulationengine" class="tsd-kind-icon">simulation<wbr>Engine</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#addsystem" class="tsd-kind-icon">add<wbr>System</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#getgamesimperiods" class="tsd-kind-icon">get<wbr>Game<wbr>Sim<wbr>PeriodS</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#getsimulationtimes" class="tsd-kind-icon">get<wbr>Simulation<wbr>TimeS</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#listen" class="tsd-kind-icon">listen</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="laniakea_server.serverengine.html#registercomponenttype" class="tsd-kind-icon">register<wbr>Component<wbr>Type</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="laniakea_server.serverengine.html#registercontinuousinputtype" class="tsd-kind-icon">register<wbr>Continuous<wbr>Input<wbr>Type</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#removesystem" class="tsd-kind-icon">remove<wbr>System</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="laniakea_server.serverengine.html#start" class="tsd-kind-icon">start</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="laniakea_server.serverengine.html#updateloop" class="tsd-kind-icon">update<wbr>Loop</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Object literals</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-class tsd-is-static"><a href="laniakea_server.serverengine.html#defaultoptions" class="tsd-kind-icon">default<wbr>Options</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Server<wbr>Engine<span class="tsd-signature-symbol">(</span>authenticatePlayer<span class="tsd-signature-symbol">: </span><a href="../modules/laniakea_server.html#authcallback" class="tsd-signature-type">AuthCallback</a>, options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/laniakea_server.serverengineoptions.html" class="tsd-signature-type">ServerEngineOptions</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="laniakea_server.serverengine.html" class="tsd-signature-type">ServerEngine</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L47">laniakea-server/src/server-engine.ts:47</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>authenticatePlayer: <a href="../modules/laniakea_server.html#authcallback" class="tsd-signature-type">AuthCallback</a></h5>
+								</li>
+								<li>
+									<h5>options: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/laniakea_server.serverengineoptions.html" class="tsd-signature-type">ServerEngineOptions</a><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="laniakea_server.serverengine.html" class="tsd-signature-type">ServerEngine</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="authenticateplayer" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> authenticate<wbr>Player</h3>
+					<div class="tsd-signature tsd-kind-icon">authenticate<wbr>Player<span class="tsd-signature-symbol">:</span> <a href="../modules/laniakea_server.html#authcallback" class="tsd-signature-type">AuthCallback</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L49">laniakea-server/src/server-engine.ts:49</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="classregistry" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> class<wbr>Registry</h3>
+					<div class="tsd-signature tsd-kind-icon">class<wbr>Registry<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ClassRegistry</span><span class="tsd-signature-symbol"> =&nbsp;new ClassRegistry()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L124">laniakea-server/src/server-engine.ts:124</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="currentframe" class="tsd-anchor"></a>
+					<h3>current<wbr>Frame</h3>
+					<div class="tsd-signature tsd-kind-icon">current<wbr>Frame<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SimulationFrameData</span><span class="tsd-signature-symbol"> =&nbsp;this.simulationEngine.createSimulationFrame()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L132">laniakea-server/src/server-engine.ts:132</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="frameupdatesenders" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> frame<wbr>Update<wbr>Senders</h3>
+					<div class="tsd-signature tsd-kind-icon">frame<wbr>Update<wbr>Senders<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">, </span><a href="laniakea_server.frameupdatesender.html" class="tsd-signature-type">FrameUpdateSender</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;PlayerId, FrameUpdateSender&gt;()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L126">laniakea-server/src/server-engine.ts:126</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="inputhandler" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> input<wbr>Handler</h3>
+					<div class="tsd-signature tsd-kind-icon">input<wbr>Handler<span class="tsd-signature-symbol">:</span> <a href="laniakea_server.serverinputhandler.html" class="tsd-signature-type">ServerInputHandler</a><span class="tsd-signature-symbol"> =&nbsp;new ServerInputHandler(this.simulationEngine)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L130">laniakea-server/src/server-engine.ts:130</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="networkserver" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> network<wbr>Server</h3>
+					<div class="tsd-signature tsd-kind-icon">network<wbr>Server<span class="tsd-signature-symbol">:</span> <a href="laniakea_server.networkserver.html" class="tsd-signature-type">NetworkServer</a><span class="tsd-signature-symbol"> =&nbsp;new NetworkServer(this.classRegistry, this.authenticatePlayer)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L127">laniakea-server/src/server-engine.ts:127</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="onplayerconnected" class="tsd-anchor"></a>
+					<h3>on<wbr>Player<wbr>Connected</h3>
+					<div class="tsd-signature tsd-kind-icon">on<wbr>Player<wbr>Connected<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">BaseEvent</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/laniakea_shared.html#playerid" class="tsd-signature-type">PlayerId</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new tsEvents.QueuedEvent&lt;PlayerId&gt;()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L47">laniakea-server/src/server-engine.ts:47</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="options" class="tsd-anchor"></a>
+					<h3>options</h3>
+					<div class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">:</span> <a href="../interfaces/laniakea_server.serverengineoptions.html" class="tsd-signature-type">ServerEngineOptions</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L46">laniakea-server/src/server-engine.ts:46</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="playerinfos" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> player<wbr>Infos</h3>
+					<div class="tsd-signature tsd-kind-icon">player<wbr>Infos<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/laniakea_server.playerinfo.html" class="tsd-signature-type">PlayerInfo</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;PlayerId, PlayerInfo&gt;()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L125">laniakea-server/src/server-engine.ts:125</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="presenttimetosimulationtimedeltas" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> present<wbr>Time<wbr>ToSimulation<wbr>Time<wbr>DeltaS</h3>
+					<div class="tsd-signature tsd-kind-icon">present<wbr>Time<wbr>ToSimulation<wbr>Time<wbr>DeltaS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L129">laniakea-server/src/server-engine.ts:129</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="simulationengine" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> simulation<wbr>Engine</h3>
+					<div class="tsd-signature tsd-kind-icon">simulation<wbr>Engine<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SimulationEngine</span><span class="tsd-signature-symbol"> =&nbsp;new SimulationEngine(this.classRegistry)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L128">laniakea-server/src/server-engine.ts:128</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="addsystem" class="tsd-anchor"></a>
+					<h3>add<wbr>System</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">add<wbr>System<span class="tsd-signature-symbol">(</span>system<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">System</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L96">laniakea-server/src/server-engine.ts:96</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>system: <span class="tsd-signature-type">System</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getgamesimperiods" class="tsd-anchor"></a>
+					<h3>get<wbr>Game<wbr>Sim<wbr>PeriodS</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Game<wbr>Sim<wbr>PeriodS<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L104">laniakea-server/src/server-engine.ts:104</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getsimulationtimes" class="tsd-anchor"></a>
+					<h3>get<wbr>Simulation<wbr>TimeS</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Simulation<wbr>TimeS<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L110">laniakea-server/src/server-engine.ts:110</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>A continuous time that represents how far along the simulation should be.
+									Not quantised to the frame timestamps, see frame time for that value.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="listen" class="tsd-anchor"></a>
+					<h3>listen</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">listen<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/laniakea_server.listenoptions.html" class="tsd-signature-type">ListenOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">AddressInfo</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L120">laniakea-server/src/server-engine.ts:120</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>options: <a href="../interfaces/laniakea_server.listenoptions.html" class="tsd-signature-type">ListenOptions</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">AddressInfo</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+					<a name="registercomponenttype" class="tsd-anchor"></a>
+					<h3>register<wbr>Component<wbr>Type</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Component<wbr>Type&lt;T&gt;<span class="tsd-signature-symbol">(</span>componentType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span>, componentTypeName<span class="tsd-signature-symbol">: </span><a href="../modules/laniakea_shared.html#typename" class="tsd-signature-type">TypeName</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L90">laniakea-server/src/server-engine.ts:90</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>componentType: <span class="tsd-signature-type">object</span></h5>
+									<ul class="tsd-parameters">
+									</ul>
+								</li>
+								<li>
+									<h5>componentTypeName: <a href="../modules/laniakea_shared.html#typename" class="tsd-signature-type">TypeName</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+					<a name="registercontinuousinputtype" class="tsd-anchor"></a>
+					<h3>register<wbr>Continuous<wbr>Input<wbr>Type</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Continuous<wbr>Input<wbr>Type&lt;T&gt;<span class="tsd-signature-symbol">(</span>inputType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span>, inputTypeName<span class="tsd-signature-symbol">: </span><a href="../modules/laniakea_shared.html#typename" class="tsd-signature-type">TypeName</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L86">laniakea-server/src/server-engine.ts:86</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>inputType: <span class="tsd-signature-type">object</span></h5>
+									<ul class="tsd-parameters">
+									</ul>
+								</li>
+								<li>
+									<h5>inputTypeName: <a href="../modules/laniakea_shared.html#typename" class="tsd-signature-type">TypeName</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="removesystem" class="tsd-anchor"></a>
+					<h3>remove<wbr>System</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">remove<wbr>System<span class="tsd-signature-symbol">(</span>system<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">System</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L100">laniakea-server/src/server-engine.ts:100</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>system: <span class="tsd-signature-type">System</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="start" class="tsd-anchor"></a>
+					<h3>start</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">start<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L114">laniakea-server/src/server-engine.ts:114</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="updateloop" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> update<wbr>Loop</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">update<wbr>Loop<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L134">laniakea-server/src/server-engine.ts:134</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Object literals</h2>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-class tsd-is-static">
+					<a name="defaultoptions" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> default<wbr>Options</h3>
+					<div class="tsd-signature tsd-kind-icon">default<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L41">laniakea-server/src/server-engine.ts:41</a></li>
+						</ul>
+					</aside>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultoptions.globalsimulationratemultiplier" class="tsd-anchor"></a>
+						<h3>global<wbr>Simulation<wbr>Rate<wbr>Multiplier</h3>
+						<div class="tsd-signature tsd-kind-icon">global<wbr>Simulation<wbr>Rate<wbr>Multiplier<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L44">laniakea-server/src/server-engine.ts:44</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultoptions.simfps" class="tsd-anchor"></a>
+						<h3>simFPS</h3>
+						<div class="tsd-signature tsd-kind-icon">simFPS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;30</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/laniakea-server/src/server-engine.ts#L42">laniakea-server/src/server-engine.ts:42</a></li>
+							</ul>
+						</aside>
+					</section>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/laniakea_client.html">laniakea-<wbr>client</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="../modules/laniakea_server.html">laniakea-<wbr>server</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/laniakea_shared.html">laniakea-<wbr>shared</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../enums/laniakea_server.ackstate.html" class="tsd-kind-icon">Ack<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../enums/laniakea_server.alivemarker.html" class="tsd-kind-icon">Alive<wbr>Marker</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="laniakea_server.componentreplicationchooser.html" class="tsd-kind-icon">Component<wbr>Replication<wbr>Chooser</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
+						<a href="laniakea_server.componentreplicationstate.html" class="tsd-kind-icon">Component<wbr>Replication<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="laniakea_server.frameupdatesender.html" class="tsd-kind-icon">Frame<wbr>Update<wbr>Sender</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
+						<a href="laniakea_server.inputbuffer.html" class="tsd-kind-icon">Input<wbr>Buffer</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="laniakea_server.networkserver.html" class="tsd-kind-icon">Network<wbr>Server</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
+						<a href="laniakea_server.rtcserver.html" class="tsd-kind-icon">RTCServer</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-module">
+						<a href="laniakea_server.serverengine.html" class="tsd-kind-icon">Server<wbr>Engine</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#authenticateplayer" class="tsd-kind-icon">authenticate<wbr>Player</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#currentframe" class="tsd-kind-icon">current<wbr>Frame</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#frameupdatesenders" class="tsd-kind-icon">frame<wbr>Update<wbr>Senders</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#inputhandler" class="tsd-kind-icon">input<wbr>Handler</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#networkserver" class="tsd-kind-icon">network<wbr>Server</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#onplayerconnected" class="tsd-kind-icon">on<wbr>Player<wbr>Connected</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#options" class="tsd-kind-icon">options</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#playerinfos" class="tsd-kind-icon">player<wbr>Infos</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#presenttimetosimulationtimedeltas" class="tsd-kind-icon">present<wbr>Time<wbr>ToSimulation<wbr>Time<wbr>DeltaS</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#simulationengine" class="tsd-kind-icon">simulation<wbr>Engine</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#addsystem" class="tsd-kind-icon">add<wbr>System</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#getgamesimperiods" class="tsd-kind-icon">get<wbr>Game<wbr>Sim<wbr>PeriodS</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#getsimulationtimes" class="tsd-kind-icon">get<wbr>Simulation<wbr>TimeS</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#listen" class="tsd-kind-icon">listen</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+								<a href="laniakea_server.serverengine.html#registercomponenttype" class="tsd-kind-icon">register<wbr>Component<wbr>Type</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+								<a href="laniakea_server.serverengine.html#registercontinuousinputtype" class="tsd-kind-icon">register<wbr>Continuous<wbr>Input<wbr>Type</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#removesystem" class="tsd-kind-icon">remove<wbr>System</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="laniakea_server.serverengine.html#start" class="tsd-kind-icon">start</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="laniakea_server.serverengine.html#updateloop" class="tsd-kind-icon">update<wbr>Loop</a>
+							</li>
+							<li class=" tsd-kind-object-literal tsd-parent-kind-class tsd-is-static">
+								<a href="laniakea_server.serverengine.html#defaultoptions" class="tsd-kind-icon">default<wbr>Options</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="laniakea_server.serverinputhandler.html" class="tsd-kind-icon">Server<wbr>Input<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.authfailureresult.html" class="tsd-kind-icon">Auth<wbr>Failure<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.authsuccessresult.html" class="tsd-kind-icon">Auth<wbr>Success<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/laniakea_server.inputbufferheapentry.html" class="tsd-kind-icon">Input<wbr>Buffer<wbr>Heap<wbr>Entry</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.listenoptions.html" class="tsd-kind-icon">Listen<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.playerinfo.html" class="tsd-kind-icon">Player<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.serverengineoptions.html" class="tsd-kind-icon">Server<wbr>Engine<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/laniakea_server.webrtcpeerconnectionportrange.html" class="tsd-kind-icon">Webrtc<wbr>Peer<wbr>Connection<wbr>Port<wbr>Range</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/laniakea_server.html#authcallback" class="tsd-kind-icon">Auth<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/laniakea_server.html#authresult" class="tsd-kind-icon">Auth<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#minumum_send_priority" class="tsd-kind-icon">MINUMUM_<wbr>SEND_<wbr>PRIORITY</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#size_of_component_id" class="tsd-kind-icon">SIZE_<wbr>OF_<wbr>COMPONENT_<wbr>ID</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#combine" class="tsd-kind-icon">combine</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#getbasicauthcreds" class="tsd-kind-icon">get<wbr>Basic<wbr>Auth<wbr>Creds</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#humanformat" class="tsd-kind-icon">human<wbr>Format</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#logger" class="tsd-kind-icon">logger</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#present" class="tsd-kind-icon">present</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#printf" class="tsd-kind-icon">printf</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#timestamp" class="tsd-kind-icon">timestamp</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/laniakea_server.html#insecure_authcallback" class="tsd-kind-icon">INSECURE_<wbr><wbr>Auth<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#bytearraysareequal" class="tsd-kind-icon">byte<wbr>Arrays<wbr>Are<wbr>Equal</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#collectionscompare" class="tsd-kind-icon">collections<wbr>Compare</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#comparetargetsimulationtimes" class="tsd-kind-icon">compare<wbr>Target<wbr>Simulation<wbr>TimeS</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#hookconsolewithlogger" class="tsd-kind-icon">hook<wbr>Console<wbr>With<wbr>Logger</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#isauthfailureresult" class="tsd-kind-icon">is<wbr>Auth<wbr>Failure<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#isauthsuccessresult" class="tsd-kind-icon">is<wbr>Auth<wbr>Success<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#logerror" class="tsd-kind-icon">log<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#otheralivemarker" class="tsd-kind-icon">other<wbr>Alive<wbr>Marker</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#padstart" class="tsd-kind-icon">pad<wbr>Start</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/laniakea_server.html#priority_growth_factor" class="tsd-kind-icon">PRIORITY_<wbr>GROWTH_<wbr>FACTOR</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
