@@ -1,3 +1,4 @@
+- [ ] Invulnerability mode which consumes your paddle width as a resource. The invuln zone grows from your paddle while used.
 - [ ] Rename OutgoingMessage which conflicts with a type in http module.
 - [ ] Evaluate the need for `withDeletedStateHidden()`, now that we can purge deleted state every frame.
 - [ ] Reduce extrapolation for objects that can't be so safely extrapolated. Potentially by completing "local perception filters" rendering strategy.
