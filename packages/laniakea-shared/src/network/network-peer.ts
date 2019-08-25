@@ -2,7 +2,7 @@ import { SyncEvent } from 'ts-events';
 import { ClassRegistry } from '../class-registry';
 import { Serializable } from '../serialization';
 import { AckingPeer } from './acking-peer';
-import { MessagePeer, OutgoingMessage } from './message-peer';
+import { MessagePeer, OutboundMessage } from './message-peer';
 import { MessageRouter } from './message-router';
 import { LikeRTCDataChannelOrWebSocket } from './socket-abstraction';
 
@@ -42,7 +42,7 @@ export class NetworkPeer {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
+  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
     return this.messagePeer.sendMessage(message, onAck);
   }
 

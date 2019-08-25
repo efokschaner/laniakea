@@ -275,12 +275,12 @@ export class NetworkServer {
       handler as (playerId: lk.PlayerId, packet: lk.Serializable) => void]);
   }
 
-  public sendMessage(playerId: lk.PlayerId, message: lk.Serializable, onAck?: () => void): lk.OutgoingMessage {
+  public sendMessage(playerId: lk.PlayerId, message: lk.Serializable, onAck?: () => void): lk.OutboundMessage {
     let maybeConn = this.connections.get(playerId);
     if (maybeConn !== undefined) {
       return maybeConn.sendMessage(message, onAck);
     }
-    return new lk.OutgoingMessage(0, undefined as any as lk.Serializable, undefined);
+    return new lk.OutboundMessage(0, undefined as any as lk.Serializable, undefined);
   }
   /**
    * Sends messages across the network

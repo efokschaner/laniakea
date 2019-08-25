@@ -65,10 +65,10 @@ export class ServerEngine implements Engine {
       let response = new S2C_TimeSyncResponseMessage();
       response.clientTimeS = timeSyncRequest.clientTimeS;
       response.serverTimeS = this.getSimulationTimeS();
-      let outgoingMessage = this.networkServer.sendMessage(playerId, response);
-      if (outgoingMessage !== undefined) {
-        outgoingMessage.currentPriority = Infinity;
-        outgoingMessage.ttl = 1;
+      let outboundMessage = this.networkServer.sendMessage(playerId, response);
+      if (outboundMessage !== undefined) {
+        outboundMessage.currentPriority = Infinity;
+        outboundMessage.ttl = 1;
       }
       this.networkServer.flushMessagesToNetwork(playerId);
     });

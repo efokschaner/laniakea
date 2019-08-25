@@ -14,7 +14,7 @@ function logWarningAboutReceiveWindow() {
   if (receiveWindowWarningLastLogTime === undefined || nowMS > receiveWindowWarningLastLogTime + 1000) {
     // If you receive this warning, you might want to expire / lower the ttl on some lower priority messages that
     // have not been able to be sent as there is a limit to the range of messages sequence numbers that can potentially be in flight.
-    console.warn('An outgoing message is blocked from sending due to unsent/unacknowledged messages that are old.');
+    console.warn('An outbound message is blocked from sending due to unsent/unacknowledged messages that are old.');
     receiveWindowWarningLastLogTime = nowMS;
   }
 }
@@ -31,7 +31,7 @@ export class WireMessage implements Serializable {
   }
 }
 
-export class OutgoingMessage {
+export class OutboundMessage {
   public priorityGrowthFactor = 1.0;
   public currentPriority = 0;
   public ttl?: number; // undefined => no ttl; number of times it will be considered for sending before automatically dropped
@@ -49,12 +49,12 @@ export class OutgoingMessage {
   }
 }
 
-class OutgoingMessageChannel {
+class OutboundMessageChannel {
   constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
 
-  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
-    let outboundMessage = new OutgoingMessage(this.getNextOutboundAbsoluteSequenceNumber(), message, onAck);
+  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
+    let outboundMessage = new OutboundMessage(this.getNextOutboundAbsoluteSequenceNumber(), message, onAck);
     this.messages.push(outboundMessage);
     return outboundMessage;
   }
@@ -63,7 +63,7 @@ class OutgoingMessageChannel {
     // Remove acked and expired messages
     // Update priority and reduce ttl
     // Find oldest absoluteSequencenumber that could still be sent
-    let oldestOutgoingAbsoluteSequenceNumber = Infinity;
+    let oldestOutboundAbsoluteSequenceNumber = Infinity;
     this.messages = this.messages.filter((m) => {
       if (m.acked || m.ttl === 0) {
         // This message is no longer needed
@@ -74,14 +74,14 @@ class OutgoingMessageChannel {
       if (m.ttl !== undefined) {
         m.ttl -= 1;
       }
-      if (m.absoluteSequenceNumber < oldestOutgoingAbsoluteSequenceNumber) {
-        oldestOutgoingAbsoluteSequenceNumber = m.absoluteSequenceNumber;
+      if (m.absoluteSequenceNumber < oldestOutboundAbsoluteSequenceNumber) {
+        oldestOutboundAbsoluteSequenceNumber = m.absoluteSequenceNumber;
       }
       return true;
     });
     // This is one larger than the highest sequence number we can send that wont cause the receive window to be exceeded
     // The receive window is defined by IncomingMessageChannel's AbsoluteSequenceNumberTranslator
-    let largestSendableAbsoluteSequenceNumberExclusive = oldestOutgoingAbsoluteSequenceNumber + AbsoluteSequenceNumberTranslator.halfwayPoint;
+    let largestSendableAbsoluteSequenceNumberExclusive = oldestOutboundAbsoluteSequenceNumber + AbsoluteSequenceNumberTranslator.halfwayPoint;
     let didSkipMessageDueToReceiveWindow = false;
     // With larger numbers of messages this becomes the dominant cost of the system.
     // I've tried using a priority queue, however the dynamic priorities mean that that you still pay
@@ -99,7 +99,7 @@ class OutgoingMessageChannel {
     });
     // Get as many messages as we can fit in to 1 packet
     let maxLength = this.ackingPeer.getMtuForPayload();
-    let messagesThatFit = new Array<OutgoingMessage>();
+    let messagesThatFit = new Array<OutboundMessage>();
     let combinedLengthOfMessagesThatFit = 0;
     for (let message of this.messages) {
       let lengthIncludingNextMessage = combinedLengthOfMessagesThatFit + message.serializedLength;
@@ -150,7 +150,7 @@ class OutgoingMessageChannel {
     this.nextOutboundAbsoluteSequenceNumber += 1;
     return ret;
   }
-  private messages = new Array<OutgoingMessage>();
+  private messages = new Array<OutboundMessage>();
 }
 
 class IncomingMessageChannel {
@@ -181,16 +181,16 @@ class IncomingMessageChannel {
  * and can be given a TTL / marked expired to limit reliability.
  */
 export class MessagePeer {
-  private outgoingMessageChannel = new OutgoingMessageChannel(this.ackingPeer, this.classRegistry);
+  private outboundMessageChannel = new OutboundMessageChannel(this.ackingPeer, this.classRegistry);
   private incomingMessageChannel = new IncomingMessageChannel(this.ackingPeer, this.classRegistry);
 
   constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
   }
   public onMessageReceived = this.incomingMessageChannel.onMessageReceived;
-  public sendMessage(message: Serializable, onAck?: () => void): OutgoingMessage {
-    return this.outgoingMessageChannel.sendMessage(message, onAck);
+  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
+    return this.outboundMessageChannel.sendMessage(message, onAck);
   }
   public flushMessagesToNetwork() {
-    this.outgoingMessageChannel.flushMessagesToNetwork();
+    this.outboundMessageChannel.flushMessagesToNetwork();
   }
 }

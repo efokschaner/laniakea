@@ -78,10 +78,10 @@ function replicationStyleTest() {
       let message = new TestMessage();
       message.seq = clientIter++;
       message.data = new Uint8Array(clientSize);
-      let outgoingMessage = client.sendMessage(message, function() {
+      let outboundMessage = client.sendMessage(message, function() {
         numAcksFromServer += 1;
       });
-      outgoingMessage.ttl = undefined;
+      outboundMessage.ttl = undefined;
     }
     client.flushMessagesToNetwork();
   }, 1000 / clientFPS, 'clientToServer');
@@ -95,10 +95,10 @@ function replicationStyleTest() {
           let message = new TestMessage();
           message.seq = serverIter++;
           message.data = new Uint8Array(getRandomSize());
-          let outgoingMessage = server.sendMessage(clientPlayerId, message, function() {
+          let outboundMessage = server.sendMessage(clientPlayerId, message, function() {
             numAcksFromClient += 1;
           });
-          outgoingMessage.ttl = undefined;
+          outboundMessage.ttl = undefined;
         }
       }
       serverAddMessagesThisFrame = !serverAddMessagesThisFrame;
@@ -166,10 +166,10 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
       let message = new TestMessage();
       message.seq = clientIter++;
       message.data = new Uint8Array(0);
-      let outgoingMessage = client.sendMessage(message, () => {
+      let outboundMessage = client.sendMessage(message, () => {
         numAcksFromServer += 1;
       })!;
-      outgoingMessage.ttl = undefined;
+      outboundMessage.ttl = undefined;
     }
     client.flushMessagesToNetwork();
   }, 5, 'clientToServer');
@@ -183,10 +183,10 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
           let message = new TestMessage();
           message.seq = serverIter++;
           message.data = new Uint8Array(Math.floor(Math.random() * 33));
-          let outgoingMessage = server.sendMessage(clientPlayerId, message, () => {
+          let outboundMessage = server.sendMessage(clientPlayerId, message, () => {
             numAcksFromClient += 1;
           });
-          outgoingMessage.ttl = undefined;
+          outboundMessage.ttl = undefined;
         }
       }
       serverAddMessagesThisFrame = !serverAddMessagesThisFrame;

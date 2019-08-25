@@ -33,10 +33,10 @@ export class ServerTimeEstimator {
     if (this.nextRequestTime === undefined || curTimeS >= this.nextRequestTime) {
       let req = new C2S_TimeSyncRequestMessage();
       req.clientTimeS = curTimeS;
-      let outgoingMessage = this.networkClient.sendMessage(req);
-      if (outgoingMessage !== undefined) {
-        outgoingMessage.currentPriority = Infinity;
-        outgoingMessage.ttl = 1;
+      let outboundMessage = this.networkClient.sendMessage(req);
+      if (outboundMessage !== undefined) {
+        outboundMessage.currentPriority = Infinity;
+        outboundMessage.ttl = 1;
       }
       this.networkClient.flushMessagesToNetwork();
       this.nextRequestTime = this.getNextRequestTimeJitteredS(curTimeS);

@@ -73,7 +73,7 @@ export class NetworkClient {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void): lk.OutgoingMessage|undefined {
+  public sendMessage(message: Serializable, onAck?: () => void): lk.OutboundMessage|undefined {
     // Don't send messages before the handshake is complete
     if (this.handshakeFulfillment === undefined && this.networkPeer !== undefined) {
       return this.networkPeer.sendMessage(message, onAck);

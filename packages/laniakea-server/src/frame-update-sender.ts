@@ -5,7 +5,7 @@ import {
   measureAndSerialize,
   measureSerializable,
   NetworkPeer,
-  OutgoingMessage,
+  OutboundMessage,
   PlayerId,
   S2C_FrameComponentStateMessage,
   S2C_FrameDeletionsMessage,
@@ -32,8 +32,8 @@ export class FrameUpdateSender {
   }
 
   private chooser = new ComponentReplicationChooser();
-  private lastOutgoingInputsUsedMessage?: OutgoingMessage;
-  private lastOutgoingComponentStateMessage?: OutgoingMessage;
+  private lastOutboundInputsUsedMessage?: OutboundMessage;
+  private lastOutboundComponentStateMessage?: OutboundMessage;
 
   private sendFrameInputsUsedMessage(currentFrame: SimulationFrameData) {
     let inputsUsedMessage = new S2C_FrameInputsUsedMessage();
@@ -45,11 +45,11 @@ export class FrameUpdateSender {
     } else {
       inputsUsedMessage.inputUsedForPlayerThisFrame = new Uint8Array(0);
     }
-    let outgoingMessage = this.networkPeer.sendMessage(inputsUsedMessage);
-    if (this.lastOutgoingInputsUsedMessage !== undefined) {
-      this.lastOutgoingInputsUsedMessage.expire();
+    let outboundMessage = this.networkPeer.sendMessage(inputsUsedMessage);
+    if (this.lastOutboundInputsUsedMessage !== undefined) {
+      this.lastOutboundInputsUsedMessage.expire();
     }
-    this.lastOutgoingInputsUsedMessage = outgoingMessage;
+    this.lastOutboundInputsUsedMessage = outboundMessage;
   }
 
   private sendFrameComponentStateMessage(currentFrame: SimulationFrameData, componentsAndSerializedData: ComponentAndSerializedData[]) {
@@ -72,13 +72,13 @@ export class FrameUpdateSender {
       c.component.id.serialize(writeStream);
       c.component.data.serialize(writeStream);
     });
-    let outgoingMessage = this.networkPeer.sendMessage(componentStateMessage, () => {
+    let outboundMessage = this.networkPeer.sendMessage(componentStateMessage, () => {
       this.chooser.onComponentsAcked(componentsToSend);
     });
-    if (this.lastOutgoingComponentStateMessage !== undefined) {
-      this.lastOutgoingComponentStateMessage.expire();
+    if (this.lastOutboundComponentStateMessage !== undefined) {
+      this.lastOutboundComponentStateMessage.expire();
     }
-    this.lastOutgoingComponentStateMessage = outgoingMessage;
+    this.lastOutboundComponentStateMessage = outboundMessage;
   }
 
   private sendDeletionsMessage(currentFrame: SimulationFrameData) {
