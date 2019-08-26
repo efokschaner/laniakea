@@ -23,6 +23,7 @@
     "tslint": "^5.16.0",
     "typedoc": "^0.15.0",
     "typedoc-plugin-lerna-packages": "^0.1.6",
+    "typedoc-plugin-nojekyll": "^1.0.1",
     "typescript": "^3.4.5"
   },
   "workspaces": [

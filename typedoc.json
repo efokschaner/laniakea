@@ -5,7 +5,10 @@
   "module": "commonjs",
   "name": "Laniakea",
   "out": "docs",
-  "plugin": ["typedoc-plugin-lerna-packages"],
+  "plugin": [
+    "typedoc-plugin-lerna-packages",
+    "typedoc-plugin-nojekyll"
+  ],
   "target": "es2015",
   "tsconfig": "tsconfig.common.json"
 }
