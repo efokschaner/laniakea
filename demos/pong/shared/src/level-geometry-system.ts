@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import * as lk from 'laniakea-shared';
+import * as lk from '@laniakea/base-engine';
 
 import {
   EntityScheduledDeletion,

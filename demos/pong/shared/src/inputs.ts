@@ -1,4 +1,4 @@
-import * as lk from 'laniakea-shared';
+import * as lk from '@laniakea/base-engine';
 
 interface NumericEnum { [key: string]: number; }
 

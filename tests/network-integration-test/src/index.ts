@@ -1,8 +1,10 @@
 // tslint:disable-next-line:no-var-requires
 // const present = require('present');
 
-import { ClassRegistry, NetworkClient, periodicCallback, SequenceNumber } from 'laniakea-client';
-import { NetworkServer, PlayerId, Serializable, SerializationStream } from 'laniakea-server';
+import { NetworkClient } from '@laniakea/network-client';
+import { PlayerId, SequenceNumber } from '@laniakea/network-peer';
+import { NetworkServer } from '@laniakea/network-server';
+import { ClassRegistry, periodicCallback, Serializable, SerializationStream } from '@laniakea/utils';
 import { w3cwebsocket } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
 import { createMetricsCollector, MetricsCollector } from './metrics-collection';

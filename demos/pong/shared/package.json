@@ -11,8 +11,8 @@
   "author": "efokschaner",
   "license": "MIT",
   "dependencies": {
+    "@laniakea/base-engine": "^0.0.1",
     "box-intersect": "^1.0.1",
-    "laniakea-shared": "^0.0.1",
     "three": "^0.106.0"
   },
   "devDependencies": {

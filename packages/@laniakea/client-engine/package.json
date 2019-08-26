@@ -1,0 +1,28 @@
+{
+  "name": "@laniakea/client-engine",
+  "version": "0.0.1",
+  "description": "Laniakea engine for clients",
+  "homepage": "https://github.com/efokschaner/laniakea",
+  "bugs": {
+    "url" : "https://github.com/efokschaner/laniakea/issues"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/efokschaner/laniakea.git",
+    "directory": "packages/@laniakea/client-engine"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "@laniakea/base-engine": "^0.0.1",
+    "@laniakea/network-client": "^0.0.1",
+    "ts-events": "^3.2.0"
+  }
+}

@@ -1,4 +1,4 @@
-import * as lk from 'laniakea-client';
+import * as lk from '@laniakea/client-engine';
 import {
   BallMovement,
   ButtonState,

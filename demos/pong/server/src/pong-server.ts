@@ -1,4 +1,4 @@
-import * as lk from 'laniakea-server';
+import * as lk from '@laniakea/server-engine';
 
 import {
   BallMovementSystem,

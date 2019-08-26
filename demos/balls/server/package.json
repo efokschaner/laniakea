@@ -12,7 +12,7 @@
   "author": "efokschaner",
   "license": "MIT",
   "dependencies": {
-    "laniakea-server": "^0.0.1",
+    "@laniakea/server-engine": "^0.0.1",
     "lk-demo-balls-shared": "^0.0.1"
   },
   "devDependencies": {

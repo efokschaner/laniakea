@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import * as lk from 'laniakea-server';
+import * as lk from '@laniakea/server-engine';
 lk.hookConsoleWithLogger();
 
 import {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import * as lk from 'laniakea-shared';
+import * as lk from '@laniakea/base-engine';
 
 export function serializeVector3(stream: lk.SerializationStream, vector: THREE.Vector3) {
   stream.serializeFloat32(vector, 'x');

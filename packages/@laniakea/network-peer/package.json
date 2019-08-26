@@ -1,0 +1,30 @@
+{
+  "name": "@laniakea/network-peer",
+  "version": "0.0.1",
+  "description": "Code shared by Laniakea Client and Server",
+  "homepage": "https://github.com/efokschaner/laniakea",
+  "bugs": {
+    "url" : "https://github.com/efokschaner/laniakea/issues"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/efokschaner/laniakea.git",
+    "directory": "packages/@laniakea/network-peer"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@laniakea/utils": "^0.0.1",
+    "present": "^1.0.0",
+    "ts-events": "^3.2.0"
+  }
+}

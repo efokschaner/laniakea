@@ -1,0 +1,29 @@
+{
+  "name": "@laniakea/utils",
+  "version": "0.0.1",
+  "description": "Code shared widely across the Laniakea project that doesn't have its own package.",
+  "homepage": "https://github.com/efokschaner/laniakea",
+  "bugs": {
+    "url" : "https://github.com/efokschaner/laniakea/issues"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/efokschaner/laniakea.git",
+    "directory": "packages/@laniakea/utils"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "present": "^1.0.0",
+    "xxhashjs": "^0.2.1"
+  }
+}

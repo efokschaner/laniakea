@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-var-requires
 require('../css/main.css');
 
-import * as lk from 'laniakea-client';
+import * as lk from '@laniakea/client-engine';
 import {
   BallMovementSystem,
   ButtonState,

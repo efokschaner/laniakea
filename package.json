@@ -28,7 +28,7 @@
   "workspaces": [
     "demos/balls/*",
     "demos/pong/*",
-    "packages/*",
+    "packages/@laniakea/*",
     "tests/*"
   ],
   "dependencies": {}

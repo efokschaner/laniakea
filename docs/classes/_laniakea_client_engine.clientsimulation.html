@@ -1,0 +1,996 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>ClientSimulation | Laniakea</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">Laniakea</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="../modules/_laniakea_client_engine.html">@laniakea/client-engine</a>
+				</li>
+				<li>
+					<a href="_laniakea_client_engine.clientsimulation.html">ClientSimulation</a>
+				</li>
+			</ul>
+			<h1>Class ClientSimulation</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>This holds multiple frames of the simulation at one time along with the necessary information
+							to rewind and replay the simulation so that we can feed &quot;old&quot; state packets in to the simulation,
+							and re-simulate the new state based on that revision of history.
+							A packet can be &quot;old&quot; either because it was sincerely delayed OR because we&#39;re intentionally
+							trying to render a simulation time that is greater than servertime - one-way-latency (i.e we&#39;re doing
+							client side prediction to get ahead of what the server has had time to confirm and send).
+							Either way this simulation approach allows us to take server data that was for a few moments ago
+						and reasonably validly work it in to our simulation..</p>
+					</div>
+					<p>TODO Investigate using a WebWorker so that simulation can run in parallel to the render thread.
+						Note that WebRTC is not available to WebWorkers currently so the render thread would still need to marshall
+					updates from the network to the webworker.</p>
+					<p>Another TODO, if the client cannot keep up with the server its simulation will fall behind until
+						it explodes, need to figure out how we can detect it / relieve pressure etc.
+						I&#39;m not sure how to deal with it yet so we&#39;ll just let it explode for now.
+					It may well require a negotiated state flush of some sort from the game server similar to reconnect.</p>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">ClientSimulation</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#engine" class="tsd-kind-icon">engine</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#firsteverframeindex" class="tsd-kind-icon">first<wbr>Ever<wbr>Frame<wbr>Index</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#frames" class="tsd-kind-icon">frames</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#largestinitializedframeindex" class="tsd-kind-icon">largest<wbr>Initialized<wbr>Frame<wbr>Index</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#oldestdirtysimulationframeindex" class="tsd-kind-icon">oldest<wbr>Dirty<wbr>Simulation<wbr>Frame<wbr>Index</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#playerid" class="tsd-kind-icon">player<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#servertimeestimator" class="tsd-kind-icon">server<wbr>Time<wbr>Estimator</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#simfps" class="tsd-kind-icon">simFPS</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#applyauthoritativestatetoresolvedstate" class="tsd-kind-icon">apply<wbr>Authoritative<wbr>State<wbr>ToResolved<wbr>State</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#applypredictedorauthoritativeinputstoresolvedinputs" class="tsd-kind-icon">apply<wbr>Predicted<wbr>OrAuthoritative<wbr>Inputs<wbr>ToResolved<wbr>Inputs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#dosimulationwork" class="tsd-kind-icon">do<wbr>Simulation<wbr>Work</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#getcurrentsimulationtimes" class="tsd-kind-icon">get<wbr>Current<wbr>Simulation<wbr>TimeS</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#getinputtraveltimes" class="tsd-kind-icon">get<wbr>Input<wbr>Travel<wbr>TimeS</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#getoldestinitializedframeindex" class="tsd-kind-icon">get<wbr>Oldest<wbr>Initialized<wbr>Frame<wbr>Index</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#getorinsertframewithoutsimulation" class="tsd-kind-icon">get<wbr>OrInsert<wbr>Frame<wbr>Without<wbr>Simulation</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#getownplayerid" class="tsd-kind-icon">get<wbr>Own<wbr>Player<wbr>Id</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#getsimulationframes" class="tsd-kind-icon">get<wbr>Simulation<wbr>Frames</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#getsuccessorframeforsimtime" class="tsd-kind-icon">get<wbr>Successor<wbr>Frame<wbr>For<wbr>Sim<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#insertnewframe" class="tsd-kind-icon">insert<wbr>New<wbr>Frame</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#markframeasdirty" class="tsd-kind-icon">mark<wbr>Frame<wbr>AsDirty</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#notifyinputbeingsent" class="tsd-kind-icon">notify<wbr>Input<wbr>Being<wbr>Sent</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#onframedeletionsmessage" class="tsd-kind-icon">on<wbr>Frame<wbr>Deletions<wbr>Message</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#onframeinputsusedmessage" class="tsd-kind-icon">on<wbr>Frame<wbr>Inputs<wbr>Used<wbr>Message</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#onframecomponentstatemessage" class="tsd-kind-icon">on<wbr>Framecomponent<wbr>State<wbr>Message</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_laniakea_client_engine.clientsimulation.html#onplayeridassigned" class="tsd-kind-icon">on<wbr>Player<wbr>IdAssigned</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_laniakea_client_engine.clientsimulation.html#simulateoneframe" class="tsd-kind-icon">simulate<wbr>One<wbr>Frame</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Client<wbr>Simulation<span class="tsd-signature-symbol">(</span>secondsOfHistoryToRetain<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, simFPS<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, serverTimeEstimator<span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.servertimeestimator.html" class="tsd-signature-type">ServerTimeEstimator</a>, engine<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">SimulationEngine</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulation.html" class="tsd-signature-type">ClientSimulation</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:75</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>secondsOfHistoryToRetain: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>simFPS: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>serverTimeEstimator: <a href="_laniakea_client_engine.servertimeestimator.html" class="tsd-signature-type">ServerTimeEstimator</a></h5>
+								</li>
+								<li>
+									<h5>engine: <span class="tsd-signature-type">SimulationEngine</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_client_engine.clientsimulation.html" class="tsd-signature-type">ClientSimulation</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="engine" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> engine</h3>
+					<div class="tsd-signature tsd-kind-icon">engine<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SimulationEngine</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:80</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="firsteverframeindex" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> first<wbr>Ever<wbr>Frame<wbr>Index</h3>
+					<div class="tsd-signature tsd-kind-icon">first<wbr>Ever<wbr>Frame<wbr>Index<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:454</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="frames" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> frames</h3>
+					<div class="tsd-signature tsd-kind-icon">frames<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CyclicBuffer</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a><span class="tsd-signature-symbol">&gt;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:439</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="largestinitializedframeindex" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> largest<wbr>Initialized<wbr>Frame<wbr>Index</h3>
+					<div class="tsd-signature tsd-kind-icon">largest<wbr>Initialized<wbr>Frame<wbr>Index<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:452</li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>An integer that represents the largest frame we have initialised so far.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="oldestdirtysimulationframeindex" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> oldest<wbr>Dirty<wbr>Simulation<wbr>Frame<wbr>Index</h3>
+					<div class="tsd-signature tsd-kind-icon">oldest<wbr>Dirty<wbr>Simulation<wbr>Frame<wbr>Index<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:447</li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>An integer that represents the oldest simulation frame for which we have received modifications
+								that have not yet been propagated.
+								Any time a historical frame is modified we drop this number to match it so that we
+							re-simulate from that frame back to the desired frame.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="playerid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> player<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">player<wbr>Id<span class="tsd-signature-symbol">:</span> <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a><span class="tsd-signature-symbol"> =&nbsp;undefined</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:85</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="servertimeestimator" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> server<wbr>Time<wbr>Estimator</h3>
+					<div class="tsd-signature tsd-kind-icon">server<wbr>Time<wbr>Estimator<span class="tsd-signature-symbol">:</span> <a href="_laniakea_client_engine.servertimeestimator.html" class="tsd-signature-type">ServerTimeEstimator</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:79</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="simfps" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> simFPS</h3>
+					<div class="tsd-signature tsd-kind-icon">simFPS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in client-engine/src/client-simulation.ts:78</li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="applyauthoritativestatetoresolvedstate" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> apply<wbr>Authoritative<wbr>State<wbr>ToResolved<wbr>State</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">apply<wbr>Authoritative<wbr>State<wbr>ToResolved<wbr>State<span class="tsd-signature-symbol">(</span>frame<span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:414</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frame: <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="applypredictedorauthoritativeinputstoresolvedinputs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> apply<wbr>Predicted<wbr>OrAuthoritative<wbr>Inputs<wbr>ToResolved<wbr>Inputs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">apply<wbr>Predicted<wbr>OrAuthoritative<wbr>Inputs<wbr>ToResolved<wbr>Inputs<span class="tsd-signature-symbol">(</span>frame<span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:399</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frame: <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="dosimulationwork" class="tsd-anchor"></a>
+					<h3>do<wbr>Simulation<wbr>Work</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">do<wbr>Simulation<wbr>Work<span class="tsd-signature-symbol">(</span>simulationTimeS<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:295</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is not meant to be called by users of library. TODO create external interface for this class.</p>
+								</div>
+								<p>Performs any outstanding simulation work between the &quot;dirty&quot; checkpoint and the requested simulationTimeS
+									Simulation will be done for the next frame to occurr after simulationTimeS on the assumption that there
+									may be interpolation between the preceeding and subsequent frame.
+								Uninitialised frames will be added as we go.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>simulationTimeS: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getcurrentsimulationtimes" class="tsd-anchor"></a>
+					<h3>get<wbr>Current<wbr>Simulation<wbr>TimeS</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Simulation<wbr>TimeS<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:101</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is the estimate of the current simulation time on the server.
+									undefined is returned when we are not synchronised with the server.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getinputtraveltimes" class="tsd-anchor"></a>
+					<h3>get<wbr>Input<wbr>Travel<wbr>TimeS</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Input<wbr>Travel<wbr>TimeS<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:109</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is the 1 way latency to the server
+									undefined is returned when we are not synchronised with the server.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="getoldestinitializedframeindex" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> get<wbr>Oldest<wbr>Initialized<wbr>Frame<wbr>Index</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Oldest<wbr>Initialized<wbr>Frame<wbr>Index<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:460</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>The oldest frame that we still have data for.
+										This starts equal to largestInitializedFrameIndex,
+									and ramps up to however many frames we store behind largestInitializedFrameIndex</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="getorinsertframewithoutsimulation" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> get<wbr>OrInsert<wbr>Frame<wbr>Without<wbr>Simulation</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>OrInsert<wbr>Frame<wbr>Without<wbr>Simulation<span class="tsd-signature-symbol">(</span>frameIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:371</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets the frame data for frameIndex, initializes any new frames up to that index,
+										does NOT perform any simulation on any new frames that are added
+									Returns undefined if frameIndex is so far in the past that it is no longer available.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameIndex: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getownplayerid" class="tsd-anchor"></a>
+					<h3>get<wbr>Own<wbr>Player<wbr>Id</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Own<wbr>Player<wbr>Id<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:93</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the playerId for this client. undefined until connection is established to server.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getsimulationframes" class="tsd-anchor"></a>
+					<h3>get<wbr>Simulation<wbr>Frames</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Simulation<wbr>Frames<span class="tsd-signature-symbol">(</span>simulationTimeS<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:123</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets 2 simulation frames.
+										&quot;current&quot; being the nearest frame preceeding the given sim time.
+										&quot;next&quot; being the next frame after current.
+									Returns undefined if we do not yet have enough data from the server to simulate any frames.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>simulationTimeS: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">object</span>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="getsuccessorframeforsimtime" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> get<wbr>Successor<wbr>Frame<wbr>For<wbr>Sim<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Successor<wbr>Frame<wbr>For<wbr>Sim<wbr>Time<span class="tsd-signature-symbol">(</span>simulationTimeS<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:143</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Does a binary search of the frames in order to find the smallest frame index
+										with a simulation time greater than the given param. Note this can return
+										dirty / unsimulated frames.
+									Returns undefined if there is no simulation frame less than the given simTime</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>simulationTimeS: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span>
+								<span class="tsd-signature-symbol"> | </span>
+								<span class="tsd-signature-type">undefined</span>
+							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="insertnewframe" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> insert<wbr>New<wbr>Frame</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">insert<wbr>New<wbr>Frame<span class="tsd-signature-symbol">(</span>frameIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:344</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="markframeasdirty" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> mark<wbr>Frame<wbr>AsDirty</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">mark<wbr>Frame<wbr>AsDirty<span class="tsd-signature-symbol">(</span>frameIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:169</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="notifyinputbeingsent" class="tsd-anchor"></a>
+					<h3>notify<wbr>Input<wbr>Being<wbr>Sent</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">notify<wbr>Input<wbr>Being<wbr>Sent<span class="tsd-signature-symbol">(</span>inputFrame<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">InputFrame</span>, targetSimulationTimeS<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:262</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is not meant to be called by users of library. TODO create external interface for this class.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>inputFrame: <span class="tsd-signature-type">InputFrame</span></h5>
+								</li>
+								<li>
+									<h5>targetSimulationTimeS: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="onframedeletionsmessage" class="tsd-anchor"></a>
+					<h3>on<wbr>Frame<wbr>Deletions<wbr>Message</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">on<wbr>Frame<wbr>Deletions<wbr>Message<span class="tsd-signature-symbol">(</span>frameDeletionsMessage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">S2C_FrameDeletionsMessage</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:240</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is not meant to be called by users of library. TODO create external interface for this class.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameDeletionsMessage: <span class="tsd-signature-type">S2C_FrameDeletionsMessage</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="onframeinputsusedmessage" class="tsd-anchor"></a>
+					<h3>on<wbr>Frame<wbr>Inputs<wbr>Used<wbr>Message</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">on<wbr>Frame<wbr>Inputs<wbr>Used<wbr>Message<span class="tsd-signature-symbol">(</span>frameMessage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">S2C_FrameInputsUsedMessage</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:186</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is not meant to be called by users of library. TODO create external interface for this class.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameMessage: <span class="tsd-signature-type">S2C_FrameInputsUsedMessage</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="onframecomponentstatemessage" class="tsd-anchor"></a>
+					<h3>on<wbr>Framecomponent<wbr>State<wbr>Message</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">on<wbr>Framecomponent<wbr>State<wbr>Message<span class="tsd-signature-symbol">(</span>frameComponentStateMessage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">S2C_FrameComponentStateMessage</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:210</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is not meant to be called by users of library. TODO create external interface for this class.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>frameComponentStateMessage: <span class="tsd-signature-type">S2C_FrameComponentStateMessage</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="onplayeridassigned" class="tsd-anchor"></a>
+					<h3>on<wbr>Player<wbr>IdAssigned</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">on<wbr>Player<wbr>IdAssigned<span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:86</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>playerId: <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="simulateoneframe" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> simulate<wbr>One<wbr>Frame</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">simulate<wbr>One<wbr>Frame<span class="tsd-signature-symbol">(</span>previousFrame<span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a>, nextFrame<span class="tsd-signature-symbol">: </span><a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in client-engine/src/client-simulation.ts:328</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>previousFrame: <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></h5>
+								</li>
+								<li>
+									<h5>nextFrame: <a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-signature-type">ClientSimulationFrameData</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_base_engine.html">@laniakea/base-<wbr>engine</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="../modules/_laniakea_client_engine.html">@laniakea/client-<wbr>engine</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_network_client.html">@laniakea/network-<wbr>client</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_network_peer.html">@laniakea/network-<wbr>peer</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_network_server.html">@laniakea/network-<wbr>server</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_server_engine.html">@laniakea/server-<wbr>engine</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/_laniakea_utils.html">@laniakea/utils</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_laniakea_client_engine.clientengine.html" class="tsd-kind-icon">Client<wbr>Engine</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-module">
+						<a href="_laniakea_client_engine.clientsimulation.html" class="tsd-kind-icon">Client<wbr>Simulation</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#engine" class="tsd-kind-icon">engine</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#firsteverframeindex" class="tsd-kind-icon">first<wbr>Ever<wbr>Frame<wbr>Index</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#frames" class="tsd-kind-icon">frames</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#largestinitializedframeindex" class="tsd-kind-icon">largest<wbr>Initialized<wbr>Frame<wbr>Index</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#oldestdirtysimulationframeindex" class="tsd-kind-icon">oldest<wbr>Dirty<wbr>Simulation<wbr>Frame<wbr>Index</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#playerid" class="tsd-kind-icon">player<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#servertimeestimator" class="tsd-kind-icon">server<wbr>Time<wbr>Estimator</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#simfps" class="tsd-kind-icon">simFPS</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#applyauthoritativestatetoresolvedstate" class="tsd-kind-icon">apply<wbr>Authoritative<wbr>State<wbr>ToResolved<wbr>State</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#applypredictedorauthoritativeinputstoresolvedinputs" class="tsd-kind-icon">apply<wbr>Predicted<wbr>OrAuthoritative<wbr>Inputs<wbr>ToResolved<wbr>Inputs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#dosimulationwork" class="tsd-kind-icon">do<wbr>Simulation<wbr>Work</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#getcurrentsimulationtimes" class="tsd-kind-icon">get<wbr>Current<wbr>Simulation<wbr>TimeS</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#getinputtraveltimes" class="tsd-kind-icon">get<wbr>Input<wbr>Travel<wbr>TimeS</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#getoldestinitializedframeindex" class="tsd-kind-icon">get<wbr>Oldest<wbr>Initialized<wbr>Frame<wbr>Index</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#getorinsertframewithoutsimulation" class="tsd-kind-icon">get<wbr>OrInsert<wbr>Frame<wbr>Without<wbr>Simulation</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#getownplayerid" class="tsd-kind-icon">get<wbr>Own<wbr>Player<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#getsimulationframes" class="tsd-kind-icon">get<wbr>Simulation<wbr>Frames</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#getsuccessorframeforsimtime" class="tsd-kind-icon">get<wbr>Successor<wbr>Frame<wbr>For<wbr>Sim<wbr>Time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#insertnewframe" class="tsd-kind-icon">insert<wbr>New<wbr>Frame</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#markframeasdirty" class="tsd-kind-icon">mark<wbr>Frame<wbr>AsDirty</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#notifyinputbeingsent" class="tsd-kind-icon">notify<wbr>Input<wbr>Being<wbr>Sent</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#onframedeletionsmessage" class="tsd-kind-icon">on<wbr>Frame<wbr>Deletions<wbr>Message</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#onframeinputsusedmessage" class="tsd-kind-icon">on<wbr>Frame<wbr>Inputs<wbr>Used<wbr>Message</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#onframecomponentstatemessage" class="tsd-kind-icon">on<wbr>Framecomponent<wbr>State<wbr>Message</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_laniakea_client_engine.clientsimulation.html#onplayeridassigned" class="tsd-kind-icon">on<wbr>Player<wbr>IdAssigned</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_laniakea_client_engine.clientsimulation.html#simulateoneframe" class="tsd-kind-icon">simulate<wbr>One<wbr>Frame</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_laniakea_client_engine.clientsimulationframedata.html" class="tsd-kind-icon">Client<wbr>Simulation<wbr>Frame<wbr>Data</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_laniakea_client_engine.servertimeestimator.html" class="tsd-kind-icon">Server<wbr>Time<wbr>Estimator</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_laniakea_client_engine.clientengineoptions.html" class="tsd-kind-icon">Client<wbr>Engine<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_laniakea_client_engine.renderingsystem.html" class="tsd-kind-icon">Rendering<wbr>System</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_laniakea_client_engine.timesyncsample.html" class="tsd-kind-icon">Time<wbr>Sync<wbr>Sample</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_laniakea_client_engine.html#present" class="tsd-kind-icon">present</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>

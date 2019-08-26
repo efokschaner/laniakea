@@ -1,0 +1,34 @@
+{
+  "name": "@laniakea/network-server",
+  "version": "0.0.1",
+  "description": "Network Server component of Laniakea engine",
+  "homepage": "https://github.com/efokschaner/laniakea",
+  "bugs": {
+    "url" : "https://github.com/efokschaner/laniakea/issues"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/efokschaner/laniakea.git",
+    "directory": "packages/@laniakea/network-server"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "efokschaner",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^10.12.1",
+    "@types/websocket": "0.0.40",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@laniakea/network-peer": "^0.0.1",
+    "basic-auth": "^2.0.0",
+    "ts-events": "^3.2.0",
+    "websocket": "^1.0.24",
+    "wrtc": "^0.4.1"
+  }
+}

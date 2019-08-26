@@ -2,7 +2,7 @@ import * as dat from 'dat.gui';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import * as lk from 'laniakea-client';
+import * as lk from '@laniakea/client-engine';
 
 import { BallShape, WallPlane } from 'lk-demo-balls-shared';
 

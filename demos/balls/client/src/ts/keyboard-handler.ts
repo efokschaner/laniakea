@@ -1,4 +1,4 @@
-import { ClientEngine, Serializable } from 'laniakea-client';
+import { ClientEngine, Serializable } from '@laniakea/client-engine';
 import { ButtonState } from 'lk-demo-pong-shared';
 
 /**

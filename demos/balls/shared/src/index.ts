@@ -1,7 +1,7 @@
 import boxIntersect = require('box-intersect');
 import * as THREE from 'three';
 
-import * as lk from 'laniakea-shared';
+import * as lk from '@laniakea/base-engine';
 
 export const gameServerWsPort = 9876;
 export function getGameServerWsUrl(hostname: string) { return `ws://${hostname}:${gameServerWsPort}`; }

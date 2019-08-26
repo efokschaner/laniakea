@@ -13,9 +13,11 @@
   "license": "MIT",
   "devDependencies": {},
   "dependencies": {
+    "@laniakea/network-client": "0.0.1",
+    "@laniakea/network-peer": "0.0.1",
+    "@laniakea/network-server": "0.0.1",
+    "@laniakea/utils": "0.0.1",
     "influx": "^5.4.0",
-    "laniakea-client": "0.0.1",
-    "laniakea-server": "0.0.1",
     "present": "^1.0.0",
     "source-map-support": "^0.5.12",
     "websocket": "^1.0.29",
