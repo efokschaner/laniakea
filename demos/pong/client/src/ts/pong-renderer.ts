@@ -23,13 +23,11 @@ class ThreeRenderer implements lk.RenderingSystem {
   private foregroundThickness = 0.2;
 
   private scene = new THREE.Scene();
+
   private camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-  private currentCameraLerp?: {
-    startOrientation: THREE.Quaternion,
-    startTimestampMS: number,
-    endOrientation: THREE.Quaternion,
-    endTimestampMS: number} = undefined;
-  private cameraIsLockedToPlayer = false;
+  private lastCameraUpdateTimestampMS?: number = undefined;
+  private cameraMaxRotationSpeedRadiansPerSecond = Math.PI / 2;
+  private currentCameraTargetOrientation?: THREE.Quaternion = undefined;
 
   private renderer = new THREE.WebGLRenderer({antialias: true});
   private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
@@ -96,6 +94,12 @@ class ThreeRenderer implements lk.RenderingSystem {
   }
 
   private updateCamera(domHighResTimestampMS: number) {
+    let cameraUpdateDeltaS = 0;
+    if (this.lastCameraUpdateTimestampMS !== undefined) {
+      cameraUpdateDeltaS = (domHighResTimestampMS - this.lastCameraUpdateTimestampMS) / 1000;
+    }
+    this.lastCameraUpdateTimestampMS = domHighResTimestampMS;
+
     this.rendererSizeUpdater.update();
 
     // Set camera distance to ensure scene is contained.
@@ -110,33 +114,9 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     if (this.cameraController !== undefined) {
       this.cameraController.update();
+    } else if (this.currentCameraTargetOrientation !== undefined) {
+      this.camera.quaternion.rotateTowards(this.currentCameraTargetOrientation, this.cameraMaxRotationSpeedRadiansPerSecond * cameraUpdateDeltaS);
     }
-    if (this.currentCameraLerp !== undefined) {
-      let lerpFactor = (domHighResTimestampMS - this.currentCameraLerp.startTimestampMS) /
-                       (this.currentCameraLerp.endTimestampMS - this.currentCameraLerp.startTimestampMS);
-      let clampedLerpFactor = THREE.Math.clamp(lerpFactor, 0, 1);
-      this.camera.quaternion.copy(this.currentCameraLerp.startOrientation).slerp(this.currentCameraLerp.endOrientation, clampedLerpFactor);
-      if (clampedLerpFactor >= 1) {
-        this.currentCameraLerp = undefined;
-      }
-    }
-  }
-
-  private startCameraLerp(currentDomHighResTimestampMS: number, targetOrientation: THREE.Quaternion, durationMS: number) {
-    // If we're already in that orientation do nothing.
-    if (this.camera.quaternion.equals(targetOrientation)) {
-      return;
-    }
-    // If we're already lerping to that orientation do nothing.
-    if (this.currentCameraLerp !== undefined && this.currentCameraLerp.endOrientation.equals(targetOrientation)) {
-      return;
-    }
-    this.currentCameraLerp = {
-      startOrientation: this.camera.quaternion.clone(),
-      startTimestampMS: currentDomHighResTimestampMS,
-      endOrientation: targetOrientation,
-      endTimestampMS: currentDomHighResTimestampMS + durationMS,
-    };
   }
 
   public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
@@ -275,19 +255,12 @@ class ThreeRenderer implements lk.RenderingSystem {
           // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
           // rotate by another 180 degrees to put it at the bottom
           targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
-          if (!this.cameraIsLockedToPlayer) {
-            this.startCameraLerp(domHighResTimestampMS, targetOrientation, 1000);
-          }
-          if (this.cameraIsLockedToPlayer || this.camera.quaternion.equals(targetOrientation)) {
-            this.cameraIsLockedToPlayer = true;
-            this.camera.quaternion.copy(targetOrientation);
-          }
+          this.currentCameraTargetOrientation = targetOrientation;
         }
       }
     }
     if (!foundOurPaddle) {
-      this.cameraIsLockedToPlayer = false;
-      this.startCameraLerp(domHighResTimestampMS, new THREE.Quaternion(0, 0, 0, 1), 2000);
+      this.currentCameraTargetOrientation = new THREE.Quaternion(0, 0, 0, 1);
     }
 
     // Note we do this before balls because balls want the camera's orientation.
