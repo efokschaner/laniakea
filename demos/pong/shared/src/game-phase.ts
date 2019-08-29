@@ -1,6 +1,6 @@
 import * as lk from '@laniakea/base-engine';
 
-import { GamePhaseComponent, GamePhase } from './components';
+import { GamePhase, GamePhaseComponent } from './components';
 
 export function getCurrentGamePhase(state: lk.EntityComponentState): GamePhase | undefined {
   let gamePhases = Array.from(state.getComponents(GamePhaseComponent));

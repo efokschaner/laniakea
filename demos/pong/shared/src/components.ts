@@ -149,7 +149,7 @@ export class BotSpawner implements lk.Serializable {
 export enum GamePhase {
   WaitingForPlayers,
   Playing,
-  Finished
+  Finished,
 }
 
 export class GamePhaseComponent implements lk.Serializable {
@@ -175,4 +175,3 @@ export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(BotSpawner, 'BotSpawner');
   engine.registerComponentType(GamePhaseComponent, 'GamePhaseComponent');
 }
-

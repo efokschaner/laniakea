@@ -1,8 +1,7 @@
 import * as lk from '@laniakea/base-engine';
-import { BotSpawner, GamePhase, PlayerInfo } from "./components";
-import { getCurrentGamePhase } from './game-phase';
+import { BotSpawner, GamePhase, PlayerInfo } from './components';
 import { NUM_PLAYERS_REQUIRED_TO_START } from './constants';
-
+import { getCurrentGamePhase } from './game-phase';
 
 function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<BotSpawner> {
   let spawners = Array.from(state.getComponents(BotSpawner));

@@ -1,5 +1,5 @@
 import * as lk from '@laniakea/base-engine';
-import { PlayerInfo, GamePhase, GamePhaseComponent, NUM_PLAYERS_REQUIRED_TO_START } from 'lk-demo-pong-shared';
+import { GamePhase, GamePhaseComponent, NUM_PLAYERS_REQUIRED_TO_START, PlayerInfo } from 'lk-demo-pong-shared';
 
 function getOrCreateGamePhaseComponent(state: lk.EntityComponentState): lk.Component<GamePhaseComponent> {
   let gamePhases = Array.from(state.getComponents(GamePhaseComponent));
@@ -15,7 +15,7 @@ export class GamePhaseSystem implements lk.System {
   public Step({state}: lk.StepParams): void {
     let phaseComponent = getOrCreateGamePhaseComponent(state);
     let phaseComponentData = phaseComponent.getData();
-    switch(phaseComponent.getData().currentGamePhase) {
+    switch (phaseComponent.getData().currentGamePhase) {
       case GamePhase.WaitingForPlayers: {
         let players = Array.from(state.getComponents(PlayerInfo));
         if (players.length >= NUM_PLAYERS_REQUIRED_TO_START) {
@@ -27,10 +27,10 @@ export class GamePhaseSystem implements lk.System {
           let players = Array.from(state.getComponents(PlayerInfo));
           let alivePlayers = players.filter((pi) => pi.getData().alive);
           let numPlayersAlive = alivePlayers.length;
-          if (numPlayersAlive == 1) {
+          if (numPlayersAlive === 1) {
             phaseComponentData.currentGamePhase = GamePhase.Finished;
           }
-        break;
+          break;
       }
       case GamePhase.Finished:
         break;

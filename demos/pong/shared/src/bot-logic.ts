@@ -69,9 +69,9 @@ export function calculateBestMoveIntent(paddle: Paddle, wallData: WallData, ball
       // For the sake of prioritising balls moving at us more highly, we'll consider balls not moving at
       // us to be moving towards us with 1/10th of their linear velocity
       let velocityInOurDirectionForScoringPurposes = ballVelocity.length() * 0.1;
-      let priority = distanceToWall / velocityInOurDirectionForScoringPurposes;
-      if (highestBallPriority > priority) {
-        highestBallPriority = priority;
+      let priorityOfMovingAwayBall = distanceToWall / velocityInOurDirectionForScoringPurposes;
+      if (highestBallPriority > priorityOfMovingAwayBall) {
+        highestBallPriority = priorityOfMovingAwayBall;
         desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWallLine, true);
       }
       // Finished considering this ball
