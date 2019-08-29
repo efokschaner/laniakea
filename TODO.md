@@ -1,4 +1,11 @@
 - [ ] Invulnerability mode which consumes your paddle width as a resource. The invuln zone grows from your paddle while used.
+- [ ] Fix crash when debugging on first frame.
+      Repro:
+      - Put breakpoint on `foundOurPaddle = true;` in pong-renderer.ts
+      - Refresh page
+      - Hit breakpoint
+      - Wait 2 seconds (for frame to drop out of sim buffer)
+      - Resume.
 - [ ] Evaluate the need for `withDeletedStateHidden()`, now that we can purge deleted state every frame.
 - [ ] Reduce extrapolation for objects that can't be so safely extrapolated. Potentially by completing "local perception filters" rendering strategy.
 - [ ] Automatic / manual bandwidth control. WebRTC has congestion control built-in. However we can potentially use more bandwidth than we do currently,
