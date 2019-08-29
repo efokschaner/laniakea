@@ -49,36 +49,37 @@ export function calculateBestMoveIntent(paddle: Paddle, wallData: WallData, ball
     new THREE.Vector3(wallData.wallPoint.x, wallData.wallPoint.y),
     new THREE.Vector3(wallData.wallEndPoint.x, wallData.wallEndPoint.y),
   );
-  let considerBallsNotMovingAtUs = true;
-  let nearestBallDistance: number = Infinity;
+  let highestBallPriority: number = Infinity; // Lower priority means more important
   for (let ballComponents of balls) {
     let ballPosition = ballComponents[1].getData();
     let ballVelocity = ballComponents[0].getData().velocity;
     let ballPos3D = new THREE.Vector3(ballPosition.x, ballPosition.y);
-    let closestPointOnWall = wallLine.closestPointToPoint(
-      new THREE.Vector3(ballPosition.x, ballPosition.y),
-      true,
+    let closestPointOnWallLine = wallLine.closestPointToPoint(
+      ballPos3D,
+      false,
       new THREE.Vector3(),
     );
     // is ball moving in direction of nearest point?
-    let closestPointOnWall2D = new THREE.Vector2(closestPointOnWall.x, closestPointOnWall.y);
-    let distanceToWall = closestPointOnWall.distanceTo(ballPos3D);
-    if (distanceToWall > wallLine.distance() / 4) {
-      // ignore balls further than 1/4 a side length away.
-      continue;
-    }
-    let isMovingTowardsWall = closestPointOnWall2D.sub(ballPosition).dot(ballVelocity) > 0;
+    let closestPointOnWallLine2D = new THREE.Vector2(closestPointOnWallLine.x, closestPointOnWallLine.y);
+    let ballToWall = closestPointOnWallLine2D.sub(ballPosition);
+    let distanceToWall = ballToWall.length();
+    let velocityInOurDirection = ballVelocity.dot(ballToWall) / ballToWall.length();
+    let isMovingTowardsWall = velocityInOurDirection > 0;
     if (!isMovingTowardsWall) {
-      if (considerBallsNotMovingAtUs) {
-        // We havent yet found a ball moving at us so we might as well try to guard against this one.
-        desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWall, true);
+      // For the sake of prioritising balls moving at us more highly, we'll consider balls not moving at
+      // us to be moving towards us with 1/10th of their linear velocity
+      let velocityInOurDirectionForScoringPurposes = ballVelocity.length() * 0.1;
+      let priority = distanceToWall / velocityInOurDirectionForScoringPurposes;
+      if (highestBallPriority > priority) {
+        highestBallPriority = priority;
+        desiredWallPosInWallSpace = wallLine.closestPointToPointParameter(closestPointOnWallLine, true);
       }
       // Finished considering this ball
       continue;
     }
-    considerBallsNotMovingAtUs = false;
-    if (nearestBallDistance > distanceToWall) {
-      nearestBallDistance = distanceToWall;
+    let priority = distanceToWall / velocityInOurDirection;
+    if (highestBallPriority > priority) {
+      highestBallPriority = priority;
       let normalizedBallVelocity = ballVelocity.clone().normalize();
       let ballRay = new THREE.Ray(
         new THREE.Vector3(ballPosition.x, ballPosition.y),
