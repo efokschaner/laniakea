@@ -15,10 +15,12 @@ import {
   PolarLerp2DProcessor,
   registerComponents,
 } from 'lk-demo-pong-shared';
+import { GamePhaseSystem } from './game-phase-system';
 
 export function initialiseServer(serverEngine: lk.ServerEngine) {
   registerComponents(serverEngine);
 
+  serverEngine.addSystem(new GamePhaseSystem());
   serverEngine.addSystem(new BotSpawnerSystem());
   serverEngine.addSystem(new LevelGeometrySystem());
   serverEngine.addSystem(new InputHandlerSystem());

@@ -146,6 +146,20 @@ export class BotSpawner implements lk.Serializable {
   }
 }
 
+export enum GamePhase {
+  WaitingForPlayers,
+  Playing,
+  Finished
+}
+
+export class GamePhaseComponent implements lk.Serializable {
+  public currentGamePhase = GamePhase.WaitingForPlayers;
+
+  public serialize(stream: lk.SerializationStream): void {
+    stream.serializeUint8(this, 'currentGamePhase');
+  }
+}
+
 export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(Position2, 'Position2');
   engine.registerComponentType(Orientation, 'Orientation');
@@ -159,4 +173,6 @@ export function registerComponents(engine: lk.Engine) {
   engine.registerComponentType(BallSpawner, 'BallSpawner');
   engine.registerComponentType(Final2Players, 'Final2Players');
   engine.registerComponentType(BotSpawner, 'BotSpawner');
+  engine.registerComponentType(GamePhaseComponent, 'GamePhaseComponent');
 }
+

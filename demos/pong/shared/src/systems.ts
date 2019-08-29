@@ -4,8 +4,6 @@ import * as lk from '@laniakea/base-engine';
 
 import {
   BallMovement,
-  BallSpawner,
-  BotSpawner,
   EntityScheduledDeletion,
   HumanPlayerId,
   MoveIntent,
@@ -201,39 +199,6 @@ export class BallMovementSystem implements lk.System {
   }
 }
 
-function getOrCreateBallSpawner(state: lk.EntityComponentState): lk.Component<BallSpawner> {
-  let spawners = Array.from(state.getComponents(BallSpawner));
-  let spawner = spawners[0];
-  if (spawner !== undefined) {
-    return spawner;
-  }
-  let spawnerComponent = new BallSpawner();
-  return state.createEntity().setComponent(spawnerComponent);
-}
-
-export class BallSpawnerSystem implements lk.System {
-  public Step({simulationTimeS, state}: lk.StepParams): void {
-    let spawner = getOrCreateBallSpawner(state);
-    let players = Array.from(state.getComponents(PlayerInfo));
-    let alivePlayers = players.filter((pi) => pi.getData().alive);
-    let balls = Array.from(state.getComponents(BallMovement));
-    let desiredNumBalls = Math.floor(alivePlayers.length / 2);
-    let hasBeenMoreThanASecondSinceLastSpawn = spawner.getData().lastBallSpawnTimeS <= simulationTimeS - 1;
-    if (hasBeenMoreThanASecondSinceLastSpawn && balls.length < desiredNumBalls) {
-      spawner.getData().lastBallSpawnTimeS = simulationTimeS;
-      let initialBallVelocityMagnitude = 4;
-      let ballPos = new Position2();
-      let ballMovement = new BallMovement();
-      ballMovement.velocity.x = 1;
-      ballMovement.velocity.rotateAround(new THREE.Vector2(), Math.random() * 2 * Math.PI);
-      ballMovement.velocity.setLength(initialBallVelocityMagnitude);
-      let ball = state.createEntity();
-      ball.setComponent(ballPos);
-      ball.setComponent(ballMovement);
-    }
-  }
-}
-
 export class InputHandlerSystem implements lk.System {
   public Step({inputs, state}: lk.StepParams): void {
     let playerIdToPlayerInfoMap = new Map(
@@ -322,32 +287,6 @@ export class PaddlePositionSyncSystem implements lk.System {
       posData.lerpVectors(wallStartVertPos.clone(), wallEndVertPos.clone(), paddle.getData().positionInWallSpace);
       let wallDirection = wallEndVertPos.clone().sub(wallStartVertPos).normalize();
       orientation.getData().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
-    }
-  }
-}
-
-function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<BotSpawner> {
-  let spawners = Array.from(state.getComponents(BotSpawner));
-  let spawner = spawners[0];
-  if (spawner !== undefined) {
-    return spawner;
-  }
-  let spawnerComponent = new BotSpawner();
-  return state.createEntity().setComponent(spawnerComponent);
-}
-
-export class BotSpawnerSystem implements lk.System {
-  public Step({simulationTimeS, state}: lk.StepParams): void {
-    let spawner = getOrCreateBotSpawner(state);
-    let players = Array.from(state.getComponents(PlayerInfo));
-    let alivePlayers = players.filter((pi) => pi.getData().alive);
-    let numPlayersAlive = alivePlayers.length;
-    let isTimeToSpawn = spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 5;
-    if (isTimeToSpawn && numPlayersAlive <= 20) {
-      spawner.getData().lastBotSpawnTimeS = simulationTimeS;
-      let newPlayerInfo = new PlayerInfo();
-      newPlayerInfo.playerIndex = players.length + 1;
-      state.createEntity().setComponent(newPlayerInfo);
     }
   }
 }
