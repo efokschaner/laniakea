@@ -225,7 +225,6 @@ class ThreeRenderer implements lk.RenderingSystem {
     }
 
     let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
-    let foundOurPaddle = false;
     for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
       let paddleOrientationData = interpolatedOrientations.get(paddleOrientation.getId().ownerId)!;
       let maybeObj = this.rendererPaddles.get(paddle.getId().ownerId);
@@ -249,7 +248,6 @@ class ThreeRenderer implements lk.RenderingSystem {
       if (ownPlayerInfo !== undefined) {
         let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
         if (paddleIsOurs) {
-          foundOurPaddle = true;
           maybeObj.material = this.allyPaddleMaterial;
           let targetOrientation = paddleOrientationData.clone();
           // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
@@ -258,9 +256,6 @@ class ThreeRenderer implements lk.RenderingSystem {
           this.currentCameraTargetOrientation = targetOrientation;
         }
       }
-    }
-    if (!foundOurPaddle) {
-      this.currentCameraTargetOrientation = new THREE.Quaternion(0, 0, 0, 1);
     }
 
     // Note we do this before balls because balls want the camera's orientation.
