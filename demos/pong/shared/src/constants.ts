@@ -1,2 +1,2 @@
 
-export const NUM_PLAYERS_REQUIRED_TO_START = 32;
+export const NUM_PLAYERS_REQUIRED_TO_START = 24;
