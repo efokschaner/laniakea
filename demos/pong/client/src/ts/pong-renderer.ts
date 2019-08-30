@@ -55,7 +55,7 @@ class ThreeRenderer implements lk.RenderingSystem {
   // ORBITAL CAMERA JUST FOR DEBUG.
   private cameraController?: OrbitControls;
 
-  constructor(private sceneElementContainer: HTMLElement) {
+  constructor(private clientSettings: ClientSettings, private sceneElementContainer: HTMLElement) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene.background = new THREE.Color(this.backgroundColor);
@@ -142,6 +142,9 @@ class ThreeRenderer implements lk.RenderingSystem {
 
     let midFrameLerpFactor = (targetSimTimeS - nearestFrames.current.simulationTimeS) /
                              (nearestFrames.next.simulationTimeS - nearestFrames.current.simulationTimeS);
+    if (!this.clientSettings.subFrameInterpolationEnabled.get()) {
+      midFrameLerpFactor = 0;
+    }
     let interpolatedPositions = new Map<lk.EntityId, Position2>();
     // Loop through the current frame for positions, if there are positions in the next frame that are not in the current
     // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
@@ -296,7 +299,9 @@ export class GuiRenderer implements lk.RenderingSystem {
   constructor(clientSettings: ClientSettings) {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
-    this.guiView.add(clientSettings, 'clientIsBot').listen();
+    this.guiView.add(clientSettings.clientIsBot , 'value').name('clientIsBot').listen();
+    this.guiView.add(clientSettings.clientSimulationEnabled, 'value').name('clientSimulationEnabled').listen();
+    this.guiView.add(clientSettings.subFrameInterpolationEnabled, 'value').name('subFrameInterpolationEnabled').listen();
   }
 
   public render(_domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
@@ -311,7 +316,7 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private guiRenderer: GuiRenderer;
 
   constructor(private sceneElementContainer: HTMLElement, clientSettings: ClientSettings) {
-    this.threeRenderer = new ThreeRenderer(this.sceneElementContainer);
+    this.threeRenderer = new ThreeRenderer(clientSettings, this.sceneElementContainer);
     this.guiRenderer = new GuiRenderer(clientSettings);
   }
 

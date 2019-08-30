@@ -58,12 +58,39 @@ let clientEngine = new lk.ClientEngine({simFPS, globalSimulationRateMultiplier})
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine);
 
-clientEngine.addSystem(new InputHandlerSystem());
-clientEngine.addSystem(new PolarLerp2DProcessor());
-clientEngine.addSystem(new EntityScheduledDeletionProcessor());
-clientEngine.addSystem(new PaddleMovementSystem());
-clientEngine.addSystem(new PaddlePositionSyncSystem());
-clientEngine.addSystem(new BallMovementSystem(false));
+let systems = [
+  new InputHandlerSystem(),
+  new PolarLerp2DProcessor(),
+  new EntityScheduledDeletionProcessor(),
+  new PaddleMovementSystem(),
+  new PaddlePositionSyncSystem(),
+  new BallMovementSystem(false),
+];
+
+function removeSystems() {
+  for (let system of systems) {
+    clientEngine.removeSystem(system);
+  }
+}
+
+function addSystems() {
+  // Remove systems first to get idempotent.
+  removeSystems();
+  for (let system of systems) {
+    clientEngine.addSystem(system);
+  }
+}
+
+function handleClientSimulationEnabledSetting(enabled: boolean) {
+  if (enabled) {
+    addSystems();
+  } else {
+    removeSystems();
+  }
+}
+
+clientSettings.clientSimulationEnabled.attach(handleClientSimulationEnabledSetting);
+handleClientSimulationEnabledSetting(clientSettings.clientSimulationEnabled.value);
 
 // tslint:disable-next-line:no-unused-expression
 new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
