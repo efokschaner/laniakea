@@ -1,11 +1,13 @@
-Laniakea
-========
+# Laniakea
+
 ### An experimental multiplayer game engine for browsers.
 
 **Status: Unstable, under development.**
 
 ### Motivation (for Yet Another Javascript Game Engine)
+
 There are many game engines that target browsers these days. To give just a few examples:
+
 - [Unity's WebGL target](https://docs.unity3d.com/Manual/webgl-gettingstarted.html)
 - [Unreal's HTML5 target](https://docs.unrealengine.com/en-us/Platforms/HTML5/GettingStarted)
 - [Godot's HTML5 target](http://docs.godotengine.org/en/3.0/getting_started/workflow/export/exporting_for_web.html)
@@ -34,37 +36,56 @@ Games will be able to control networking where it intersects with things like "v
 **Laniakea** will provide a more "bring your own" approach to everything outside of State, Simulation, and Networking.
 
 ### Key Features
+
 - Statically typed. Built with TypeScript.
 - Game state replication over webRTC Data Channels. Avoids [Head-of-line blocking](https://web.archive.org/web/20181107181507/https://gafferongames.com/post/why_cant_i_send_udp_packets_from_a_browser/#the-problem).
 
 ### Demo
+
 Assuming you have `node v10.15.3` and `yarn v1.16.0` installed.
 To see the demo:
+
 ```
 yarn run bootstrap
 yarn run build
 # See it run
 yarn run demo
 ```
+
 While it's running open <http://127.0.0.1:8080> to see the demo. Try opening 2 browser tabs!
 
 ### Learn More
+
 Perhaps check out the [demo n-player pong implementation](./demos/pong), or check out the [API docs](https://efokschaner.github.io/laniakea).
 
 ### Development Notes
+
 This is a monorepo of multiple npm packages managed using [`lerna`](https://github.com/lerna/lerna), and [`yarn`'s workspaces feature](https://yarnpkg.com/en/docs/workspaces).
-We'll assume you have `node` and `yarn` installed. I'm using `node v10.15.3` and `yarn v1.16.0` in case it matters.
+We'll assume you have `node` and `yarn` installed. I'm using `node v14.16.0` and `yarn 1.22.10` in case it matters.
+
+#### Formatting
+
+```
+yarn run prettier:write
+```
 
 #### Linting
+
 ```
-yarn run tslint:fix
+yarn run lint:fix
 ```
+
 #### Build docs
+
 ```
 yarn run typedoc
 ```
+
 #### Going Nuclear with package upgrades
+
 ```
-yarn run lerna exec --concurrency 1 'yarn upgrade --latest'
+yarn run lerna exec --concurrency 1 "yarn upgrade --latest"
 yarn upgrade --latest
+# If the above doesn't seem to update everything, this might work better:
+yarn upgrade-interactive --latest
 ```

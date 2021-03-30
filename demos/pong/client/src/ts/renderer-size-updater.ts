@@ -7,25 +7,31 @@ import * as THREE from 'three';
 export class RendererSizeUpdater {
   private prevSize = { clientWidth: 0, clientHeight: 0 };
 
-  constructor(
+  public constructor(
     private camera: THREE.PerspectiveCamera,
-    private renderer: THREE.WebGLRenderer) {
-  }
+    private renderer: THREE.WebGLRenderer
+  ) {}
 
-  public update() {
+  public update(): void {
     let sceneElementContainer = this.renderer.domElement.parentElement;
     if (!sceneElementContainer) {
       return;
     }
-    if (sceneElementContainer.clientWidth !== this.prevSize.clientWidth
-        || sceneElementContainer.clientHeight !== this.prevSize.clientHeight) {
+    if (
+      sceneElementContainer.clientWidth !== this.prevSize.clientWidth ||
+      sceneElementContainer.clientHeight !== this.prevSize.clientHeight
+    ) {
       // Set the scroll overflow to hidden to prevent the resizer oscillating with the existence of scrollbars.
       sceneElementContainer.style.overflow = 'hidden';
       this.prevSize.clientWidth = sceneElementContainer.clientWidth;
       this.prevSize.clientHeight = sceneElementContainer.clientHeight;
-      this.camera.aspect = sceneElementContainer.clientWidth / sceneElementContainer.clientHeight;
+      this.camera.aspect =
+        sceneElementContainer.clientWidth / sceneElementContainer.clientHeight;
       this.camera.updateProjectionMatrix();
-      this.renderer.setSize(sceneElementContainer.clientWidth, sceneElementContainer.clientHeight);
+      this.renderer.setSize(
+        sceneElementContainer.clientWidth,
+        sceneElementContainer.clientHeight
+      );
     }
   }
 }

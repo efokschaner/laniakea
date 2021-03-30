@@ -10,17 +10,13 @@ export interface IntegrationTestMeasurement {
   peerName: string;
 }
 
-let integrationTestStatsSchema =  {
+let integrationTestStatsSchema = {
   measurement: measurementName,
   fields: {
     acksReceived: Influx.FieldType.INTEGER,
     messagesSent: Influx.FieldType.INTEGER,
   },
-  tags: [
-    'peerName',
-    'pid',
-    'sessionStartTimeISO8601',
-  ],
+  tags: ['peerName', 'pid', 'sessionStartTimeISO8601'],
 };
 
 export class MetricsCollector {
@@ -31,16 +27,17 @@ export class MetricsCollector {
     this.influx = new Influx.InfluxDB({
       host: '127.0.0.1',
       database: dbName,
-      schema: [
-        integrationTestStatsSchema,
-      ],
+      schema: [integrationTestStatsSchema],
     });
   }
 
-  public async collectIntegrationTestMeasurements(measurements: IntegrationTestMeasurement[]) {
+  public async collectIntegrationTestMeasurements(
+    measurements: IntegrationTestMeasurement[]
+  ): Promise<void> {
     try {
-      await this.influx.writeMeasurement(measurementName, measurements.map((m) => {
-        return {
+      await this.influx.writeMeasurement(
+        measurementName,
+        measurements.map((m) => ({
           fields: {
             acksReceived: m.acksReceived,
             messagesSent: m.messagesSent,
@@ -50,14 +47,14 @@ export class MetricsCollector {
             pid: String(process.pid),
             sessionStartTimeISO8601: this.sessionStartTimeISOString,
           },
-        };
-      }));
+        }))
+      );
     } catch (error) {
       console.warn('Failed to send metrics: ', error.stack || error);
     }
   }
 
-  public async createDatabaseIfNeeded() {
+  public async createDatabaseIfNeeded(): Promise<void> {
     let names = await this.influx.getDatabaseNames();
     if (!names.includes(dbName)) {
       await this.influx.createDatabase(dbName);
@@ -71,7 +68,7 @@ export class MetricsCollector {
   }
 }
 
-export async function createMetricsCollector() {
+export async function createMetricsCollector(): Promise<MetricsCollector> {
   let collector = new MetricsCollector();
   await collector.createDatabaseIfNeeded();
   return collector;

@@ -9,7 +9,7 @@
 // some cognitive burden.... Hmmm
 
 import * as reflection from './class-registry';
-import { GenericConstructor, ShortTypeId } from './class-registry';
+import { ShortTypeId } from './class-registry';
 
 export interface Serializable {
   serialize(stream: SerializationStream): void;
@@ -18,27 +18,22 @@ export interface Serializable {
 export type SerializationStream = ReadStream | WriteStream | MeasureStream;
 
 export interface SerializationStreamInterface {
-  readonly kind: 'read'|'write';
+  readonly kind: 'read' | 'write';
   readonly isReading: boolean;
   readonly isWriting: boolean;
 
-  serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void;
-
-  serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-  serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-  serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-
-  serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-  serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-  serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-
-  serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-  serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void;
-
-  serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void;
-  serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void;
-
-  serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void;
+  serializeBoolean(value: boolean): boolean;
+  serializeUint8(value: number): number;
+  serializeUint16(value: number): number;
+  serializeUint32(value: number): number;
+  serializeInt8(value: number): number;
+  serializeInt16(value: number): number;
+  serializeInt32(value: number): number;
+  serializeFloat32(value: number): number;
+  serializeFloat64(value: number): number;
+  serializeStringUTF16(value: string): string;
+  serializeUint8Array(value: Uint8Array): Uint8Array;
+  serializeSerializable(value: Serializable): Serializable;
 }
 
 export class ReadStream implements SerializationStreamInterface {
@@ -47,8 +42,10 @@ export class ReadStream implements SerializationStreamInterface {
   public readonly isWriting = false;
 
   private curOffset = 0;
-  constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
-  }
+  public constructor(
+    private dataView: DataView,
+    private classRegistry?: reflection.ClassRegistry<Serializable>
+  ) {}
 
   public getNumBytesRead(): number {
     return this.curOffset;
@@ -110,7 +107,11 @@ export class ReadStream implements SerializationStreamInterface {
   public readStringUTF16(): string {
     let strLenBytes = this.dataView.getUint8(this.curOffset);
     this.curOffset += 1;
-    let stringView = new Uint16Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, strLenBytes);
+    let stringView = new Uint16Array(
+      this.dataView.buffer,
+      this.dataView.byteOffset + this.curOffset,
+      strLenBytes
+    );
     this.curOffset += strLenBytes;
     let result = String.fromCharCode(...stringView);
     return result;
@@ -118,62 +119,65 @@ export class ReadStream implements SerializationStreamInterface {
   public readUint8Array(): Uint8Array {
     let buffLenBytes = this.dataView.getUint16(this.curOffset);
     this.curOffset += 2;
-    let result = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
+    let result = new Uint8Array(
+      this.dataView.buffer,
+      this.dataView.byteOffset + this.curOffset,
+      buffLenBytes
+    );
     this.curOffset += buffLenBytes;
     return result;
   }
 
   public readSerializable(): Serializable {
     if (this.classRegistry === undefined) {
-      throw new Error('Can not serialize arbitrary type without a classRegistry.');
+      throw new Error(
+        'Can not serialize arbitrary type without a classRegistry.'
+      );
     }
     let typeId = this.dataView.getUint16(this.curOffset) as ShortTypeId;
     this.curOffset += 2;
-    let result = this.classRegistry.getTypeInfoByShortTypeId(typeId)!.construct() as Serializable;
+    let result = this.classRegistry
+      .getTypeInfoByShortTypeId(typeId)!
+      .construct();
     result.serialize(this);
     return result;
   }
 
-  public serializeBoolean<T extends Record<K, boolean|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, boolean>)[key] = this.readBoolean();
+  public serializeBoolean(_value: boolean): boolean {
+    return this.readBoolean();
   }
-
-  public serializeUint8<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readUint8();
+  public serializeUint8(_value: number): number {
+    return this.readUint8();
   }
-  public serializeUint16<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readUint16();
+  public serializeUint16(_value: number): number {
+    return this.readUint16();
   }
-  public serializeUint32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readUint32();
+  public serializeUint32(_value: number): number {
+    return this.readUint32();
   }
-
-  public serializeInt8<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readInt8();
+  public serializeInt8(_value: number): number {
+    return this.readInt8();
   }
-  public serializeInt16<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readInt16();
+  public serializeInt16(_value: number): number {
+    return this.readInt16();
   }
-  public serializeInt32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readInt32();
+  public serializeInt32(_value: number): number {
+    return this.readInt32();
   }
-
-  public serializeFloat32<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readFloat32();
+  public serializeFloat32(_value: number): number {
+    return this.readFloat32();
   }
-  public serializeFloat64<T extends Record<K, number|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, number>)[key] = this.readFloat64();
+  public serializeFloat64(_value: number): number {
+    return this.readFloat64();
   }
-
-  public serializeStringUTF16<T extends Record<K, string|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, string>)[key] = this.readStringUTF16();
+  public serializeStringUTF16(_value: string): string {
+    return this.readStringUTF16();
   }
-  public serializeUint8Array<T extends Record<K, Uint8Array|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, Uint8Array>)[key] = this.readUint8Array();
+  public serializeUint8Array(_value: Uint8Array): Uint8Array {
+    return this.readUint8Array();
   }
-
-  public serializeSerializable<T extends Record<K, Serializable|undefined>, K extends keyof T>(obj: T, key: K): void {
-    (obj as Record<K, Serializable>)[key] = this.readSerializable();
+  public serializeSerializable(_value: Serializable): Serializable {
+    return this.readSerializable();
   }
 }
 
@@ -192,8 +196,10 @@ export class WriteStream implements SerializationStreamInterface {
    * @param dataView
    * @param classRegistry optional, only required for serialization of variant types.
    */
-  constructor(private dataView: DataView, private classRegistry?: reflection.ClassRegistry) {
-  }
+  public constructor(
+    private dataView: DataView,
+    private classRegistry?: reflection.ClassRegistry<Serializable>
+  ) {}
 
   public writeBoolean(value: boolean): void {
     this.dataView.setUint8(this.curOffset, value ? 1 : 0);
@@ -254,61 +260,76 @@ export class WriteStream implements SerializationStreamInterface {
     }
     this.dataView.setUint16(this.curOffset, buffLenBytes);
     this.curOffset += 2;
-    let buffView = new Uint8Array(this.dataView.buffer, this.dataView.byteOffset + this.curOffset, buffLenBytes);
+    let buffView = new Uint8Array(
+      this.dataView.buffer,
+      this.dataView.byteOffset + this.curOffset,
+      buffLenBytes
+    );
     buffView.set(value);
     this.curOffset += buffLenBytes;
   }
 
   public writeSerializable(value: Serializable): void {
     if (this.classRegistry === undefined) {
-      throw new Error('Can not serialize arbitrary type without a classRegistry.');
+      throw new Error(
+        'Can not serialize arbitrary type without a classRegistry.'
+      );
     }
-    let typeId = this.classRegistry.getTypeInfoByConstructor(value.constructor as GenericConstructor)!.shortTypeId;
+    let typeId = this.classRegistry.getTypeInfoByConstructor(
+      value.constructor as reflection.Constructor<Serializable>
+    )!.shortTypeId;
     this.dataView.setUint16(this.curOffset, typeId);
     this.curOffset += 2;
     value.serialize(this);
   }
 
-  public serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void {
-    this.writeBoolean(obj[key]);
+  public serializeBoolean(value: boolean): boolean {
+    this.writeBoolean(value);
+    return value;
   }
-
-  public serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint8(obj[key]);
+  public serializeUint8(value: number): number {
+    this.writeUint8(value);
+    return value;
   }
-  public serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint16(obj[key]);
+  public serializeUint16(value: number): number {
+    this.writeUint16(value);
+    return value;
   }
-  public serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint32(obj[key]);
+  public serializeUint32(value: number): number {
+    this.writeUint32(value);
+    return value;
   }
-
-  public serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt8(obj[key]);
+  public serializeInt8(value: number): number {
+    this.writeInt8(value);
+    return value;
   }
-  public serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt16(obj[key]);
+  public serializeInt16(value: number): number {
+    this.writeInt16(value);
+    return value;
   }
-  public serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt32(obj[key]);
+  public serializeInt32(value: number): number {
+    this.writeInt32(value);
+    return value;
   }
-
-  public serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeFloat32(obj[key]);
+  public serializeFloat32(value: number): number {
+    this.writeFloat32(value);
+    return value;
   }
-  public serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeFloat64(obj[key]);
+  public serializeFloat64(value: number): number {
+    this.writeFloat64(value);
+    return value;
   }
-
-  public serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void {
-    this.writeStringUTF16(obj[key]);
+  public serializeStringUTF16(value: string): string {
+    this.writeStringUTF16(value);
+    return value;
   }
-  public serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint8Array(obj[key]);
+  public serializeUint8Array(value: Uint8Array): Uint8Array {
+    this.writeUint8Array(value);
+    return value;
   }
-
-  public serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void {
-    this.writeSerializable(obj[key]);
+  public serializeSerializable(value: Serializable): Serializable {
+    this.writeSerializable(value);
+    return value;
   }
 }
 
@@ -376,46 +397,53 @@ export class MeasureStream implements SerializationStreamInterface {
     value.serialize(this);
   }
 
-  public serializeBoolean<T extends Record<K, boolean>, K extends keyof T>(obj: T, key: K): void {
-    this.writeBoolean(obj[key]);
+  public serializeBoolean(value: boolean): boolean {
+    this.writeBoolean(value);
+    return value;
   }
-
-  public serializeUint8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint8(obj[key]);
+  public serializeUint8(value: number): number {
+    this.writeUint8(value);
+    return value;
   }
-  public serializeUint16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint16(obj[key]);
+  public serializeUint16(value: number): number {
+    this.writeUint16(value);
+    return value;
   }
-  public serializeUint32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint32(obj[key]);
+  public serializeUint32(value: number): number {
+    this.writeUint32(value);
+    return value;
   }
-
-  public serializeInt8<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt8(obj[key]);
+  public serializeInt8(value: number): number {
+    this.writeInt8(value);
+    return value;
   }
-  public serializeInt16<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt16(obj[key]);
+  public serializeInt16(value: number): number {
+    this.writeInt16(value);
+    return value;
   }
-  public serializeInt32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeInt32(obj[key]);
+  public serializeInt32(value: number): number {
+    this.writeInt32(value);
+    return value;
   }
-
-  public serializeFloat32<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeFloat32(obj[key]);
+  public serializeFloat32(value: number): number {
+    this.writeFloat32(value);
+    return value;
   }
-  public serializeFloat64<T extends Record<K, number>, K extends keyof T>(obj: T, key: K): void {
-    this.writeFloat64(obj[key]);
+  public serializeFloat64(value: number): number {
+    this.writeFloat64(value);
+    return value;
   }
-
-  public serializeStringUTF16<T extends Record<K, string>, K extends keyof T>(obj: T, key: K): void {
-    this.writeStringUTF16(obj[key]);
+  public serializeStringUTF16(value: string): string {
+    this.writeStringUTF16(value);
+    return value;
   }
-  public serializeUint8Array<T extends Record<K, Uint8Array>, K extends keyof T>(obj: T, key: K): void {
-    this.writeUint8Array(obj[key]);
+  public serializeUint8Array(value: Uint8Array): Uint8Array {
+    this.writeUint8Array(value);
+    return value;
   }
-
-  public serializeSerializable<T extends Record<K, Serializable>, K extends keyof T>(obj: T, key: K): void {
-    this.writeSerializable(obj[key]);
+  public serializeSerializable(value: Serializable): Serializable {
+    this.writeSerializable(value);
+    return value;
   }
 }
 
@@ -425,7 +453,10 @@ export function measureSerializable(obj: Serializable): number {
   return measureStream.getNumBytesWritten();
 }
 
-export function measureAndSerialize(obj: Serializable, classRegistry?: reflection.ClassRegistry): ArrayBuffer {
+export function measureAndSerialize(
+  obj: Serializable,
+  classRegistry?: reflection.ClassRegistry<Serializable>
+): ArrayBuffer {
   let measureStream = new MeasureStream();
   obj.serialize(measureStream);
   let writeBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());

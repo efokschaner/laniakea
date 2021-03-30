@@ -20,11 +20,13 @@ interface NetworkPeerAndPlayerId {
 }
 
 export class NetworkClient {
-  constructor(private classRegistry: ClassRegistry) {
+  public constructor(private classRegistry: ClassRegistry<Serializable>) {
     registerBuiltinMessages(this.classRegistry);
     this.registerMessageHandler(S2C_BuiltinHandshakeMessage, (message) => {
       if (this.handshakeFulfillment !== undefined) {
-        this.classRegistry.setTypeIdToShortTypeIdMapping(message.classRegistryDictionary);
+        this.classRegistry.setTypeIdToShortTypeIdMapping(
+          message.classRegistryDictionary
+        );
         this.isConnected = true;
         this.handshakeFulfillment.resolve();
         this.onConnected.post(this.assignedPlayerId!);
@@ -37,20 +39,22 @@ export class NetworkClient {
 
   public connect(serverWsUrl: string): Promise<void> {
     let handshakePromise = new Promise<void>((resolve, reject) => {
-      this.handshakeFulfillment = {resolve, reject};
+      this.handshakeFulfillment = { resolve, reject };
     });
-    return this.connectToRTCServer(serverWsUrl).then((connectResult) => {
-      this.networkPeer = connectResult.networkPeer;
-      this.assignedPlayerId = connectResult.assignedPlayerId;
-      this.networkPeer.onClose.attach(() => this.handleDisconnect());
-      return handshakePromise;
-    }).catch((e) => {
-      this.handleDisconnect();
-      throw e;
-    });
+    return this.connectToRTCServer(serverWsUrl)
+      .then((connectResult) => {
+        this.networkPeer = connectResult.networkPeer;
+        this.assignedPlayerId = connectResult.assignedPlayerId;
+        this.networkPeer.onClose.attach(() => this.handleDisconnect());
+        return handshakePromise;
+      })
+      .catch((e) => {
+        this.handleDisconnect();
+        throw e;
+      });
   }
 
-  public close() {
+  public close(): void {
     if (this.networkPeer !== undefined) {
       this.networkPeer.close();
     }
@@ -65,15 +69,16 @@ export class NetworkClient {
    * All message types you will send or receive must be registered for serialisation / deserialisation
    */
   public registerMessageType<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
-    uniqueMessageTypeName: string,
+    ctor: new (...args: any[]) => T,
+    uniqueMessageTypeName: string
   ): void {
     this.classRegistry.registerClass(ctor, uniqueMessageTypeName);
   }
 
   public registerMessageHandler<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
-    handler: (t: T) => void): void {
+    ctor: new (...args: any[]) => T,
+    handler: (t: T) => void
+  ): void {
     this.messageRouter.registerHandler(ctor, handler);
   }
 
@@ -82,9 +87,15 @@ export class NetworkClient {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage|undefined {
+  public sendMessage(
+    message: Serializable,
+    onAck?: () => void
+  ): OutboundMessage | undefined {
     // Don't send messages before the handshake is complete
-    if (this.handshakeFulfillment === undefined && this.networkPeer !== undefined) {
+    if (
+      this.handshakeFulfillment === undefined &&
+      this.networkPeer !== undefined
+    ) {
       return this.networkPeer.sendMessage(message, onAck);
     }
     return undefined;
@@ -92,7 +103,7 @@ export class NetworkClient {
   /**
    * Sends messages across the network
    */
-  public flushMessagesToNetwork() {
+  public flushMessagesToNetwork(): void {
     if (this.networkPeer !== undefined) {
       this.networkPeer.flushMessagesToNetwork();
     }
@@ -101,7 +112,10 @@ export class NetworkClient {
   private messageRouter = new MessageRouter();
   private networkPeer?: NetworkPeer;
   private assignedPlayerId?: PlayerId;
-  private handshakeFulfillment?: { resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: any) => void };
+  private handshakeFulfillment?: {
+    resolve: (value?: void | PromiseLike<void>) => void;
+    reject: (reason?: any) => void;
+  };
 
   private handleDisconnect() {
     if (this.networkPeer) {
@@ -118,27 +132,34 @@ export class NetworkClient {
       this.onDisconnected.post();
     }
   }
-  private connectToRTCServer(serverWsUrl: string): Promise<NetworkPeerAndPlayerId> {
+  private connectToRTCServer(
+    serverWsUrl: string
+  ): Promise<NetworkPeerAndPlayerId> {
     let websocketForCleanup: WebSocket | undefined;
     let assignedPlayerId: PlayerId | undefined;
-    return new Promise<{ websocket: WebSocket, peerConnection: RTCPeerConnection }>((resolve, reject) => {
+    return new Promise<{
+      websocket: WebSocket;
+      peerConnection: RTCPeerConnection;
+    }>((resolve, reject) => {
       let peerConnection = new RTCPeerConnection(undefined);
       let websocket = new WebSocket(serverWsUrl);
       websocketForCleanup = websocket;
       websocket.onmessage = (evt) => {
         console.log('connectedWsClient.onmessage', evt);
-        let message = JSON.parse(evt.data);
+        let message = JSON.parse(evt.data) as Record<string, unknown>;
         if (message.desc) {
-          let desc = message.desc;
+          let desc = message.desc as RTCSessionDescriptionInit;
           if (desc.type === 'answer') {
             peerConnection.setRemoteDescription(desc).catch(logError);
           } else {
             console.log('Unhandled session description mesage', desc);
           }
         } else if (message.candidate) {
-          peerConnection.addIceCandidate(message.candidate).catch(logError);
+          peerConnection
+            .addIceCandidate(message.candidate as RTCIceCandidateInit)
+            .catch(logError);
         } else if (message.playerIdAssignment !== undefined) {
-          assignedPlayerId = message.playerIdAssignment;
+          assignedPlayerId = message.playerIdAssignment as PlayerId;
         } else {
           console.log('Unhandled ws mesage', message);
         }
@@ -149,7 +170,7 @@ export class NetworkClient {
       };
       websocket.onclose = (closeEvent) => {
         console.log('wsClient.onclose', closeEvent);
-        reject(new Error(closeEvent.code + ' ' + closeEvent.reason));
+        reject(new Error(`${closeEvent.code} ${closeEvent.reason}`));
       };
       websocket.onerror = (error) => {
         // Connection failures result in an onclose judging from
@@ -157,44 +178,67 @@ export class NetworkClient {
         // So here we just log.
         console.log('websocket.onerror', error);
       };
-    }).then(({ websocket, peerConnection }) => {
-      return new Promise<NetworkPeerAndPlayerId>((resolve, reject) => {
-        // send any ice candidates to the other peer
-        peerConnection.onicecandidate = (evt) => {
-          websocket.send(JSON.stringify({ candidate: evt.candidate }));
-        };
-        // let the "negotiationneeded" event trigger offer generation
-        peerConnection.onnegotiationneeded = () => {
-          peerConnection.createOffer().then((offer) => {
-            return peerConnection.setLocalDescription(offer);
-          })
-          .then(() => {
-            // send the offer to the other peer
-            websocket.send(JSON.stringify({ desc: peerConnection.localDescription }));
-          })
-          .catch(logError);
-        };
-        let dataChannel = peerConnection.createDataChannel('laniakea-unreliable', {negotiated: true, id: 0});
-        dataChannel.binaryType = 'arraybuffer';
-        let peerConnectionAndDataChannel = new RTCPeerConnectionAndDataChannel(peerConnection, dataChannel);
-        let networkPeer = new NetworkPeer(peerConnectionAndDataChannel, this.classRegistry, this.messageRouter);
-        dataChannel.onopen = () => {
-          if (assignedPlayerId === undefined) {
-            // This should never happen as playerId should be transmitted before rtc stuff.
-            reject(new Error('Expected to have assignedPlayerId before connection was fully open.'));
-          } else {
-            resolve({
-              assignedPlayerId,
-              networkPeer,
+    })
+      .then(
+        ({ websocket, peerConnection }) =>
+          new Promise<NetworkPeerAndPlayerId>((resolve, reject) => {
+            // send any ice candidates to the other peer
+            peerConnection.onicecandidate = (evt) => {
+              websocket.send(JSON.stringify({ candidate: evt.candidate }));
+            };
+            // let the "negotiationneeded" event trigger offer generation
+            peerConnection.onnegotiationneeded = () => {
+              peerConnection
+                .createOffer()
+                .then((offer) => peerConnection.setLocalDescription(offer))
+                .then(() => {
+                  // send the offer to the other peer
+                  websocket.send(
+                    JSON.stringify({
+                      desc: peerConnection.localDescription,
+                    })
+                  );
+                })
+                .catch(logError);
+            };
+            let dataChannel = peerConnection.createDataChannel(
+              'laniakea-unreliable',
+              { negotiated: true, id: 0 }
+            );
+            dataChannel.binaryType = 'arraybuffer';
+            let peerConnectionAndDataChannel = new RTCPeerConnectionAndDataChannel(
+              peerConnection,
+              dataChannel
+            );
+            let networkPeer = new NetworkPeer(
+              peerConnectionAndDataChannel,
+              this.classRegistry,
+              this.messageRouter
+            );
+            dataChannel.onopen = () => {
+              if (assignedPlayerId === undefined) {
+                // This should never happen as playerId should be transmitted before rtc stuff.
+                reject(
+                  new Error(
+                    'Expected to have assignedPlayerId before connection was fully open.'
+                  )
+                );
+              } else {
+                resolve({
+                  assignedPlayerId,
+                  networkPeer,
+                });
+              }
+            };
+            networkPeer.onClose.attach(() => {
+              reject(new Error('networkPeer closed during startup.'));
             });
-          }
-        };
-        networkPeer.onClose.attach(() => { reject(new Error('networkPeer closed during startup.')); } );
+          })
+      )
+      .finally(() => {
+        if (websocketForCleanup) {
+          websocketForCleanup.close();
+        }
       });
-    }).finally(() => {
-      if (websocketForCleanup) {
-        websocketForCleanup.close();
-      }
-    });
   }
 }

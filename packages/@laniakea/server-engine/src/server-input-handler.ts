@@ -25,12 +25,15 @@ function collectionsCompare(a: number, b: number): number {
   return 0;
 }
 
-function compareTargetSimulationTimeS(a: InputBufferHeapEntry, b: InputBufferHeapEntry): number {
+function compareTargetSimulationTimeS(
+  a: InputBufferHeapEntry,
+  b: InputBufferHeapEntry
+): number {
   return collectionsCompare(a.targetSimulationTimeS, b.targetSimulationTimeS);
 }
 
 class InputBuffer {
-  constructor(private engine: SimulationEngine) {
+  public constructor(private engine: SimulationEngine) {
     // Initialise with an empty input at t-zero
     this.inputHeap.add({
       targetSimulationTimeS: 0,
@@ -44,7 +47,8 @@ class InputBuffer {
     let inputFrameDataView = new DataView(
       packet.inputFrame.buffer,
       packet.inputFrame.byteOffset,
-      packet.inputFrame.byteLength);
+      packet.inputFrame.byteLength
+    );
     newFrame.serialize(new ReadStream(inputFrameDataView));
     this.inputHeap.add({
       targetSimulationTimeS: packet.targetSimulationTimeS,
@@ -56,22 +60,33 @@ class InputBuffer {
   public getInputFrameForSimTime(simulationTimeS: number): InputFrame {
     // Pull all the input frames with a targetSimulationTimeS smaller than or equal to simulationTimeS
     let framesToCoallesce: InputBufferHeapEntry[] = [];
-    for (let nextInput = this.inputHeap.peek();
-        nextInput !== undefined && nextInput.targetSimulationTimeS <= simulationTimeS;
-        nextInput = this.inputHeap.peek()) {
+    for (
+      let nextInput = this.inputHeap.peek();
+      nextInput !== undefined &&
+      nextInput.targetSimulationTimeS <= simulationTimeS;
+      nextInput = this.inputHeap.peek()
+    ) {
       framesToCoallesce.push(nextInput);
       this.inputHeap.removeRoot();
     }
     // Coallescing inputs for now just means grabbing the one with the highest sequence number.
-    let result = framesToCoallesce.reduce((acc: InputBufferHeapEntry|undefined, frame) => {
-      if (acc === undefined || frame.messageSequenceNumber.isGreaterThan(acc.messageSequenceNumber)) {
-        return frame;
-      }
-      return acc;
-    }, undefined);
+    let result = framesToCoallesce.reduce(
+      (acc: InputBufferHeapEntry | undefined, frame) => {
+        if (
+          acc === undefined ||
+          frame.messageSequenceNumber.isGreaterThan(acc.messageSequenceNumber)
+        ) {
+          return frame;
+        }
+        return acc;
+      },
+      undefined
+    );
 
     if (result === undefined) {
-      throw new Error('There should have been at least one entry in framesToCoallesce.');
+      throw new Error(
+        'There should have been at least one entry in framesToCoallesce.'
+      );
     }
     // After calculating we "save" the result as the new smallest value in the heap
     // in order to preserve the inputs in to the next frame's calculation.
@@ -84,26 +99,34 @@ class InputBuffer {
   }
 
   // A Binary heap of input packets stored in ascending targetSimulationTimeS order
-  private inputHeap = new Heap<InputBufferHeapEntry>(compareTargetSimulationTimeS);
-
+  private inputHeap = new Heap<InputBufferHeapEntry>(
+    compareTargetSimulationTimeS
+  );
 }
 
 /**
  * Receives input packets and processes them so that they can be consumed per simulation frame.
  */
 export class ServerInputHandler {
-  constructor(private engine: SimulationEngine) {
-  }
+  public constructor(private engine: SimulationEngine) {}
 
-  public onInputFramePacket(playerId: PlayerId, packet: C2S_InputFrameMessage) {
+  public onInputFramePacket(
+    playerId: PlayerId,
+    packet: C2S_InputFrameMessage
+  ): void {
     let inputBuffer = this.getOrAddPlayerInputBuffer(playerId);
     inputBuffer.onInputFramePacket(packet);
   }
 
-  public getInputFramesForSimTime(simulationTimeS: number): Map<PlayerId, InputFrame> {
+  public getInputFramesForSimTime(
+    simulationTimeS: number
+  ): Map<PlayerId, InputFrame> {
     let result = new Map<PlayerId, InputFrame>();
     for (let [playerId, inputBuffer] of this.perPlayerInputBuffers.entries()) {
-      result.set(playerId, inputBuffer.getInputFrameForSimTime(simulationTimeS));
+      result.set(
+        playerId,
+        inputBuffer.getInputFrameForSimTime(simulationTimeS)
+      );
     }
     return result;
   }

@@ -1,5 +1,4 @@
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
+import present = require('present');
 
 export interface PeriodicCallbackHandle {
   stop(): void;
@@ -15,7 +14,11 @@ export interface PeriodicCallbackHandle {
  * @param periodMS
  * @param cosmeticName Name of the callback used in errors and warnings.
  */
-export function periodicCallback(callback: () => void, periodMS: number, cosmeticName: string): PeriodicCallbackHandle {
+export function periodicCallback(
+  callback: () => void,
+  periodMS: number,
+  cosmeticName: string
+): PeriodicCallbackHandle {
   let nextTimeoutHandle: NodeJS.Timer;
   let callbackWrapper = () => {
     let startTimeMS = present();
@@ -29,7 +32,9 @@ export function periodicCallback(callback: () => void, periodMS: number, cosmeti
     let durationMS = endTimeMS - startTimeMS;
     let timeToNextCallMS = periodMS - durationMS;
     if (timeToNextCallMS < 0) {
-      console.warn(`${cosmeticName} callback took longer than period. periodMS=${periodMS} durationMS=${durationMS}`);
+      console.warn(
+        `${cosmeticName} callback took longer than period. periodMS=${periodMS} durationMS=${durationMS}`
+      );
       timeToNextCallMS = 0;
     }
     nextTimeoutHandle = setTimeout(callbackWrapper, timeToNextCallMS);

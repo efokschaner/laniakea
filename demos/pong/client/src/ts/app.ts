@@ -1,4 +1,4 @@
-// tslint:disable-next-line:no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('../css/main.css');
 
 import * as lk from '@laniakea/client-engine';
@@ -39,7 +39,9 @@ interface HTMLHyperlinkElementUtils {
 }
 
 let persistIdToLocalStorage = false;
-let localStorage = persistIdToLocalStorage ? window.localStorage : new MockStorage();
+let localStorage = persistIdToLocalStorage
+  ? window.localStorage
+  : new MockStorage();
 
 function getUserId() {
   let prior = localStorage.getItem('user_id');
@@ -53,7 +55,10 @@ function getUserId() {
 
 let clientSettings = new ClientSettings(window.localStorage);
 
-let clientEngine = new lk.ClientEngine({simFPS, globalSimulationRateMultiplier});
+let clientEngine = new lk.ClientEngine({
+  simFPS,
+  globalSimulationRateMultiplier,
+});
 
 clientEngine.registerContinuousInputType(GameButtonsInput, 'GameButtonsInput');
 registerComponents(clientEngine);
@@ -89,14 +94,20 @@ function handleClientSimulationEnabledSetting(enabled: boolean) {
   }
 }
 
-clientSettings.clientSimulationEnabled.attach(handleClientSimulationEnabledSetting);
-handleClientSimulationEnabledSetting(clientSettings.clientSimulationEnabled.value);
+clientSettings.clientSimulationEnabled.attach(
+  handleClientSimulationEnabledSetting
+);
+handleClientSimulationEnabledSetting(
+  clientSettings.clientSimulationEnabled.value
+);
 
-// tslint:disable-next-line:no-unused-expression
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 new KeyboardHandler(clientEngine, GameButtonsInput, (key: string) => {
   switch (key) {
-    case 'a': return GameButtons.LEFT;
-    case 'd': return GameButtons.RIGHT;
+    case 'a':
+      return GameButtons.LEFT;
+    case 'd':
+      return GameButtons.RIGHT;
   }
   return undefined;
 });
@@ -132,17 +143,23 @@ clientEngine.setRenderingSystem(renderingSystem);
 
 clientEngine.start();
 
-let gameServerWsUrl = document.createElement('a') as HTMLAnchorElement & HTMLHyperlinkElementUtils;
+let gameServerWsUrl = document.createElement('a') as HTMLAnchorElement &
+  HTMLHyperlinkElementUtils;
 gameServerWsUrl.href = getGameServerWsUrl(location.hostname);
 
 gameServerWsUrl.username = getUserId();
 gameServerWsUrl.password = 'whateverpass';
 
-clientEngine.connectToServer(gameServerWsUrl.href);
-clientEngine.onConnectedToServer.attach(() => { console.log('Connected to server'); });
+clientEngine.onConnectedToServer.attach(() => {
+  console.log('Connected to server');
+});
+void clientEngine.connectToServer(gameServerWsUrl.href);
 
 setInterval(() => {
   if (clientSettings.clientIsBot) {
-    doClientSideBotting(clientEngine.clientSimulation, clientEngine.getCurrentContinuousInput(GameButtonsInput)!);
+    doClientSideBotting(
+      clientEngine.clientSimulation,
+      clientEngine.getCurrentContinuousInput(GameButtonsInput)!
+    );
   }
 }, 25);

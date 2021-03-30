@@ -1,18 +1,33 @@
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
+import present = require('present');
 
-import { ClassRegistry, CyclicBuffer, measureSerializable, ReadStream, Serializable, SerializationStream, WriteStream } from '@laniakea/utils';
+import {
+  ClassRegistry,
+  CyclicBuffer,
+  measureSerializable,
+  ReadStream,
+  Serializable,
+  SerializationStream,
+  WriteStream,
+} from '@laniakea/utils';
 import { SyncEvent } from 'ts-events';
 import { AckingPeer } from './acking-peer';
-import { AbsoluteSequenceNumberTranslator, SequenceNumber } from './sequence-number';
+import {
+  AbsoluteSequenceNumberTranslator,
+  SequenceNumber,
+} from './sequence-number';
 
-let receiveWindowWarningLastLogTime: number|undefined;
+let receiveWindowWarningLastLogTime: number | undefined;
 function logWarningAboutReceiveWindow() {
   let nowMS = present();
-  if (receiveWindowWarningLastLogTime === undefined || nowMS > receiveWindowWarningLastLogTime + 1000) {
+  if (
+    receiveWindowWarningLastLogTime === undefined ||
+    nowMS > receiveWindowWarningLastLogTime + 1000
+  ) {
     // If you receive this warning, you might want to expire / lower the ttl on some lower priority messages that
     // have not been able to be sent as there is a limit to the range of messages sequence numbers that can potentially be in flight.
-    console.warn('An outbound message is blocked from sending due to unsent/unacknowledged messages that are old.');
+    console.warn(
+      'An outbound message is blocked from sending due to unsent/unacknowledged messages that are old.'
+    );
     receiveWindowWarningLastLogTime = nowMS;
   }
 }
@@ -25,7 +40,7 @@ export class WireMessage implements Serializable {
   public message!: Serializable;
   public serialize(stream: SerializationStream): void {
     this.sequenceNumber.serialize(stream);
-    stream.serializeSerializable(this, 'message');
+    this.message = stream.serializeSerializable(this.message);
   }
 }
 
@@ -36,23 +51,38 @@ export class OutboundMessage {
   public acked = false;
   public serializedLength: number;
   public wireMessage: WireMessage;
-  constructor(public absoluteSequenceNumber: number, message: Serializable, public onAck?: () => void) {
+  public constructor(
+    public absoluteSequenceNumber: number,
+    message: Serializable,
+    public onAck?: () => void
+  ) {
     this.wireMessage = new WireMessage();
-    this.wireMessage.sequenceNumber = new SequenceNumber(this.absoluteSequenceNumber);
+    this.wireMessage.sequenceNumber = new SequenceNumber(
+      this.absoluteSequenceNumber
+    );
     this.wireMessage.message = message;
     this.serializedLength = measureSerializable(this.wireMessage);
   }
-  public expire() {
+  public expire(): void {
     this.ttl = 0;
   }
 }
 
 class OutboundMessageChannel {
-  constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
-  }
+  public constructor(
+    private ackingPeer: AckingPeer,
+    private classRegistry: ClassRegistry<Serializable>
+  ) {}
 
-  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
-    let outboundMessage = new OutboundMessage(this.getNextOutboundAbsoluteSequenceNumber(), message, onAck);
+  public sendMessage(
+    message: Serializable,
+    onAck?: () => void
+  ): OutboundMessage {
+    let outboundMessage = new OutboundMessage(
+      this.getNextOutboundAbsoluteSequenceNumber(),
+      message,
+      onAck
+    );
     this.messages.push(outboundMessage);
     return outboundMessage;
   }
@@ -79,7 +109,9 @@ class OutboundMessageChannel {
     });
     // This is one larger than the highest sequence number we can send that wont cause the receive window to be exceeded
     // The receive window is defined by IncomingMessageChannel's AbsoluteSequenceNumberTranslator
-    let largestSendableAbsoluteSequenceNumberExclusive = oldestOutboundAbsoluteSequenceNumber + AbsoluteSequenceNumberTranslator.halfwayPoint;
+    let largestSendableAbsoluteSequenceNumberExclusive =
+      oldestOutboundAbsoluteSequenceNumber +
+      AbsoluteSequenceNumberTranslator.halfwayPoint;
     let didSkipMessageDueToReceiveWindow = false;
     // With larger numbers of messages this becomes the dominant cost of the system.
     // I've tried using a priority queue, however the dynamic priorities mean that that you still pay
@@ -100,14 +132,21 @@ class OutboundMessageChannel {
     let messagesThatFit = new Array<OutboundMessage>();
     let combinedLengthOfMessagesThatFit = 0;
     for (let message of this.messages) {
-      let lengthIncludingNextMessage = combinedLengthOfMessagesThatFit + message.serializedLength;
+      let lengthIncludingNextMessage =
+        combinedLengthOfMessagesThatFit + message.serializedLength;
       // Don't test length on the first message
       // If the first sendable message is too large, accept it and let webrtc deal with fragmentation
-      if (messagesThatFit.length !== 0 && (lengthIncludingNextMessage > maxLength)) {
+      if (
+        messagesThatFit.length !== 0 &&
+        lengthIncludingNextMessage > maxLength
+      ) {
         // Skip this message as it would take us over the size limit
         continue;
       }
-      if (message.absoluteSequenceNumber >= largestSendableAbsoluteSequenceNumberExclusive) {
+      if (
+        message.absoluteSequenceNumber >=
+        largestSendableAbsoluteSequenceNumberExclusive
+      ) {
         didSkipMessageDueToReceiveWindow = true;
         continue;
       }
@@ -116,15 +155,20 @@ class OutboundMessageChannel {
       message.currentPriority = 0;
       // If we're less than 8 bytes from the maxLength, it's good enough
       // We're probably not going to find a small enough message to squeeze in, so break out
-      if (combinedLengthOfMessagesThatFit > (maxLength - 8)) {
+      if (combinedLengthOfMessagesThatFit > maxLength - 8) {
         break;
       }
     }
     if (didSkipMessageDueToReceiveWindow) {
       logWarningAboutReceiveWindow();
     }
-    let combinedMessageBuffer = new ArrayBuffer(combinedLengthOfMessagesThatFit);
-    let writeStream = new WriteStream(new DataView(combinedMessageBuffer), this.classRegistry);
+    let combinedMessageBuffer = new ArrayBuffer(
+      combinedLengthOfMessagesThatFit
+    );
+    let writeStream = new WriteStream(
+      new DataView(combinedMessageBuffer),
+      this.classRegistry
+    );
     messagesThatFit.forEach((m) => {
       m.wireMessage.serialize(writeStream);
     });
@@ -152,26 +196,43 @@ class OutboundMessageChannel {
 }
 
 class IncomingMessageChannel {
-  constructor(private ackingPacketPeer: AckingPeer, private classRegistry: ClassRegistry) {
-    this.ackingPacketPeer.onPacketReceived.attach(this.handleIncomingPacket.bind(this));
+  public constructor(
+    private ackingPacketPeer: AckingPeer,
+    private classRegistry: ClassRegistry<Serializable>
+  ) {
+    this.ackingPacketPeer.onPacketReceived.attach(
+      this.handleIncomingPacket.bind(this)
+    );
   }
   public onMessageReceived = new SyncEvent<Serializable>();
 
   private handleIncomingPacket(payload: Uint8Array) {
-    let readStream = new ReadStream(new DataView(payload.buffer, payload.byteOffset, payload.byteLength), this.classRegistry);
+    let readStream = new ReadStream(
+      new DataView(payload.buffer, payload.byteOffset, payload.byteLength),
+      this.classRegistry
+    );
     while (readStream.hasMoreData()) {
       let wireMessage = new WireMessage();
       wireMessage.serialize(readStream);
-      let absoluteSequenceNumber = this.absoluteSequenceNumberTranslator.getAbsoluteSequenceNumber(wireMessage.sequenceNumber);
-      let alreadyReceivedQuery = this.messageAlreadyReceivedBuffer.getElement(absoluteSequenceNumber);
+      let absoluteSequenceNumber = this.absoluteSequenceNumberTranslator.getAbsoluteSequenceNumber(
+        wireMessage.sequenceNumber
+      );
+      let alreadyReceivedQuery = this.messageAlreadyReceivedBuffer.getElement(
+        absoluteSequenceNumber
+      );
       if (alreadyReceivedQuery !== true) {
-        this.messageAlreadyReceivedBuffer.setElement(absoluteSequenceNumber, true);
+        this.messageAlreadyReceivedBuffer.setElement(
+          absoluteSequenceNumber,
+          true
+        );
         this.onMessageReceived.post(wireMessage.message);
       }
     }
   }
   private absoluteSequenceNumberTranslator = new AbsoluteSequenceNumberTranslator();
-  private messageAlreadyReceivedBuffer = new CyclicBuffer<boolean>(SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE / 4);
+  private messageAlreadyReceivedBuffer = new CyclicBuffer<boolean>(
+    SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE / 4
+  );
 }
 
 /**
@@ -179,16 +240,27 @@ class IncomingMessageChannel {
  * and can be given a TTL / marked expired to limit reliability.
  */
 export class MessagePeer {
-  private outboundMessageChannel = new OutboundMessageChannel(this.ackingPeer, this.classRegistry);
-  private incomingMessageChannel = new IncomingMessageChannel(this.ackingPeer, this.classRegistry);
+  private outboundMessageChannel = new OutboundMessageChannel(
+    this.ackingPeer,
+    this.classRegistry
+  );
+  private incomingMessageChannel = new IncomingMessageChannel(
+    this.ackingPeer,
+    this.classRegistry
+  );
 
-  constructor(private ackingPeer: AckingPeer, private classRegistry: ClassRegistry) {
-  }
+  public constructor(
+    private ackingPeer: AckingPeer,
+    private classRegistry: ClassRegistry<Serializable>
+  ) {}
   public onMessageReceived = this.incomingMessageChannel.onMessageReceived;
-  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
+  public sendMessage(
+    message: Serializable,
+    onAck?: () => void
+  ): OutboundMessage {
     return this.outboundMessageChannel.sendMessage(message, onAck);
   }
-  public flushMessagesToNetwork() {
+  public flushMessagesToNetwork(): void {
     this.outboundMessageChannel.flushMessagesToNetwork();
   }
 }

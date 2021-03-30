@@ -4,23 +4,23 @@
   "description": "Laniakea engine code shared by client and server",
   "homepage": "https://github.com/efokschaner/laniakea",
   "bugs": {
-    "url" : "https://github.com/efokschaner/laniakea/issues"
+    "url": "https://github.com/efokschaner/laniakea/issues"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/efokschaner/laniakea.git",
+    "type": "git",
+    "url": "https://github.com/efokschaner/laniakea.git",
     "directory": "packages/@laniakea/base-engine"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests implemented\""
   },
   "author": "efokschaner",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^3.4.5"
+    "typescript": "^4.2.3"
   },
   "dependencies": {
     "@laniakea/network-peer": "^0.0.1",

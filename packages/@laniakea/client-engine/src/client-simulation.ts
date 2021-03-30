@@ -17,10 +17,7 @@ import {
 import { ServerTimeEstimator } from './server-time-estimator';
 
 export class ClientSimulationFrameData {
-  constructor(
-    public resolvedFrameData: SimulationFrameData,
-  ) {
-  }
+  public constructor(public resolvedFrameData: SimulationFrameData) {}
 
   /**
    * Inputs that we predict that the server will process this frame.
@@ -73,13 +70,16 @@ export class ClientSimulationFrameData {
  * It may well require a negotiated state flush of some sort from the game server similar to reconnect.
  */
 export class ClientSimulation {
-  constructor(
+  public constructor(
     secondsOfHistoryToRetain: number,
     private simFPS: number,
     private serverTimeEstimator: ServerTimeEstimator,
-    private engine: SimulationEngine) {
+    private engine: SimulationEngine
+  ) {
     let numberOfFramesToRetain = Math.round(secondsOfHistoryToRetain * simFPS);
-    this.frames = new CyclicBuffer<ClientSimulationFrameData>(numberOfFramesToRetain);
+    this.frames = new CyclicBuffer<ClientSimulationFrameData>(
+      numberOfFramesToRetain
+    );
   }
 
   private playerId?: PlayerId = undefined;
@@ -90,7 +90,7 @@ export class ClientSimulation {
   /**
    * Get the playerId for this client. undefined until connection is established to server.
    */
-  public getOwnPlayerId(): PlayerId|undefined {
+  public getOwnPlayerId(): PlayerId | undefined {
     return this.playerId;
   }
 
@@ -120,9 +120,11 @@ export class ClientSimulation {
    * "next" being the next frame after current.
    * Returns undefined if we do not yet have enough data from the server to simulate any frames.
    */
-  public getSimulationFrames(simulationTimeS: number): { current: SimulationFrameData, next: SimulationFrameData } | undefined {
+  public getSimulationFrames(
+    simulationTimeS: number
+  ): { current: SimulationFrameData; next: SimulationFrameData } | undefined {
     this.doSimulationWork(simulationTimeS);
-    let successorFrameIndex =  this.getSuccessorFrameForSimTime(simulationTimeS);
+    let successorFrameIndex = this.getSuccessorFrameForSimTime(simulationTimeS);
     if (successorFrameIndex === undefined) {
       return undefined;
     }
@@ -131,7 +133,7 @@ export class ClientSimulation {
     if (next === undefined || current === undefined) {
       return undefined;
     }
-    return {current: current.resolvedFrameData, next: next.resolvedFrameData};
+    return { current: current.resolvedFrameData, next: next.resolvedFrameData };
   }
 
   /**
@@ -140,7 +142,9 @@ export class ClientSimulation {
    * dirty / unsimulated frames.
    * Returns undefined if there is no simulation frame less than the given simTime
    */
-  private getSuccessorFrameForSimTime(simulationTimeS: number): number|undefined {
+  private getSuccessorFrameForSimTime(
+    simulationTimeS: number
+  ): number | undefined {
     let lowerBound = this.getOldestInitializedFrameIndex();
     if (lowerBound === undefined) {
       return undefined;
@@ -151,8 +155,11 @@ export class ClientSimulation {
     let initialUpperBound = this.largestInitializedFrameIndex;
     let upperBound = initialUpperBound;
     while (lowerBound <= upperBound) {
-      let middleIndex: number = Math.floor(lowerBound + ((upperBound - lowerBound) / 2));
-      let midValue = this.frames.getElement(middleIndex)!.resolvedFrameData.simulationTimeS;
+      let middleIndex: number = Math.floor(
+        lowerBound + (upperBound - lowerBound) / 2
+      );
+      let midValue = this.frames.getElement(middleIndex)!.resolvedFrameData
+        .simulationTimeS;
       if (midValue > simulationTimeS) {
         upperBound = middleIndex - 1;
       } else {
@@ -168,7 +175,10 @@ export class ClientSimulation {
 
   private markFrameAsDirty(frameIndex: number) {
     // Now make sure the frame is marked as dirty
-    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, frameIndex);
+    this.oldestDirtySimulationFrameIndex = Math.min(
+      this.oldestDirtySimulationFrameIndex!,
+      frameIndex
+    );
     // If this is the first frame we have received we immediately apply the authoritative state so that the
     // frame is considered useable to simulate the next frame.
     if (this.firstEverFrameIndex === frameIndex) {
@@ -183,22 +193,32 @@ export class ClientSimulation {
   /**
    * This is not meant to be called by users of library. TODO create external interface for this class.
    */
-  public onFrameInputsUsedMessage(frameMessage: S2C_FrameInputsUsedMessage) {
-    let targetFrame = this.getOrInsertFrameWithoutSimulation(frameMessage.simulationFrameIndex);
+  public onFrameInputsUsedMessage(
+    frameMessage: S2C_FrameInputsUsedMessage
+  ): void {
+    let targetFrame = this.getOrInsertFrameWithoutSimulation(
+      frameMessage.simulationFrameIndex
+    );
     if (targetFrame === undefined) {
-      console.warn('Discarding S2C_FrameInputsUsedMessage for frame that was too old. ' +
-        `simulationFrameIndex: ${frameMessage.simulationFrameIndex} simulationTimeS: ${frameMessage.simulationTimeS}`);
+      console.warn(
+        'Discarding S2C_FrameInputsUsedMessage for frame that was too old. ' +
+          `simulationFrameIndex: ${frameMessage.simulationFrameIndex} simulationTimeS: ${frameMessage.simulationTimeS}`
+      );
       return;
     }
-    targetFrame.receivedAuthoritativeSimulationTimeS = frameMessage.simulationTimeS;
+    targetFrame.receivedAuthoritativeSimulationTimeS =
+      frameMessage.simulationTimeS;
 
     targetFrame.receivedAuthoritativeInput = this.engine.createInputFrame();
     if (frameMessage.inputUsedForPlayerThisFrame.byteLength > 0) {
       let inputFrameDataView = new DataView(
         frameMessage.inputUsedForPlayerThisFrame.buffer,
         frameMessage.inputUsedForPlayerThisFrame.byteOffset,
-        frameMessage.inputUsedForPlayerThisFrame.byteLength);
-      targetFrame.receivedAuthoritativeInput.serialize(new ReadStream(inputFrameDataView));
+        frameMessage.inputUsedForPlayerThisFrame.byteLength
+      );
+      targetFrame.receivedAuthoritativeInput.serialize(
+        new ReadStream(inputFrameDataView)
+      );
     }
 
     this.markFrameAsDirty(frameMessage.simulationFrameIndex);
@@ -207,28 +227,48 @@ export class ClientSimulation {
   /**
    * This is not meant to be called by users of library. TODO create external interface for this class.
    */
-  public onFramecomponentStateMessage(frameComponentStateMessage: S2C_FrameComponentStateMessage) {
-    let targetFrame = this.getOrInsertFrameWithoutSimulation(frameComponentStateMessage.simulationFrameIndex);
+  public onFramecomponentStateMessage(
+    frameComponentStateMessage: S2C_FrameComponentStateMessage
+  ): void {
+    let targetFrame = this.getOrInsertFrameWithoutSimulation(
+      frameComponentStateMessage.simulationFrameIndex
+    );
     if (targetFrame === undefined) {
-      console.warn('Discarding S2C_FrameComponentStateMessage for frame that was too old. ' +
-        `simulationFrameIndex: ${frameComponentStateMessage.simulationFrameIndex} simulationTimeS: ${frameComponentStateMessage.simulationTimeS}`);
+      console.warn(
+        'Discarding S2C_FrameComponentStateMessage for frame that was too old. ' +
+          `simulationFrameIndex: ${frameComponentStateMessage.simulationFrameIndex} simulationTimeS: ${frameComponentStateMessage.simulationTimeS}`
+      );
       return;
     }
-    targetFrame.receivedAuthoritativeSimulationTimeS = frameComponentStateMessage.simulationTimeS;
+    targetFrame.receivedAuthoritativeSimulationTimeS =
+      frameComponentStateMessage.simulationTimeS;
 
     let allComponentsBuffer = frameComponentStateMessage.componentData;
-    let dataView = new DataView(allComponentsBuffer.buffer, allComponentsBuffer.byteOffset, allComponentsBuffer.byteLength);
+    let dataView = new DataView(
+      allComponentsBuffer.buffer,
+      allComponentsBuffer.byteOffset,
+      allComponentsBuffer.byteLength
+    );
     let readStream = new ReadStream(dataView);
     while (readStream.hasMoreData()) {
       let componentId = new ComponentId();
       componentId.serialize(readStream);
-      let componentData = this.engine.constructComponentData(componentId.typeId);
+      let componentData = this.engine.constructComponentData(
+        componentId.typeId
+      );
       let startOffset = readStream.getNumBytesRead();
       componentData.serialize(readStream);
       let endOffset = readStream.getNumBytesRead();
-      let serializedData = new Uint8Array(allComponentsBuffer.buffer, allComponentsBuffer.byteOffset + startOffset, endOffset - startOffset);
+      let serializedData = new Uint8Array(
+        allComponentsBuffer.buffer,
+        allComponentsBuffer.byteOffset + startOffset,
+        endOffset - startOffset
+      );
       let component = new GenericComponent(componentId, componentData);
-      targetFrame.receivedAuthoritativeComponentData.push({component, serializedData});
+      targetFrame.receivedAuthoritativeComponentData.push({
+        component,
+        serializedData,
+      });
     }
 
     this.markFrameAsDirty(frameComponentStateMessage.simulationFrameIndex);
@@ -237,19 +277,26 @@ export class ClientSimulation {
   /**
    * This is not meant to be called by users of library. TODO create external interface for this class.
    */
-  public onFrameDeletionsMessage(frameDeletionsMessage: S2C_FrameDeletionsMessage) {
+  public onFrameDeletionsMessage(
+    frameDeletionsMessage: S2C_FrameDeletionsMessage
+  ): void {
     let targetFrameIndex = frameDeletionsMessage.simulationFrameIndex;
     let targetFrame = this.getOrInsertFrameWithoutSimulation(targetFrameIndex);
     if (targetFrame === undefined) {
       // We never want to ignore deletions, the best we can do is insert them in to the oldest frame we do have.
       targetFrameIndex = this.getOldestInitializedFrameIndex()!;
-      targetFrame = this.frames.getElement(targetFrameIndex)!;
+      targetFrame = this.frames.getElement(targetFrameIndex);
     } else {
-      targetFrame.receivedAuthoritativeSimulationTimeS = frameDeletionsMessage.simulationTimeS;
+      targetFrame.receivedAuthoritativeSimulationTimeS =
+        frameDeletionsMessage.simulationTimeS;
     }
 
-    targetFrame.receivedComponentDeletions = targetFrame.receivedComponentDeletions.concat(frameDeletionsMessage.deletedComponentIds);
-    targetFrame.receivedEntityDeletions = targetFrame.receivedEntityDeletions.concat(frameDeletionsMessage.deletedEntityIds);
+    targetFrame!.receivedComponentDeletions = targetFrame!.receivedComponentDeletions.concat(
+      frameDeletionsMessage.deletedComponentIds
+    );
+    targetFrame!.receivedEntityDeletions = targetFrame!.receivedEntityDeletions.concat(
+      frameDeletionsMessage.deletedEntityIds
+    );
 
     this.markFrameAsDirty(targetFrameIndex);
   }
@@ -259,17 +306,30 @@ export class ClientSimulation {
    * @param inputFrame
    * @param targetSimulationTimeS
    */
-  public notifyInputBeingSent(inputFrame: InputFrame, targetSimulationTimeS: number) {
+  public notifyInputBeingSent(
+    inputFrame: InputFrame,
+    targetSimulationTimeS: number
+  ): void {
     // Estimate the frame index of arrival
     if (this.oldestDirtySimulationFrameIndex === undefined) {
       return;
     }
-    let oldestConfidentSimFrame = this.frames.getElement(this.oldestDirtySimulationFrameIndex - 1)!;
-    let numFramesAhead = Math.ceil((targetSimulationTimeS - oldestConfidentSimFrame.resolvedFrameData.simulationTimeS) * this.simFPS);
+    let oldestConfidentSimFrame = this.frames.getElement(
+      this.oldestDirtySimulationFrameIndex - 1
+    )!;
+    let numFramesAhead = Math.ceil(
+      (targetSimulationTimeS -
+        oldestConfidentSimFrame.resolvedFrameData.simulationTimeS) *
+        this.simFPS
+    );
     // Note numFramesAhead could be negative
-    let targetFrameIndex = oldestConfidentSimFrame.resolvedFrameData.simulationFrameIndex + numFramesAhead;
+    let targetFrameIndex =
+      oldestConfidentSimFrame.resolvedFrameData.simulationFrameIndex +
+      numFramesAhead;
     // We don't care about simulation we just need a data structure in which to store our predicted input
-    let targetFrameData = this.getOrInsertFrameWithoutSimulation(targetFrameIndex);
+    let targetFrameData = this.getOrInsertFrameWithoutSimulation(
+      targetFrameIndex
+    );
     if (targetFrameData === undefined) {
       return;
     }
@@ -281,7 +341,10 @@ export class ClientSimulation {
     }
     this.engine.copyInputFrame(inputFrame, targetFrameData.predictedInput);
     // We've modified the frame so mark it as dirty.
-    this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex, targetFrameIndex);
+    this.oldestDirtySimulationFrameIndex = Math.min(
+      this.oldestDirtySimulationFrameIndex,
+      targetFrameIndex
+    );
   }
 
   /**
@@ -292,7 +355,7 @@ export class ClientSimulation {
    * may be interpolation between the preceeding and subsequent frame.
    * Uninitialised frames will be added as we go.
    */
-  public doSimulationWork(simulationTimeS: number) {
+  public doSimulationWork(simulationTimeS: number): void {
     if (this.oldestDirtySimulationFrameIndex === undefined) {
       // We have nothing to simulate yet
       return;
@@ -312,12 +375,16 @@ export class ClientSimulation {
     }
 
     while (true) {
-      let previousFrame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate - 1)!;
+      let previousFrame = this.getOrInsertFrameWithoutSimulation(
+        frameIndexToSimulate - 1
+      )!;
       if (previousFrame.resolvedFrameData.simulationTimeS > simulationTimeS) {
         // We're done
         break;
       }
-      let nextFrame = this.getOrInsertFrameWithoutSimulation(frameIndexToSimulate)!;
+      let nextFrame = this.getOrInsertFrameWithoutSimulation(
+        frameIndexToSimulate
+      )!;
       this.simulateOneFrame(previousFrame, nextFrame);
       ++frameIndexToSimulate;
       // The next frame we would have simulated is the new checkpoint for simulation.
@@ -325,12 +392,19 @@ export class ClientSimulation {
     }
   }
 
-  private simulateOneFrame(previousFrame: ClientSimulationFrameData, nextFrame: ClientSimulationFrameData) {
+  private simulateOneFrame(
+    previousFrame: ClientSimulationFrameData,
+    nextFrame: ClientSimulationFrameData
+  ) {
     // Approximate the server behaviour where one frame's inputs are applied to next
     // in the absence of any other changes.
     nextFrame.resolvedFrameData.inputs = previousFrame.resolvedFrameData.inputs;
     this.applyPredictedOrAuthoritativeInputsToResolvedInputs(nextFrame);
-    this.engine.stepSimulation(1 / this.simFPS, previousFrame.resolvedFrameData, nextFrame.resolvedFrameData);
+    this.engine.stepSimulation(
+      1 / this.simFPS,
+      previousFrame.resolvedFrameData,
+      nextFrame.resolvedFrameData
+    );
     this.applyAuthoritativeStateToResolvedState(nextFrame);
     nextFrame.resolvedFrameData.state.releaseDeletedState();
     // By copying the data to itself, we quantize the state, which ensures that the values being
@@ -338,7 +412,10 @@ export class ClientSimulation {
     // on the network, as well as the client performing the same operation on itself to create
     // the same effect.
     // This makes determinism a bit better, not that we're aiming for full determinism support
-    this.engine.copySimulationState(nextFrame.resolvedFrameData.state, nextFrame.resolvedFrameData.state);
+    this.engine.copySimulationState(
+      nextFrame.resolvedFrameData.state,
+      nextFrame.resolvedFrameData.state
+    );
   }
 
   private insertNewFrame(frameIndex: number): ClientSimulationFrameData {
@@ -351,10 +428,13 @@ export class ClientSimulation {
     // In order to avoid that we check for that case here and advance the simulation one tick to avoid
     // expiring our only simulated frame.
     let frameIndexWeAreAboutToReplace = frameIndex - this.frames.entries.length;
-    if (this.oldestDirtySimulationFrameIndex === frameIndexWeAreAboutToReplace + 1 ) {
+    if (
+      this.oldestDirtySimulationFrameIndex ===
+      frameIndexWeAreAboutToReplace + 1
+    ) {
       this.simulateOneFrame(
         this.frames.getElement(frameIndexWeAreAboutToReplace)!,
-        this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!,
+        this.frames.getElement(frameIndexWeAreAboutToReplace + 1)!
       );
       this.oldestDirtySimulationFrameIndex += 1;
     }
@@ -368,7 +448,9 @@ export class ClientSimulation {
    * Returns undefined if frameIndex is so far in the past that it is no longer available.
    * @param frameIndex
    */
-  private getOrInsertFrameWithoutSimulation(frameIndex: number): ClientSimulationFrameData | undefined  {
+  private getOrInsertFrameWithoutSimulation(
+    frameIndex: number
+  ): ClientSimulationFrameData | undefined {
     if (this.largestInitializedFrameIndex !== undefined) {
       if (this.largestInitializedFrameIndex >= frameIndex) {
         // We either already have the frame or it has been discarded
@@ -379,7 +461,11 @@ export class ClientSimulation {
         }
       }
       // Create all frames between the highest and this one.
-      for (let frameIndexToInit = this.largestInitializedFrameIndex + 1; frameIndexToInit < frameIndex; ++frameIndexToInit) {
+      for (
+        let frameIndexToInit = this.largestInitializedFrameIndex + 1;
+        frameIndexToInit < frameIndex;
+        ++frameIndexToInit
+      ) {
         this.insertNewFrame(frameIndexToInit);
       }
     }
@@ -390,39 +476,60 @@ export class ClientSimulation {
     } else {
       // Note here that we have not updated this.largestInitializedFrameIndex.
       // So it still currently refers to the frame before the ones we just inserted.
-      this.oldestDirtySimulationFrameIndex = Math.min(this.oldestDirtySimulationFrameIndex!, this.largestInitializedFrameIndex + 1);
+      this.oldestDirtySimulationFrameIndex = Math.min(
+        this.oldestDirtySimulationFrameIndex!,
+        this.largestInitializedFrameIndex + 1
+      );
     }
     this.largestInitializedFrameIndex = frameIndex;
     return result;
   }
 
-  private applyPredictedOrAuthoritativeInputsToResolvedInputs(frame: ClientSimulationFrameData) {
+  private applyPredictedOrAuthoritativeInputsToResolvedInputs(
+    frame: ClientSimulationFrameData
+  ) {
     if (frame.receivedAuthoritativeSimulationTimeS !== undefined) {
-      frame.resolvedFrameData.simulationTimeS = frame.receivedAuthoritativeSimulationTimeS;
+      frame.resolvedFrameData.simulationTimeS =
+        frame.receivedAuthoritativeSimulationTimeS;
     }
     if (this.playerId === undefined) {
       // We cannot apply our own inputs before we know our own playerId
       return;
     }
     if (frame.receivedAuthoritativeInput !== undefined) {
-      frame.resolvedFrameData.inputs = new Map([[this.playerId, frame.receivedAuthoritativeInput]]);
+      frame.resolvedFrameData.inputs = new Map([
+        [this.playerId, frame.receivedAuthoritativeInput],
+      ]);
     } else if (frame.predictedInput !== undefined) {
-      frame.resolvedFrameData.inputs = new Map([[this.playerId, frame.predictedInput]]);
+      frame.resolvedFrameData.inputs = new Map([
+        [this.playerId, frame.predictedInput],
+      ]);
     }
   }
 
-  private applyAuthoritativeStateToResolvedState(frame: ClientSimulationFrameData): void {
+  private applyAuthoritativeStateToResolvedState(
+    frame: ClientSimulationFrameData
+  ): void {
     let state = frame.resolvedFrameData.state;
     let ecdb = state.getEntityComponentDb();
     for (let c of frame.receivedAuthoritativeComponentData) {
       // TODO make this less dirty
       // Beacause component data is mutable, and because we're handing the simulation our own
       // authoritative copy of the state, we first re-deserialize from the pristine data buffer.
-      let readStream = new ReadStream(new DataView(c.serializedData.buffer, c.serializedData.byteOffset, c.serializedData.byteLength));
+      let readStream = new ReadStream(
+        new DataView(
+          c.serializedData.buffer,
+          c.serializedData.byteOffset,
+          c.serializedData.byteLength
+        )
+      );
       c.component.data.serialize(readStream);
       // Receiving a component update for an entity implies that the server thinks it's alive this frame.
       // Therefore if the entity was marked for deletion, unmark it
-      let maybeDeletedTag = state.getComponent(DeletedTag, c.component.id.ownerId);
+      let maybeDeletedTag = state.getComponent(
+        DeletedTag,
+        c.component.id.ownerId
+      );
       if (maybeDeletedTag !== undefined) {
         ecdb.releaseComponent(maybeDeletedTag.getId());
       }
@@ -458,10 +565,18 @@ export class ClientSimulation {
    * and ramps up to however many frames we store behind largestInitializedFrameIndex
    */
   private getOldestInitializedFrameIndex(): number | undefined {
-    if (this.largestInitializedFrameIndex === undefined || this.firstEverFrameIndex === undefined) {
+    if (
+      this.largestInitializedFrameIndex === undefined ||
+      this.firstEverFrameIndex === undefined
+    ) {
       return undefined;
     }
-    return this.largestInitializedFrameIndex - Math.min(
-      this.largestInitializedFrameIndex - this.firstEverFrameIndex, this.frames.entries.length - 1);
+    return (
+      this.largestInitializedFrameIndex -
+      Math.min(
+        this.largestInitializedFrameIndex - this.firstEverFrameIndex,
+        this.frames.entries.length - 1
+      )
+    );
   }
 }

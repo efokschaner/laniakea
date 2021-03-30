@@ -1,7 +1,13 @@
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
+import present = require('present');
 
-import { CyclicBuffer, measureAndSerialize, measureSerializable, ReadStream, Serializable, SerializationStream } from '@laniakea/utils';
+import {
+  CyclicBuffer,
+  measureAndSerialize,
+  measureSerializable,
+  ReadStream,
+  Serializable,
+  SerializationStream,
+} from '@laniakea/utils';
 import { SyncEvent } from 'ts-events';
 import { SequenceNumber } from './sequence-number';
 import { LikeRTCDataChannelOrWebSocket } from './socket-abstraction';
@@ -17,10 +23,10 @@ class Packet implements Serializable {
   public serialize(stream: SerializationStream) {
     this.sequenceNumber.serialize(stream);
     this.ackSequenceNumber.serialize(stream);
-    stream.serializeUint32(this, 'ackBitfield');
+    this.ackBitfield = stream.serializeUint32(this.ackBitfield);
     // TODO: we can save serializing length of the payload buffer because the
     // underlying protocol carries the length and we can assume 1 Packet per webrtc Message from the browser
-    stream.serializeUint8Array(this, 'payload');
+    this.payload = stream.serializeUint8Array(this.payload);
   }
 }
 
@@ -28,13 +34,12 @@ class SentPacketData {
   public sendTimeS: number;
   public onAck?: () => void;
   public ackedTimeS?: number;
-  constructor(sendTimeS: number) {
+  public constructor(sendTimeS: number) {
     this.sendTimeS = sendTimeS;
   }
 }
 
-class ReceivedPacketData {
-}
+class ReceivedPacketData {}
 
 /**
  * This is the largest number of bytes we should send in a data channel payload
@@ -60,39 +65,52 @@ let ackingPacketProtocolPayloadMTU = calculatePayloadMTU();
  * and other fun stuff
  */
 export class AckingPeer {
-  constructor(
-    private channel: LikeRTCDataChannelOrWebSocket,
-  ) {
-    console.assert(SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE % this.packetHistoryBufferSize === 0);
+  public constructor(private channel: LikeRTCDataChannelOrWebSocket) {
+    console.assert(
+      SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE %
+        this.packetHistoryBufferSize ===
+        0
+    );
     this.channel.onmessage = this.onChannelMessage.bind(this);
   }
 
-  public getMtuForPayload() {
+  public getMtuForPayload(): number {
     return ackingPacketProtocolPayloadMTU;
   }
 
   public onPacketReceived = new SyncEvent<Uint8Array>();
 
-  public sendPacket(payload: Uint8Array, onAck?: () => void) {
+  public sendPacket(payload: Uint8Array, onAck?: () => void): void {
     if (payload.byteLength > this.getMtuForPayload()) {
-      console.warn(`payload is ${payload.byteLength} bytes, which is larger than getMtuForPayload(): ${this.getMtuForPayload()}. Fragmentation may occur.`);
+      console.warn(
+        `payload is ${
+          payload.byteLength
+        } bytes, which is larger than getMtuForPayload(): ${this.getMtuForPayload()}. Fragmentation may occur.`
+      );
     }
     let outboundPacket = new Packet();
     outboundPacket.sequenceNumber = this.getNextOutboundSequenceNumber();
     outboundPacket.ackSequenceNumber = this.highestReceivedSequenceNumber;
     outboundPacket.ackBitfield = 0;
     for (let i = 0; i < ACK_BITFIELD_BYTES * 8; ++i) {
-      let sequenceNumberRepresentedByBit = outboundPacket.ackSequenceNumber.add( -1 - i);
-      let receivedPacketEntry = this.receivedPacketsHistory.getElement(sequenceNumberRepresentedByBit.value);
+      let sequenceNumberRepresentedByBit = outboundPacket.ackSequenceNumber.add(
+        -1 - i
+      );
+      let receivedPacketEntry = this.receivedPacketsHistory.getElement(
+        sequenceNumberRepresentedByBit.value
+      );
       if (receivedPacketEntry !== undefined) {
-        // tslint:disable-next-line:no-bitwise
+        // eslint-disable-next-line no-bitwise
         outboundPacket.ackBitfield |= 1 << i;
       }
     }
     outboundPacket.payload = payload;
     let sentPacketData = new SentPacketData(present() / 1000);
     sentPacketData.onAck = onAck;
-    this.sentPacketsHistory.setElement(outboundPacket.sequenceNumber.value, sentPacketData);
+    this.sentPacketsHistory.setElement(
+      outboundPacket.sequenceNumber.value,
+      sentPacketData
+    );
     this.lastSentAckSequenceNumber = outboundPacket.ackSequenceNumber;
     let outboundBuffer = measureAndSerialize(outboundPacket, undefined);
     this.channel.send(outboundBuffer);
@@ -101,14 +119,16 @@ export class AckingPeer {
   // EXPENSIVE DEBUG ONLY
   // TODO make configurable and compute eagerly to reduce cost
   // TODO exclude outliers
-  public getRttEstimate() {
+  public getRttEstimate(): number {
     let numberCounted = 0;
     let cumulativeMovingAverageRtt = 0;
     for (let entry of this.sentPacketsHistory.entries) {
       if (entry.data && entry.data.ackedTimeS) {
         numberCounted += 1;
         let sampledRtt = entry.data.ackedTimeS - entry.data.sendTimeS;
-        cumulativeMovingAverageRtt = cumulativeMovingAverageRtt + (sampledRtt - cumulativeMovingAverageRtt) / numberCounted;
+        cumulativeMovingAverageRtt =
+          cumulativeMovingAverageRtt +
+          (sampledRtt - cumulativeMovingAverageRtt) / numberCounted;
       }
     }
     return cumulativeMovingAverageRtt;
@@ -116,7 +136,7 @@ export class AckingPeer {
 
   // EXPENSIVE DEBUG ONLY
   // TODO make configurable and compute eagerly to reduce cost
-  public getFractionAcked() {
+  public getFractionAcked(): string {
     let sentCount = 0;
     let ackedCount = 0;
     for (let entry of this.sentPacketsHistory.entries) {
@@ -127,7 +147,7 @@ export class AckingPeer {
         }
       }
     }
-    return `${sentCount} / ${ackedCount} = ${100 * sentCount / ackedCount}%`;
+    return `${sentCount} / ${ackedCount} = ${(100 * sentCount) / ackedCount}%`;
   }
 
   /**
@@ -147,8 +167,12 @@ export class AckingPeer {
    * = 128
    */
   private packetHistoryBufferSize = 128;
-  private sentPacketsHistory = new CyclicBuffer<SentPacketData>(this.packetHistoryBufferSize);
-  private receivedPacketsHistory = new CyclicBuffer<ReceivedPacketData>(this.packetHistoryBufferSize);
+  private sentPacketsHistory = new CyclicBuffer<SentPacketData>(
+    this.packetHistoryBufferSize
+  );
+  private receivedPacketsHistory = new CyclicBuffer<ReceivedPacketData>(
+    this.packetHistoryBufferSize
+  );
   private nextOutboundSequenceNumber = new SequenceNumber(0);
   private getNextOutboundSequenceNumber(): SequenceNumber {
     let ret = this.nextOutboundSequenceNumber;
@@ -161,8 +185,13 @@ export class AckingPeer {
     this.handleIncomingPacket(ev.data);
   }
   private processAck(sentSequenceNumber: number, receivedTimeS: number) {
-    let sentPacketEntry = this.sentPacketsHistory.getElement(sentSequenceNumber);
-    if (sentPacketEntry !== undefined && sentPacketEntry.ackedTimeS === undefined) {
+    let sentPacketEntry = this.sentPacketsHistory.getElement(
+      sentSequenceNumber
+    );
+    if (
+      sentPacketEntry !== undefined &&
+      sentPacketEntry.ackedTimeS === undefined
+    ) {
       sentPacketEntry.ackedTimeS = receivedTimeS;
       if (sentPacketEntry.onAck !== undefined) {
         sentPacketEntry.onAck();
@@ -173,30 +202,45 @@ export class AckingPeer {
   private handleIncomingPacket(data: ArrayBuffer) {
     let inboundPacket = new Packet();
     inboundPacket.serialize(new ReadStream(new DataView(data), undefined));
-    if (inboundPacket.sequenceNumber.isGreaterThan(this.highestReceivedSequenceNumber)) {
-      for (let i = this.highestReceivedSequenceNumber.add(1);
-          inboundPacket.sequenceNumber.isGreaterThan(i);
-          i = i.add(1)) {
+    if (
+      inboundPacket.sequenceNumber.isGreaterThan(
+        this.highestReceivedSequenceNumber
+      )
+    ) {
+      for (
+        let i = this.highestReceivedSequenceNumber.add(1);
+        inboundPacket.sequenceNumber.isGreaterThan(i);
+        i = i.add(1)
+      ) {
         this.receivedPacketsHistory.clearElement(i.value);
       }
       this.highestReceivedSequenceNumber = inboundPacket.sequenceNumber;
     }
-    this.receivedPacketsHistory.setElement(inboundPacket.sequenceNumber.value, new ReceivedPacketData());
+    this.receivedPacketsHistory.setElement(
+      inboundPacket.sequenceNumber.value,
+      new ReceivedPacketData()
+    );
     let receivedTimeS = present() / 1000;
     this.processAck(inboundPacket.ackSequenceNumber.value, receivedTimeS);
     for (let i = 0; i < ACK_BITFIELD_BYTES * 8; ++i) {
-      // tslint:disable-next-line:no-bitwise
+      // eslint-disable-next-line no-bitwise
       let bitMask = 1 << i;
-      // tslint:disable-next-line:no-bitwise
+      // eslint-disable-next-line no-bitwise
       if (bitMask & inboundPacket.ackBitfield) {
-        let sequenceNumberRepresentedByBit = inboundPacket.ackSequenceNumber.add(-1 - i);
+        let sequenceNumberRepresentedByBit = inboundPacket.ackSequenceNumber.add(
+          -1 - i
+        );
         this.processAck(sequenceNumberRepresentedByBit.value, receivedTimeS);
       }
     }
     // If we've received multiple packets without having transmitted any, send an empty ack packet so that the
     // other end knows we're getting them.
     let halfTheAckRangeOfAPacket = ACK_BITFIELD_BYTES * 4;
-    if (inboundPacket.sequenceNumber.isGreaterThan(this.lastSentAckSequenceNumber.add(halfTheAckRangeOfAPacket))) {
+    if (
+      inboundPacket.sequenceNumber.isGreaterThan(
+        this.lastSentAckSequenceNumber.add(halfTheAckRangeOfAPacket)
+      )
+    ) {
       // This implies we have half a packet's ack capacity of un-acked packets to ack
       // Send a packet with zero length payload so that we transmit some acks.
       this.sendPacket(new Uint8Array(0));

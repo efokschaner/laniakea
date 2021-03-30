@@ -1,9 +1,17 @@
 import * as lk from '@laniakea/base-engine';
 import * as THREE from 'three';
-import { BallMovement, BallSpawner, GamePhase, PlayerInfo, Position2 } from './components';
+import {
+  BallMovement,
+  BallSpawner,
+  GamePhase,
+  PlayerInfo,
+  Position2,
+} from './components';
 import { getCurrentGamePhase } from './game-phase';
 
-function getOrCreateBallSpawner(state: lk.EntityComponentState): lk.Component<BallSpawner> {
+function getOrCreateBallSpawner(
+  state: lk.EntityComponentState
+): lk.Component<BallSpawner> {
   let spawners = Array.from(state.getComponents(BallSpawner));
   let spawner = spawners[0];
   if (spawner !== undefined) {
@@ -23,14 +31,21 @@ export class BallSpawnerSystem implements lk.System {
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let balls = Array.from(state.getComponents(BallMovement));
     let desiredNumBalls = alivePlayers.length;
-    let hasBeenMoreThanASecondSinceLastSpawn = spawner.getData().lastBallSpawnTimeS <= simulationTimeS - 1;
-    if (hasBeenMoreThanASecondSinceLastSpawn && balls.length < desiredNumBalls) {
+    let hasBeenMoreThanASecondSinceLastSpawn =
+      spawner.getData().lastBallSpawnTimeS <= simulationTimeS - 1;
+    if (
+      hasBeenMoreThanASecondSinceLastSpawn &&
+      balls.length < desiredNumBalls
+    ) {
       spawner.getData().lastBallSpawnTimeS = simulationTimeS;
       let initialBallVelocityMagnitude = 4;
       let ballPos = new Position2();
       let ballMovement = new BallMovement();
       ballMovement.velocity.x = 1;
-      ballMovement.velocity.rotateAround(new THREE.Vector2(), Math.random() * 2 * Math.PI);
+      ballMovement.velocity.rotateAround(
+        new THREE.Vector2(),
+        Math.random() * 2 * Math.PI
+      );
       ballMovement.velocity.setLength(initialBallVelocityMagnitude);
       let ball = state.createEntity();
       ball.setComponent(ballPos);

@@ -4,16 +4,16 @@ services:
   influxdb:
     image: influxdb:1.7.7
     ports:
-    - 8086:8086
+      - 8086:8086
     volumes:
-    - ./influxdb.conf:/etc/influxdb/influxdb.conf:ro
-    - ./influxdb-persistent-volume:/var/lib/influxdb
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf:ro
+      - ./influxdb-persistent-volume:/var/lib/influxdb
   grafana:
     image: grafana/grafana:5.4.3
     ports:
-    - 3000:3000
+      - 3000:3000
     volumes:
-    - ./grafana-persistent-volume:/var/lib/grafana
-    - ./grafana-provisioning:/etc/grafana/provisioning
+      - ./grafana-persistent-volume:/var/lib/grafana
+      - ./grafana-provisioning:/etc/grafana/provisioning
     links:
-    - influxdb # Allows grafana to find influx at http://influxdb:8086
+      - influxdb # Allows grafana to find influx at http://influxdb:8086

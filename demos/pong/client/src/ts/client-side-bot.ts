@@ -13,7 +13,10 @@ import {
   Position2,
 } from 'lk-demo-pong-shared';
 
-export function doClientSideBotting(simulation: lk.ClientSimulation, buttonsInput: GameButtonsInput) {
+export function doClientSideBotting(
+  simulation: lk.ClientSimulation,
+  buttonsInput: GameButtonsInput
+): void {
   let simTimeS = simulation.getCurrentSimulationTimeS();
   if (simTimeS === undefined) {
     // Nothing to do yet
@@ -29,8 +32,11 @@ export function doClientSideBotting(simulation: lk.ClientSimulation, buttonsInpu
 
   let state = nearestFrames.current.state;
   let ownPlayerId = simulation.getOwnPlayerId()!;
-  let ownPlayerInfo: PlayerInfo|undefined;
-  for (let [playerInfo, humanPlayerId] of state.getAspect(PlayerInfo, HumanPlayerId)) {
+  let ownPlayerInfo: PlayerInfo | undefined;
+  for (let [playerInfo, humanPlayerId] of state.getAspect(
+    PlayerInfo,
+    HumanPlayerId
+  )) {
     if (humanPlayerId.getData().playerId === ownPlayerId) {
       ownPlayerInfo = playerInfo.getData();
       break;
@@ -41,7 +47,7 @@ export function doClientSideBotting(simulation: lk.ClientSimulation, buttonsInpu
     return;
   }
 
-  let ownPaddle: Paddle|undefined;
+  let ownPaddle: Paddle | undefined;
   for (let paddle of state.getComponents(Paddle)) {
     if (paddle.getData().playerIndex === ownPlayerInfo.playerIndex) {
       ownPaddle = paddle.getData();

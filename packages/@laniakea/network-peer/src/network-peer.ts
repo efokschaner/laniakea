@@ -10,10 +10,11 @@ import { LikeRTCDataChannelOrWebSocket } from './socket-abstraction';
  * to remove boilerplate from client and server.
  */
 export class NetworkPeer {
-  constructor(
+  public constructor(
     private channel: LikeRTCDataChannelOrWebSocket,
-    private classRegistry: ClassRegistry,
-    private messageRouter: MessageRouter) {
+    private classRegistry: ClassRegistry<Serializable>,
+    private messageRouter: MessageRouter
+  ) {
     channel.onerror = (error) => {
       console.error('channel error:', error);
     };
@@ -28,7 +29,7 @@ export class NetworkPeer {
   public onClose = new SyncEvent<this>();
   private _isClosing = false;
 
-  public close() {
+  public close(): void {
     if (!this._isClosing) {
       this._isClosing = true;
       this.channel.close();
@@ -41,15 +42,18 @@ export class NetworkPeer {
    * Messages are unordered, prioritized individually,
    * and can be given a TTL / marked expired to limit reliability.
    */
-  public sendMessage(message: Serializable, onAck?: () => void): OutboundMessage {
+  public sendMessage(
+    message: Serializable,
+    onAck?: () => void
+  ): OutboundMessage {
     return this.messagePeer.sendMessage(message, onAck);
   }
 
-  public flushMessagesToNetwork() {
+  public flushMessagesToNetwork(): void {
     this.messagePeer.flushMessagesToNetwork();
   }
 
-  public getMtuForMessage() {
+  public getMtuForMessage(): number {
     return this.ackingPeer.getMtuForPayload();
   }
 

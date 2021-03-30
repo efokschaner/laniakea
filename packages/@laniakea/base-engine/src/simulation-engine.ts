@@ -1,5 +1,12 @@
 import { PlayerId } from '@laniakea/network-peer';
-import { ClassRegistry, measureAndSerialize, ReadStream, Serializable, TypeInfo, TypeName } from '@laniakea/utils';
+import {
+  ClassRegistry,
+  measureAndSerialize,
+  ReadStream,
+  Serializable,
+  TypeInfo,
+  TypeName,
+} from '@laniakea/utils';
 import { StepParams, System } from './engine';
 import { DeletedTag } from './entity-component-db';
 import { ComponentTypeId } from './ids';
@@ -7,12 +14,12 @@ import { InputFrame } from './input';
 import { EntityComponentState, EntityComponentStateImpl } from './state';
 
 export class SimulationFrameData {
-  constructor(
+  public constructor(
     public simulationFrameIndex: number,
     public simulationTimeS: number,
     public inputs: Map<PlayerId, InputFrame>,
-    public state: EntityComponentState) {
-    }
+    public state: EntityComponentState
+  ) {}
 }
 
 /**
@@ -21,15 +28,18 @@ export class SimulationFrameData {
 export class SimulationEngine {
   /**
    *
-   * @param classRegistry A ClassRegistry that will be used for serialization and typeIds,
+   * @param classRegistry A ClassRegistry<Serializable>that will be used for serialization and typeIds,
    * should be synced between server and client for state to be networked correctly.
    */
-  constructor(private classRegistry: ClassRegistry) {
+  public constructor(private classRegistry: ClassRegistry<Serializable>) {
     this.registerComponentType(DeletedTag, '__DeletedTag');
   }
 
   public createSimulationFrame(): SimulationFrameData {
-    let state = new EntityComponentStateImpl(this.componentTypes.map((ti) => ti.shortTypeId), this.classRegistry);
+    let state = new EntityComponentStateImpl(
+      this.componentTypes.map((ti) => ti.shortTypeId),
+      this.classRegistry
+    );
     let inputs = new Map<PlayerId, InputFrame>();
     let frame = new SimulationFrameData(-1, 0, inputs, state);
     return frame;
@@ -48,7 +58,10 @@ export class SimulationEngine {
   /**
    * See [[Engine.registerContinuousInputType]]
    */
-  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputTypeName: TypeName): void {
+  public registerContinuousInputType<T extends Serializable>(
+    inputType: new () => T,
+    inputTypeName: TypeName
+  ): void {
     let typeInfo = this.classRegistry.registerClass(inputType, inputTypeName);
     this.continuousInputTypes.push(typeInfo);
   }
@@ -74,16 +87,29 @@ export class SimulationEngine {
 
   //#region State
 
-  public registerComponentType<T extends Serializable>(componentType: new() => T, componentTypeName: TypeName): void {
-    let typeInfo = this.classRegistry.registerClass(componentType, componentTypeName);
+  public registerComponentType<T extends Serializable>(
+    componentType: new () => T,
+    componentTypeName: TypeName
+  ): void {
+    let typeInfo = this.classRegistry.registerClass(
+      componentType,
+      componentTypeName
+    );
     this.componentTypes.push(typeInfo);
   }
 
-  public constructComponentData(componentTypeId: ComponentTypeId): Serializable {
-    return this.classRegistry.getTypeInfoByShortTypeId(componentTypeId)!.construct() as Serializable;
+  public constructComponentData(
+    componentTypeId: ComponentTypeId
+  ): Serializable {
+    return this.classRegistry
+      .getTypeInfoByShortTypeId(componentTypeId)!
+      .construct();
   }
 
-  public copySimulationState(src: EntityComponentState, dst: EntityComponentState): void {
+  public copySimulationState(
+    src: EntityComponentState,
+    dst: EntityComponentState
+  ): void {
     let serialized = measureAndSerialize(src);
     let readStream = new ReadStream(new DataView(serialized));
     dst.serialize(readStream);
@@ -107,7 +133,11 @@ export class SimulationEngine {
    * Runs 1 simulation step with duration of timeDeltaS to produce nextFrame from previousFrame
    * using the simulation provided by the registered systems.
    */
-  public stepSimulation(timeDeltaS: number, previousFrame: SimulationFrameData, nextFrame: SimulationFrameData): void {
+  public stepSimulation(
+    timeDeltaS: number,
+    previousFrame: SimulationFrameData,
+    nextFrame: SimulationFrameData
+  ): void {
     nextFrame.simulationFrameIndex = previousFrame.simulationFrameIndex + 1;
     nextFrame.simulationTimeS = previousFrame.simulationTimeS + timeDeltaS;
     this.copySimulationState(previousFrame.state, nextFrame.state);
@@ -123,7 +153,7 @@ export class SimulationEngine {
     this.systems.forEach((s) => s.Step(stepParams));
   }
 
-  private continuousInputTypes = new Array<TypeInfo>();
-  private componentTypes = new Array<TypeInfo>();
+  private continuousInputTypes = new Array<TypeInfo<Serializable>>();
+  private componentTypes = new Array<TypeInfo<Serializable>>();
   private systems: System[] = [];
 }

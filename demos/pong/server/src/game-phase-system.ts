@@ -1,7 +1,14 @@
 import * as lk from '@laniakea/base-engine';
-import { GamePhase, GamePhaseComponent, NUM_PLAYERS_REQUIRED_TO_START, PlayerInfo } from 'lk-demo-pong-shared';
+import {
+  GamePhase,
+  GamePhaseComponent,
+  NUM_PLAYERS_REQUIRED_TO_START,
+  PlayerInfo,
+} from 'lk-demo-pong-shared';
 
-function getOrCreateGamePhaseComponent(state: lk.EntityComponentState): lk.Component<GamePhaseComponent> {
+function getOrCreateGamePhaseComponent(
+  state: lk.EntityComponentState
+): lk.Component<GamePhaseComponent> {
   let gamePhases = Array.from(state.getComponents(GamePhaseComponent));
   let gamePhase = gamePhases[0];
   if (gamePhase !== undefined) {
@@ -12,7 +19,7 @@ function getOrCreateGamePhaseComponent(state: lk.EntityComponentState): lk.Compo
 }
 
 export class GamePhaseSystem implements lk.System {
-  public Step({state}: lk.StepParams): void {
+  public Step({ state }: lk.StepParams): void {
     let phaseComponent = getOrCreateGamePhaseComponent(state);
     let phaseComponentData = phaseComponent.getData();
     switch (phaseComponent.getData().currentGamePhase) {
@@ -24,13 +31,13 @@ export class GamePhaseSystem implements lk.System {
         break;
       }
       case GamePhase.Playing: {
-          let players = Array.from(state.getComponents(PlayerInfo));
-          let alivePlayers = players.filter((pi) => pi.getData().alive);
-          let numPlayersAlive = alivePlayers.length;
-          if (numPlayersAlive === 1) {
-            phaseComponentData.currentGamePhase = GamePhase.Finished;
-          }
-          break;
+        let players = Array.from(state.getComponents(PlayerInfo));
+        let alivePlayers = players.filter((pi) => pi.getData().alive);
+        let numPlayersAlive = alivePlayers.length;
+        if (numPlayersAlive === 1) {
+          phaseComponentData.currentGamePhase = GamePhase.Finished;
+        }
+        break;
       }
       case GamePhase.Finished:
         break;

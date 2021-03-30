@@ -4,33 +4,33 @@
   "description": "Laniakea engine for servers",
   "homepage": "https://github.com/efokschaner/laniakea",
   "bugs": {
-    "url" : "https://github.com/efokschaner/laniakea/issues"
+    "url": "https://github.com/efokschaner/laniakea/issues"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/efokschaner/laniakea.git",
+    "type": "git",
+    "url": "https://github.com/efokschaner/laniakea.git",
     "directory": "packages/@laniakea/server-engine"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests implemented\""
   },
   "author": "efokschaner",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^10.12.1",
-    "@types/ramda": "0.25.40",
-    "@types/websocket": "0.0.40",
-    "typescript": "^3.4.5"
+    "@types/node": "^14.14.35",
+    "@types/ramda": "0.27.39",
+    "@types/websocket": "1.0.2",
+    "typescript": "^4.2.3"
   },
   "dependencies": {
     "@laniakea/base-engine": "^0.0.1",
     "@laniakea/network-server": "^0.0.1",
     "basic-auth": "^2.0.0",
     "present": "^1.0.0",
-    "ramda": "^0.25.0",
+    "ramda": "^0.27.1",
     "ts-events": "^3.2.0",
     "typescript-collections": "^1.3.2",
     "websocket": "^1.0.24",

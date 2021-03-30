@@ -1,5 +1,6 @@
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
+import { AddressInfo } from 'net';
+import present = require('present');
+
 import {
   C2S_InputFrameMessage,
   C2S_TimeSyncRequestMessage,
@@ -17,8 +18,11 @@ import {
   TypeName,
   WriteStream,
 } from '@laniakea/base-engine';
-import { AuthCallback, ListenOptions, NetworkServer } from '@laniakea/network-server';
-import { AddressInfo } from 'net';
+import {
+  AuthCallback,
+  ListenOptions,
+  NetworkServer,
+} from '@laniakea/network-server';
 import * as tsEvents from 'ts-events';
 import { FrameUpdateSender } from './frame-update-sender';
 import { ServerInputHandler } from './server-input-handler';
@@ -46,51 +50,84 @@ export class ServerEngine implements Engine {
   public options: ServerEngineOptions;
   public onPlayerConnected: tsEvents.BaseEvent<PlayerId> = new tsEvents.QueuedEvent<PlayerId>();
 
-  constructor(private authenticatePlayer: AuthCallback, options: Partial<ServerEngineOptions>) {
+  public constructor(
+    private authenticatePlayer: AuthCallback,
+    options: Partial<ServerEngineOptions>
+  ) {
     this.options = Object.assign({}, ServerEngine.defaultOptions, options);
-    this.networkServer.onConnection.attach(({playerId, networkPeer}) => {
+    this.networkServer.onConnection.attach(({ playerId, networkPeer }) => {
       console.log(`Player connected: playerId = ${playerId}`);
       this.playerInfos.set(playerId, {
         id: playerId,
         displayName: playerId.toString(),
       });
-      this.frameUpdateSenders.set(playerId, new FrameUpdateSender(playerId, networkPeer));
+      this.frameUpdateSenders.set(
+        playerId,
+        new FrameUpdateSender(playerId, networkPeer)
+      );
       this.onPlayerConnected.post(playerId);
     });
     this.networkServer.onDisconnect.attach((playerId) => {
       this.frameUpdateSenders.delete(playerId);
     });
-    registerMessageTypes(this.networkServer.registerMessageType.bind(this.networkServer));
-    this.networkServer.registerMessageHandler(C2S_TimeSyncRequestMessage, (playerId, timeSyncRequest) => {
-      let response = new S2C_TimeSyncResponseMessage();
-      response.clientTimeS = timeSyncRequest.clientTimeS;
-      response.serverTimeS = this.getSimulationTimeS();
-      let outboundMessage = this.networkServer.sendMessage(playerId, response);
-      if (outboundMessage !== undefined) {
-        outboundMessage.currentPriority = Infinity;
-        outboundMessage.ttl = 1;
+    registerMessageTypes(
+      this.networkServer.registerMessageType.bind(this.networkServer)
+    );
+    this.networkServer.registerMessageHandler(
+      C2S_TimeSyncRequestMessage,
+      (playerId, timeSyncRequest) => {
+        let response = new S2C_TimeSyncResponseMessage();
+        response.clientTimeS = timeSyncRequest.clientTimeS;
+        response.serverTimeS = this.getSimulationTimeS();
+        let outboundMessage = this.networkServer.sendMessage(
+          playerId,
+          response
+        );
+        if (outboundMessage !== undefined) {
+          outboundMessage.currentPriority = Infinity;
+          outboundMessage.ttl = 1;
+        }
+        this.networkServer.flushMessagesToNetwork(playerId);
       }
-      this.networkServer.flushMessagesToNetwork(playerId);
-    });
-    this.networkServer.registerMessageHandler(C2S_InputFrameMessage, (playerId, inputFramePacket) => {
-      // Discard input packets too far in the future so that we cannot be spammed with data that persists for a long time
-      let futureInputTimeWindowS = 4;
-      if (inputFramePacket.targetSimulationTimeS > this.currentFrame.simulationTimeS + futureInputTimeWindowS) {
-        console.warn(`Discarding inputFramePacket greater than ${futureInputTimeWindowS} seconds ahead of simulation.`);
-        return;
+    );
+    this.networkServer.registerMessageHandler(
+      C2S_InputFrameMessage,
+      (playerId, inputFramePacket) => {
+        // Discard input packets too far in the future so that we cannot be spammed with data that persists for a long time
+        let futureInputTimeWindowS = 4;
+        if (
+          inputFramePacket.targetSimulationTimeS >
+          this.currentFrame.simulationTimeS + futureInputTimeWindowS
+        ) {
+          console.warn(
+            `Discarding inputFramePacket greater than ${futureInputTimeWindowS} seconds ahead of simulation.`
+          );
+          return;
+        }
+        this.inputHandler.onInputFramePacket(playerId, inputFramePacket);
       }
-      this.inputHandler.onInputFramePacket(playerId, inputFramePacket);
-    });
+    );
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputTypeName: TypeName): void {
+  public registerContinuousInputType<T extends Serializable>(
+    inputType: new () => T,
+    inputTypeName: TypeName
+  ): void {
     this.simulationEngine.registerContinuousInputType(inputType, inputTypeName);
   }
 
-  public registerComponentType<T extends Serializable>(componentType: new() => T, componentTypeName: TypeName): void {
-    this.simulationEngine.registerComponentType(componentType, componentTypeName);
+  public registerComponentType<T extends Serializable>(
+    componentType: new () => T,
+    componentTypeName: TypeName
+  ): void {
+    this.simulationEngine.registerComponentType(
+      componentType,
+      componentTypeName
+    );
     // When the registered components have changed the EntityComponent state database must be rebuilt.
-    this.currentFrame = this.simulationEngine.cloneSimulationFrame(this.currentFrame);
+    this.currentFrame = this.simulationEngine.cloneSimulationFrame(
+      this.currentFrame
+    );
   }
 
   public addSystem(system: System): void {
@@ -101,18 +138,23 @@ export class ServerEngine implements Engine {
     this.simulationEngine.removeSystem(system);
   }
 
-  public getGameSimPeriodS() { return 1 / this.options.simFPS; }
+  public getGameSimPeriodS(): number {
+    return 1 / this.options.simFPS;
+  }
 
   /**
    * A continuous time that represents how far along the simulation should be.
    * Not quantised to the frame timestamps, see frame time for that value.
    */
-  public getSimulationTimeS() {
-    return (this.options.globalSimulationRateMultiplier * present() / 1000) + this.presentTimeToSimulationTimeDeltaS;
+  public getSimulationTimeS(): number {
+    return (
+      (this.options.globalSimulationRateMultiplier * present()) / 1000 +
+      this.presentTimeToSimulationTimeDeltaS
+    );
   }
 
-  public start() {
-    this.presentTimeToSimulationTimeDeltaS = - this.getSimulationTimeS();
+  public start(): void {
+    this.presentTimeToSimulationTimeDeltaS = -this.getSimulationTimeS();
     this.currentFrame.simulationTimeS = this.getSimulationTimeS();
     this.updateLoop();
   }
@@ -121,11 +163,16 @@ export class ServerEngine implements Engine {
     return this.networkServer.listen(options);
   }
 
-  private classRegistry = new ClassRegistry();
+  private classRegistry = new ClassRegistry<Serializable>();
   private playerInfos = new Map<PlayerId, PlayerInfo>();
   private frameUpdateSenders = new Map<PlayerId, FrameUpdateSender>();
-  private networkServer = new NetworkServer(this.classRegistry, this.authenticatePlayer);
-  private simulationEngine: SimulationEngine = new SimulationEngine(this.classRegistry);
+  private networkServer = new NetworkServer(
+    this.classRegistry,
+    this.authenticatePlayer
+  );
+  private simulationEngine: SimulationEngine = new SimulationEngine(
+    this.classRegistry
+  );
   private presentTimeToSimulationTimeDeltaS = 0;
   private inputHandler = new ServerInputHandler(this.simulationEngine);
 
@@ -133,7 +180,8 @@ export class ServerEngine implements Engine {
 
   private updateLoop() {
     let curSimTimeS = this.getSimulationTimeS();
-    let timeAmountInNeedOfSimulationS = curSimTimeS - this.currentFrame.simulationTimeS;
+    let timeAmountInNeedOfSimulationS =
+      curSimTimeS - this.currentFrame.simulationTimeS;
 
     // In order to prevent a catastrophic feedback loop due to our server being
     // unable to keep up with real time, and thus trying to do more work each frame,
@@ -146,10 +194,16 @@ export class ServerEngine implements Engine {
     // otherwise we will still "owe" the remaining simulation time on the next
     // update loop.
     let numFramesThreshold = 4;
-    if (timeAmountInNeedOfSimulationS > numFramesThreshold * this.getGameSimPeriodS()) {
-      console.warn('Decreasing simulation rate to compensate for delayed processing.');
+    if (
+      timeAmountInNeedOfSimulationS >
+      numFramesThreshold * this.getGameSimPeriodS()
+    ) {
+      console.warn(
+        'Decreasing simulation rate to compensate for delayed processing.'
+      );
       // Keep 1 frame's worth of elapsed time and discard the rest.
-      let timeToDiscardS = timeAmountInNeedOfSimulationS - this.getGameSimPeriodS();
+      let timeToDiscardS =
+        timeAmountInNeedOfSimulationS - this.getGameSimPeriodS();
       this.presentTimeToSimulationTimeDeltaS -= timeToDiscardS;
       timeAmountInNeedOfSimulationS = this.getGameSimPeriodS();
     }
@@ -157,9 +211,16 @@ export class ServerEngine implements Engine {
     while (timeAmountInNeedOfSimulationS >= this.getGameSimPeriodS()) {
       let previousFrame = this.currentFrame;
       this.currentFrame = this.simulationEngine.createSimulationFrame();
-      let newSimTimeS = previousFrame.simulationTimeS + this.getGameSimPeriodS();
-      this.currentFrame.inputs = this.inputHandler.getInputFramesForSimTime(newSimTimeS);
-      this.simulationEngine.stepSimulation(this.getGameSimPeriodS(), previousFrame, this.currentFrame);
+      let newSimTimeS =
+        previousFrame.simulationTimeS + this.getGameSimPeriodS();
+      this.currentFrame.inputs = this.inputHandler.getInputFramesForSimTime(
+        newSimTimeS
+      );
+      this.simulationEngine.stepSimulation(
+        this.getGameSimPeriodS(),
+        previousFrame,
+        this.currentFrame
+      );
       // At the moment this event flush is mainly just here so that onPlayerConnected event
       // triggers.
       // Some more thought may be needed to how events could / should interact with the game state however.
@@ -172,7 +233,10 @@ export class ServerEngine implements Engine {
       // the same effect.
       // This makes determinism a bit better, not that we're aiming for full determinism support
       // TODO quantize input too? Before the step?
-      this.simulationEngine.copySimulationState(this.currentFrame.state, this.currentFrame.state);
+      this.simulationEngine.copySimulationState(
+        this.currentFrame.state,
+        this.currentFrame.state
+      );
       timeAmountInNeedOfSimulationS -= this.getGameSimPeriodS();
     }
 
@@ -183,30 +247,46 @@ export class ServerEngine implements Engine {
     let aliveComponentsAndSerializedData = new Array<ComponentAndSerializedData>();
     let measureStream = new MeasureStream();
     let blankArray = new Uint8Array();
-    for (let c of this.currentFrame.state.getEntityComponentDb().getAllComponents()) {
+    for (let c of this.currentFrame.state
+      .getEntityComponentDb()
+      .getAllComponents()) {
       if (!c.isDeleted) {
-        aliveComponentsAndSerializedData.push({component: c, serializedData: blankArray});
+        aliveComponentsAndSerializedData.push({
+          component: c,
+          serializedData: blankArray,
+        });
         c.data.serialize(measureStream);
       }
     }
-    let componentDataBuffer = new ArrayBuffer(measureStream.getNumBytesWritten());
+    let componentDataBuffer = new ArrayBuffer(
+      measureStream.getNumBytesWritten()
+    );
     let writeStream = new WriteStream(new DataView(componentDataBuffer));
     for (let c of aliveComponentsAndSerializedData) {
       let startOffset = writeStream.getNumBytesWritten();
       c.component.data.serialize(writeStream);
       let endOffset = writeStream.getNumBytesWritten();
-      c.serializedData = new Uint8Array(componentDataBuffer, startOffset, endOffset - startOffset);
+      c.serializedData = new Uint8Array(
+        componentDataBuffer,
+        startOffset,
+        endOffset - startOffset
+      );
     }
     this.frameUpdateSenders.forEach((sender) => {
-      sender.sendFrameUpdate(this.currentFrame, aliveComponentsAndSerializedData);
+      sender.sendFrameUpdate(
+        this.currentFrame,
+        aliveComponentsAndSerializedData
+      );
     });
 
     // releaseDeletedState needs to happen after anything that cares about seeing deletion markers
     this.currentFrame.state.releaseDeletedState();
     this.networkServer.flushMessagesToNetwork();
     // Schedule the next update to coincide with the start time of the next unsimulated frame.
-    let nextFrameStartTimeS = this.currentFrame.simulationTimeS + this.getGameSimPeriodS();
-    let nextFrameStartOffsetMS = (nextFrameStartTimeS - this.getSimulationTimeS()) * 1000;
+    let nextFrameStartTimeS =
+      this.currentFrame.simulationTimeS + this.getGameSimPeriodS();
+    let nextFrameStartOffsetMS =
+      (nextFrameStartTimeS - this.getSimulationTimeS()) * 1000;
     setTimeout(() => this.updateLoop(), nextFrameStartOffsetMS);
   }
 }

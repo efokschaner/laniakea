@@ -1,0 +1,6 @@
+dist
+dist-test
+docs
+
+# .0x profiling output
+*.0x/

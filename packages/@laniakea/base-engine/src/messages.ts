@@ -2,9 +2,6 @@ import { SequenceNumber } from '@laniakea/network-peer';
 import { Serializable, SerializationStream } from '@laniakea/utils';
 import { ComponentId, EntityId } from './ids';
 
-// Allow our message name format
-// tslint:disable:class-name
-
 export class S2C_FrameInputsUsedMessage implements Serializable {
   public simulationFrameIndex = -1;
   public simulationTimeS = -1;
@@ -14,9 +11,13 @@ export class S2C_FrameInputsUsedMessage implements Serializable {
   // TODO We should try to revise this so that we don't have to do this.
   public inputUsedForPlayerThisFrame!: Uint8Array;
   public serialize(stream: SerializationStream): void {
-    stream.serializeUint32(this, 'simulationFrameIndex');
-    stream.serializeFloat64(this, 'simulationTimeS');
-    stream.serializeUint8Array(this, 'inputUsedForPlayerThisFrame');
+    this.simulationFrameIndex = stream.serializeUint32(
+      this.simulationFrameIndex
+    );
+    this.simulationTimeS = stream.serializeFloat64(this.simulationTimeS);
+    this.inputUsedForPlayerThisFrame = stream.serializeUint8Array(
+      this.inputUsedForPlayerThisFrame
+    );
   }
 }
 
@@ -29,24 +30,24 @@ export class S2C_FrameComponentStateMessage implements Serializable {
   // TODO We should try to revise this so that we don't have to do this.
   public componentData!: Uint8Array;
   public serialize(stream: SerializationStream): void {
-    stream.serializeUint32(this, 'simulationFrameIndex');
-    stream.serializeFloat64(this, 'simulationTimeS');
-    stream.serializeUint8Array(this, 'componentData');
+    this.simulationFrameIndex = stream.serializeUint32(
+      this.simulationFrameIndex
+    );
+    this.simulationTimeS = stream.serializeFloat64(this.simulationTimeS);
+    this.componentData = stream.serializeUint8Array(this.componentData);
   }
 }
 
 function serializeUint32Array(stream: SerializationStream, arr: number[]) {
-  let lengthObj = {val: arr.length};
-  stream.serializeUint32(lengthObj, 'val');
-  let uint8Arr = {val: new Uint8Array(0)};
+  let uint8Arr = new Uint8Array(0);
   if (stream.isWriting) {
     let uint32arr = Uint32Array.from(arr);
-    uint8Arr = {val: new Uint8Array(uint32arr.buffer)};
+    uint8Arr = new Uint8Array(uint32arr.buffer);
   }
-  stream.serializeUint8Array(uint8Arr, 'val');
+  uint8Arr = stream.serializeUint8Array(uint8Arr);
   if (stream.isReading) {
     arr.length = 0;
-    let uint32Arr = new Uint32Array(uint8Arr.val);
+    let uint32Arr = new Uint32Array(uint8Arr);
     for (let uint32 of uint32Arr) {
       arr.push(uint32);
     }
@@ -61,9 +62,13 @@ export class S2C_FrameDeletionsMessage implements Serializable {
   public deletedEntityIds = new Array<EntityId>();
 
   public serialize(stream: SerializationStream): void {
-    stream.serializeUint32(this, 'simulationFrameIndex');
-    stream.serializeFloat64(this, 'simulationTimeS');
-    stream.serializeUint16(this.deletedComponentIds, 'length');
+    this.simulationFrameIndex = stream.serializeUint32(
+      this.simulationFrameIndex
+    );
+    this.simulationTimeS = stream.serializeFloat64(this.simulationTimeS);
+    this.deletedComponentIds.length = stream.serializeUint16(
+      this.deletedComponentIds.length
+    );
     for (let i = 0; i < this.deletedComponentIds.length; ++i) {
       if (stream.isWriting) {
         this.deletedComponentIds[i].serialize(stream);
@@ -80,7 +85,7 @@ export class S2C_FrameDeletionsMessage implements Serializable {
 export class C2S_TimeSyncRequestMessage implements Serializable {
   public clientTimeS = 0;
   public serialize(stream: SerializationStream): void {
-    stream.serializeFloat64(this, 'clientTimeS');
+    this.clientTimeS = stream.serializeFloat64(this.clientTimeS);
   }
 }
 
@@ -88,8 +93,8 @@ export class S2C_TimeSyncResponseMessage implements Serializable {
   public clientTimeS = 0;
   public serverTimeS = 0;
   public serialize(stream: SerializationStream): void {
-    stream.serializeFloat64(this, 'clientTimeS');
-    stream.serializeFloat64(this, 'serverTimeS');
+    this.clientTimeS = stream.serializeFloat64(this.clientTimeS);
+    this.serverTimeS = stream.serializeFloat64(this.serverTimeS);
   }
 }
 
@@ -98,16 +103,20 @@ export class C2S_InputFrameMessage implements Serializable {
   public inputFrame!: Uint8Array;
   public sequenceNumber = new SequenceNumber();
   public serialize(stream: SerializationStream): void {
-    stream.serializeFloat64(this, 'targetSimulationTimeS');
-    stream.serializeUint8Array(this, 'inputFrame');
+    this.targetSimulationTimeS = stream.serializeFloat64(
+      this.targetSimulationTimeS
+    );
+    this.inputFrame = stream.serializeUint8Array(this.inputFrame);
     this.sequenceNumber.serialize(stream);
   }
 }
 
 export function registerMessageTypes(
   registerCb: <T extends Serializable>(
-    ctor: new(...args: any[]) => T,
-    uniquePacketTypeName: string) => void) {
+    ctor: new (...args: any[]) => T,
+    uniquePacketTypeName: string
+  ) => void
+): void {
   registerCb(S2C_FrameInputsUsedMessage, 'S2C_FrameInputsUsedMessage');
   registerCb(S2C_FrameComponentStateMessage, 'S2C_FrameComponentStateMessage');
   registerCb(S2C_FrameDeletionsMessage, 'S2C_FrameDeletionsMessage');

@@ -1,4 +1,8 @@
-import { ComponentAndSerializedData, ComponentId, NumericComponentId } from '@laniakea/base-engine';
+import {
+  ComponentAndSerializedData,
+  ComponentId,
+  NumericComponentId,
+} from '@laniakea/base-engine';
 
 enum AckState {
   UNSENT,
@@ -40,38 +44,58 @@ function byteArraysAreEqual(a: Uint8Array, b: Uint8Array) {
 }
 
 class ComponentReplicationState {
-  constructor(
+  public constructor(
     public componentId: ComponentId,
     /**
      * A marker that allows us to purge components that were not in the latest frame
      */
     public aliveMarker: AliveMarker,
-    public latestState: ComponentAndSerializedData) {
-  }
+    public latestState: ComponentAndSerializedData
+  ) {}
   public ackState = AckState.UNSENT;
   public currentPriority = PRIORITY_GROWTH_FACTOR[AckState.UNSENT];
 }
 
 export class ComponentReplicationChooser {
-
   private currentFrameMarker = AliveMarker.FOO;
-  private componentReplicationStates = new Map<NumericComponentId, ComponentReplicationState>();
+  private componentReplicationStates = new Map<
+    NumericComponentId,
+    ComponentReplicationState
+  >();
 
-  private upsertComponentReplicationState(componentId: ComponentId, latestState: ComponentAndSerializedData): ComponentReplicationState {
+  private upsertComponentReplicationState(
+    componentId: ComponentId,
+    latestState: ComponentAndSerializedData
+  ): ComponentReplicationState {
     let componentIdKey = componentId.asNumericId();
-    let componentReplicationState = this.componentReplicationStates.get(componentIdKey);
+    let componentReplicationState = this.componentReplicationStates.get(
+      componentIdKey
+    );
     if (componentReplicationState === undefined) {
-      componentReplicationState = new ComponentReplicationState(componentId, this.currentFrameMarker, latestState);
-      this.componentReplicationStates.set(componentIdKey, componentReplicationState);
+      componentReplicationState = new ComponentReplicationState(
+        componentId,
+        this.currentFrameMarker,
+        latestState
+      );
+      this.componentReplicationStates.set(
+        componentIdKey,
+        componentReplicationState
+      );
     } else {
       // Set the alive marker as we accessed the component this frame.
       componentReplicationState.aliveMarker = this.currentFrameMarker;
       // If the latest data is different it is considered an unsent state
-      if (!byteArraysAreEqual(componentReplicationState.latestState.serializedData, latestState.serializedData)) {
+      if (
+        !byteArraysAreEqual(
+          componentReplicationState.latestState.serializedData,
+          latestState.serializedData
+        )
+      ) {
         componentReplicationState.ackState = AckState.UNSENT;
       }
       componentReplicationState.latestState = latestState;
-      componentReplicationState.currentPriority += PRIORITY_GROWTH_FACTOR[componentReplicationState.ackState];
+      componentReplicationState.currentPriority +=
+        PRIORITY_GROWTH_FACTOR[componentReplicationState.ackState];
     }
     return componentReplicationState;
   }
@@ -93,27 +117,33 @@ export class ComponentReplicationChooser {
   }
 
   private getComponentsSortedByPriority(): ComponentReplicationState[] {
-    return Array.from(
-      this.componentReplicationStates.values(),
-    ).filter(
-      // Filter lower priority items to reduce the amount of sorting work
-      (x) => x.currentPriority >= MINUMUM_SEND_PRIORITY,
-    ).sort(
-      (a, b) => b.currentPriority - a.currentPriority,
-    );
+    return Array.from(this.componentReplicationStates.values())
+      .filter(
+        // Filter lower priority items to reduce the amount of sorting work
+        (x) => x.currentPriority >= MINUMUM_SEND_PRIORITY
+      )
+      .sort((a, b) => b.currentPriority - a.currentPriority);
   }
 
-  public getComponentsToSend(currentState: ComponentAndSerializedData[], maxBytesOfComponentData: number): ComponentAndSerializedData[] {
+  public getComponentsToSend(
+    currentState: ComponentAndSerializedData[],
+    maxBytesOfComponentData: number
+  ): ComponentAndSerializedData[] {
     this.updateFromCurrentState(currentState);
     let highestPriorityComponents = this.getComponentsSortedByPriority();
     // Get as many messages as we can fit in to maxBytesOfComponentData
     let componentsThatFit = new Array<ComponentAndSerializedData>();
     let combinedLengthOfComponentsThatFit = 0;
     for (let component of highestPriorityComponents) {
-      let lengthIncludingNextComponent = combinedLengthOfComponentsThatFit + component.latestState.serializedData.byteLength;
+      let lengthIncludingNextComponent =
+        combinedLengthOfComponentsThatFit +
+        component.latestState.serializedData.byteLength;
       // Don't test length on the first component
       // If the first sendable component is too large, accept it and let webrtc deal with fragmentation
-      if (componentsThatFit.length !== 0 && (lengthIncludingNextComponent > maxBytesOfComponentData)) {
+      if (
+        componentsThatFit.length !== 0 &&
+        lengthIncludingNextComponent > maxBytesOfComponentData
+      ) {
         // Skip this component as it would take us over the size limit
         continue;
       }
@@ -126,18 +156,25 @@ export class ComponentReplicationChooser {
       component.currentPriority = 0;
       // If we're less than 8 bytes from the maxLength, it's good enough
       // We're probably not going to find a small enough message to squeeze in, so break out
-      if (combinedLengthOfComponentsThatFit > (maxBytesOfComponentData - 8)) {
+      if (combinedLengthOfComponentsThatFit > maxBytesOfComponentData - 8) {
         break;
       }
     }
     return componentsThatFit;
   }
 
-  public onComponentsAcked(components: ComponentAndSerializedData[]) {
+  public onComponentsAcked(components: ComponentAndSerializedData[]): void {
     for (let c of components) {
-      let maybeComponentReplicationState = this.componentReplicationStates.get(c.component.id.asNumericId());
+      let maybeComponentReplicationState = this.componentReplicationStates.get(
+        c.component.id.asNumericId()
+      );
       if (maybeComponentReplicationState !== undefined) {
-        if (byteArraysAreEqual(maybeComponentReplicationState.latestState.serializedData, c.serializedData)) {
+        if (
+          byteArraysAreEqual(
+            maybeComponentReplicationState.latestState.serializedData,
+            c.serializedData
+          )
+        ) {
           maybeComponentReplicationState.ackState = AckState.ACKED;
         }
       }

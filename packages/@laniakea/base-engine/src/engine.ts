@@ -25,11 +25,16 @@ export interface Engine {
    * Continuous input remains the same on the server if it doesnt get an update from client.
    * Good for things like player movement instructions from inputs that are held down by the player.
    */
-  registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputTypeName: TypeName): void;
+  registerContinuousInputType<T extends Serializable>(
+    inputType: new () => T,
+    inputTypeName: TypeName
+  ): void;
 
-  registerComponentType<T extends Serializable>(componentType: new() => T, componentTypeName: TypeName): void;
+  registerComponentType<T extends Serializable>(
+    componentType: new () => T,
+    componentTypeName: TypeName
+  ): void;
 
   addSystem(system: System): void;
   removeSystem(system: System): void;
-
 }

@@ -1,14 +1,7 @@
 {
-  "ignoreCompilerErrors": true,
   "gitRevision": "master",
-  "mode": "modules",
-  "module": "commonjs",
   "name": "Laniakea",
   "out": "docs",
-  "plugin": [
-    "typedoc-plugin-lerna-packages",
-    "typedoc-plugin-nojekyll"
-  ],
-  "target": "es2015",
+  "plugin": ["typedoc-plugin-lerna-packages", "typedoc-plugin-nojekyll"],
   "tsconfig": "tsconfig.common.json"
 }

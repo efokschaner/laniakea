@@ -3,7 +3,9 @@ import { BotSpawner, GamePhase, PlayerInfo } from './components';
 import { NUM_PLAYERS_REQUIRED_TO_START } from './constants';
 import { getCurrentGamePhase } from './game-phase';
 
-function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<BotSpawner> {
+function getOrCreateBotSpawner(
+  state: lk.EntityComponentState
+): lk.Component<BotSpawner> {
   let spawners = Array.from(state.getComponents(BotSpawner));
   let spawner = spawners[0];
   if (spawner !== undefined) {
@@ -14,7 +16,7 @@ function getOrCreateBotSpawner(state: lk.EntityComponentState): lk.Component<Bot
 }
 
 export class BotSpawnerSystem implements lk.System {
-  public Step({simulationTimeS, state}: lk.StepParams): void {
+  public Step({ simulationTimeS, state }: lk.StepParams): void {
     if (getCurrentGamePhase(state) !== GamePhase.WaitingForPlayers) {
       return;
     }
@@ -22,7 +24,8 @@ export class BotSpawnerSystem implements lk.System {
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
     let numPlayersAlive = alivePlayers.length;
-    let isTimeToSpawn = spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 1;
+    let isTimeToSpawn =
+      spawner.getData().lastBotSpawnTimeS <= simulationTimeS - 1;
     if (isTimeToSpawn && numPlayersAlive <= NUM_PLAYERS_REQUIRED_TO_START) {
       spawner.getData().lastBotSpawnTimeS = simulationTimeS;
       let newPlayerInfo = new PlayerInfo();

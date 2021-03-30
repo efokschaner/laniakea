@@ -15,7 +15,7 @@ import {
 } from 'lk-demo-pong-shared';
 
 import { ClientSettings } from './client-settings';
-import {RendererSizeUpdater} from './renderer-size-updater';
+import { RendererSizeUpdater } from './renderer-size-updater';
 
 class ThreeRenderer implements lk.RenderingSystem {
   private graphicalWorldRadius = 12;
@@ -29,25 +29,61 @@ class ThreeRenderer implements lk.RenderingSystem {
   private cameraMaxRotationSpeedRadiansPerSecond = Math.PI / 2;
   private currentCameraTargetOrientation?: THREE.Quaternion = undefined;
 
-  private renderer = new THREE.WebGLRenderer({antialias: true});
-  private rendererSizeUpdater = new RendererSizeUpdater(this.camera, this.renderer);
+  private renderer = new THREE.WebGLRenderer({ antialias: true });
+  private rendererSizeUpdater = new RendererSizeUpdater(
+    this.camera,
+    this.renderer
+  );
 
-  private floorGeometry = new THREE.PlaneBufferGeometry(this.graphicalWorldRadius * 2, this.graphicalWorldRadius * 2, 8, 8);
-  private floorMaterial = new THREE.MeshLambertMaterial( { color: this.backgroundColor, wireframe: false } );
+  private floorGeometry = new THREE.PlaneBufferGeometry(
+    this.graphicalWorldRadius * 2,
+    this.graphicalWorldRadius * 2,
+    8,
+    8
+  );
+  private floorMaterial = new THREE.MeshLambertMaterial({
+    color: this.backgroundColor,
+    wireframe: false,
+  });
   private floorMesh = new THREE.Mesh(this.floorGeometry, this.floorMaterial);
 
-  private lineMaterial = new THREE.LineBasicMaterial( { color: 0x080808, linewidth: 0.4 } );
+  private lineMaterial = new THREE.LineBasicMaterial({
+    color: 0x080808,
+    linewidth: 0.4,
+  });
   private rendererWalls = new Map<lk.EntityId, THREE.Line>();
 
   private allyColor = 0x3030ff;
-  private allyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.allyColor, emissive: this.allyColor, emissiveIntensity: 0.6 });
+  private allyPaddleMaterial = new THREE.MeshLambertMaterial({
+    color: this.allyColor,
+    emissive: this.allyColor,
+    emissiveIntensity: 0.6,
+  });
   private enemyColor = 0xff2b2b;
-  private enemyPaddleMaterial = new THREE.MeshLambertMaterial({ color: this.enemyColor, emissive: this.enemyColor, emissiveIntensity: 0.6 });
-  private paddleGeometry = new THREE.BoxBufferGeometry(1, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
+  private enemyPaddleMaterial = new THREE.MeshLambertMaterial({
+    color: this.enemyColor,
+    emissive: this.enemyColor,
+    emissiveIntensity: 0.6,
+  });
+  private paddleGeometry = new THREE.BoxBufferGeometry(
+    1,
+    this.foregroundThickness,
+    this.foregroundThickness,
+    1,
+    1,
+    1
+  );
   private rendererPaddles = new Map<lk.EntityId, THREE.Mesh>();
 
-  private ballGeometry = new THREE.BoxBufferGeometry(this.foregroundThickness, this.foregroundThickness, this.foregroundThickness, 1, 1, 1);
-  private ballMaterial = new THREE.MeshLambertMaterial( { color: 0x080808 } );
+  private ballGeometry = new THREE.BoxBufferGeometry(
+    this.foregroundThickness,
+    this.foregroundThickness,
+    this.foregroundThickness,
+    1,
+    1,
+    1
+  );
+  private ballMaterial = new THREE.MeshLambertMaterial({ color: 0x080808 });
   private rendererBalls = new Map<lk.EntityId, THREE.Mesh>();
 
   private dayLight = new THREE.DirectionalLight();
@@ -55,7 +91,10 @@ class ThreeRenderer implements lk.RenderingSystem {
   // ORBITAL CAMERA JUST FOR DEBUG.
   private cameraController?: OrbitControls;
 
-  constructor(private clientSettings: ClientSettings, private sceneElementContainer: HTMLElement) {
+  public constructor(
+    private clientSettings: ClientSettings,
+    private sceneElementContainer: HTMLElement
+  ) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene.background = new THREE.Color(this.backgroundColor);
@@ -86,7 +125,7 @@ class ThreeRenderer implements lk.RenderingSystem {
     };
     */
 
-    this.floorMesh.translateZ(- 0.75 * this.foregroundThickness);
+    this.floorMesh.translateZ(-0.75 * this.foregroundThickness);
     this.floorMesh.receiveShadow = true;
     this.scene.add(this.floorMesh);
 
@@ -96,30 +135,39 @@ class ThreeRenderer implements lk.RenderingSystem {
   private updateCamera(domHighResTimestampMS: number) {
     let cameraUpdateDeltaS = 0;
     if (this.lastCameraUpdateTimestampMS !== undefined) {
-      cameraUpdateDeltaS = (domHighResTimestampMS - this.lastCameraUpdateTimestampMS) / 1000;
+      cameraUpdateDeltaS =
+        (domHighResTimestampMS - this.lastCameraUpdateTimestampMS) / 1000;
     }
     this.lastCameraUpdateTimestampMS = domHighResTimestampMS;
 
     this.rendererSizeUpdater.update();
 
     // Set camera distance to ensure scene is contained.
-    let verticalFov = this.camera.getEffectiveFOV() * Math.PI / 180;
+    let verticalFov = (this.camera.getEffectiveFOV() * Math.PI) / 180;
     let smallerFov = verticalFov;
     if (this.camera.aspect < 1) {
-      let horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
+      let horizontalFov =
+        2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
       smallerFov = horizontalFov;
     }
-    let distanceForCamera = this.graphicalWorldRadius / Math.tan(smallerFov / 2);
+    let distanceForCamera =
+      this.graphicalWorldRadius / Math.tan(smallerFov / 2);
     this.camera.position.z = distanceForCamera;
 
     if (this.cameraController !== undefined) {
       this.cameraController.update();
     } else if (this.currentCameraTargetOrientation !== undefined) {
-      this.camera.quaternion.rotateTowards(this.currentCameraTargetOrientation, this.cameraMaxRotationSpeedRadiansPerSecond * cameraUpdateDeltaS);
+      this.camera.quaternion.rotateTowards(
+        this.currentCameraTargetOrientation,
+        this.cameraMaxRotationSpeedRadiansPerSecond * cameraUpdateDeltaS
+      );
     }
   }
 
-  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(
+    domHighResTimestampMS: number,
+    simulation: lk.ClientSimulation
+  ) {
     // TODO, on the client we need to handle "entity deletion" so we release resources
     // For the renderer this is not on the frame its deleted but when none of our frame history contains
     // any live copies of the entity any more.
@@ -140,8 +188,10 @@ class ThreeRenderer implements lk.RenderingSystem {
       return;
     }
 
-    let midFrameLerpFactor = (targetSimTimeS - nearestFrames.current.simulationTimeS) /
-                             (nearestFrames.next.simulationTimeS - nearestFrames.current.simulationTimeS);
+    let midFrameLerpFactor =
+      (targetSimTimeS - nearestFrames.current.simulationTimeS) /
+      (nearestFrames.next.simulationTimeS -
+        nearestFrames.current.simulationTimeS);
     if (!this.clientSettings.subFrameInterpolationEnabled.get()) {
       midFrameLerpFactor = 0;
     }
@@ -149,40 +199,74 @@ class ThreeRenderer implements lk.RenderingSystem {
     // Loop through the current frame for positions, if there are positions in the next frame that are not in the current
     // we just don't care about them. If there are positions in the current frame that are not in the next, we just accept
     // their current pos as the value.
-    for (let currentFramePos of nearestFrames.current.state.getComponents(Position2)) {
+    for (let currentFramePos of nearestFrames.current.state.getComponents(
+      Position2
+    )) {
       // TODO Vector2.clone() signature should actually return a "this" type but doesn't.
       let interpolatedPosition = currentFramePos.getData().clone() as Position2;
-      let maybeNextFramePos = nearestFrames.next.state.getComponent(Position2, currentFramePos.getId().ownerId);
+      let maybeNextFramePos = nearestFrames.next.state.getComponent(
+        Position2,
+        currentFramePos.getId().ownerId
+      );
       if (maybeNextFramePos !== undefined) {
-        interpolatedPosition.lerp(maybeNextFramePos.getData(), midFrameLerpFactor);
+        interpolatedPosition.lerp(
+          maybeNextFramePos.getData(),
+          midFrameLerpFactor
+        );
       }
-      interpolatedPositions.set(currentFramePos.getId().ownerId, interpolatedPosition);
+      interpolatedPositions.set(
+        currentFramePos.getId().ownerId,
+        interpolatedPosition
+      );
     }
     // Now do the same for orientations.
     // Note we use lerp not slerp as we expect sub-frame quaternion differences to be small / less in need of a more expensive slerp.
     let interpolatedOrientations = new Map<lk.EntityId, Orientation>();
     let scratchOrientation = new THREE.Vector4();
     let scratchNextFrameOrientation = new THREE.Vector4();
-    for (let currentFrameOrientation of nearestFrames.current.state.getComponents(Orientation)) {
+    for (let currentFrameOrientation of nearestFrames.current.state.getComponents(
+      Orientation
+    )) {
       let currentData = currentFrameOrientation.getData();
-      scratchOrientation.set(currentData.x, currentData.y, currentData.z, currentData.w);
-      let maybeNextFrameOrientation = nearestFrames.next.state.getComponent(Orientation, currentFrameOrientation.getId().ownerId);
+      scratchOrientation.set(
+        currentData.x,
+        currentData.y,
+        currentData.z,
+        currentData.w
+      );
+      let maybeNextFrameOrientation = nearestFrames.next.state.getComponent(
+        Orientation,
+        currentFrameOrientation.getId().ownerId
+      );
       if (maybeNextFrameOrientation !== undefined) {
         let nextFrameOrientation = maybeNextFrameOrientation.getData();
-        scratchNextFrameOrientation.set(nextFrameOrientation.x, nextFrameOrientation.y, nextFrameOrientation.z, nextFrameOrientation.w);
-        scratchOrientation.lerp(scratchNextFrameOrientation, midFrameLerpFactor);
+        scratchNextFrameOrientation.set(
+          nextFrameOrientation.x,
+          nextFrameOrientation.y,
+          nextFrameOrientation.z,
+          nextFrameOrientation.w
+        );
+        scratchOrientation.lerp(
+          scratchNextFrameOrientation,
+          midFrameLerpFactor
+        );
       }
       interpolatedOrientations.set(
         currentFrameOrientation.getId().ownerId,
-        new Orientation(scratchOrientation.x, scratchOrientation.y, scratchOrientation.z, scratchOrientation.w),
+        new Orientation(
+          scratchOrientation.x,
+          scratchOrientation.y,
+          scratchOrientation.z,
+          scratchOrientation.w
+        )
       );
     }
 
     let state = nearestFrames.current.state;
 
-    let sortedVertexPositions = Array.from(state.getAspect(WallVertex, Position2)).sort((a, b) => {
-      return a[0].getData().visualIndex - b[0].getData().visualIndex;
-    });
+    let sortedVertexPositions = Array.from(
+      state.getAspect(WallVertex, Position2)
+    ).sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
 
     for (let line of this.rendererWalls.values()) {
       // We set everything to NOT visible, and if the object still exists we'll set it visible when updating properties.
@@ -196,9 +280,11 @@ class ThreeRenderer implements lk.RenderingSystem {
       let [vertex, pos] = sortedVertexPositions[i];
       let vertexPos = interpolatedPositions.get(pos.getId().ownerId)!;
       let nextVertIndex = (i + 1) % sortedVertexPositions.length;
-      let nextVertexPos = interpolatedPositions.get(sortedVertexPositions[nextVertIndex][1].getId().ownerId)!;
+      let nextVertexPos = interpolatedPositions.get(
+        sortedVertexPositions[nextVertIndex][1].getId().ownerId
+      )!;
       let maybeLine = this.rendererWalls.get(vertex.getId().ownerId);
-      let wallGeometry = new THREE.Geometry();
+      let wallGeometry = new THREE.BufferGeometry();
       if (maybeLine === undefined) {
         maybeLine = new THREE.Line(undefined, this.lineMaterial);
         this.rendererWalls.set(vertex.getId().ownerId, maybeLine);
@@ -207,11 +293,13 @@ class ThreeRenderer implements lk.RenderingSystem {
       let floorZ = this.floorMesh.position.z;
       let wallStart = new THREE.Vector3(vertexPos.x, vertexPos.y, floorZ);
       let wallEnd = new THREE.Vector3(nextVertexPos.x, nextVertexPos.y, floorZ);
-      wallGeometry.vertices.push(wallStart);
-      wallGeometry.vertices.push(wallEnd);
+      wallGeometry.setFromPoints([wallStart, wallEnd]);
       maybeLine.geometry = wallGeometry;
       maybeLine.visible = true;
-      wallPersistentIdToLength.set(vertex.getData().persistentIndex, wallStart.distanceTo(wallEnd));
+      wallPersistentIdToLength.set(
+        vertex.getData().persistentIndex,
+        wallStart.distanceTo(wallEnd)
+      );
     }
 
     for (let paddle of this.rendererPaddles.values()) {
@@ -220,25 +308,39 @@ class ThreeRenderer implements lk.RenderingSystem {
     }
 
     let ownPlayerId = simulation.getOwnPlayerId()!;
-    let ownPlayerInfo: PlayerInfo|undefined;
-    for (let [playerInfo, humanPlayerId] of state.getAspect(PlayerInfo, HumanPlayerId)) {
+    let ownPlayerInfo: PlayerInfo | undefined;
+    for (let [playerInfo, humanPlayerId] of state.getAspect(
+      PlayerInfo,
+      HumanPlayerId
+    )) {
       if (humanPlayerId.getData().playerId === ownPlayerId) {
         ownPlayerInfo = playerInfo.getData();
       }
     }
 
     let halfPaddleHeight = this.paddleGeometry.parameters.height / 2;
-    for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(Paddle, Position2, Orientation)!) {
-      let paddleOrientationData = interpolatedOrientations.get(paddleOrientation.getId().ownerId)!;
+    for (let [paddle, paddlePos, paddleOrientation] of state.getAspect(
+      Paddle,
+      Position2,
+      Orientation
+    )!) {
+      let paddleOrientationData = interpolatedOrientations.get(
+        paddleOrientation.getId().ownerId
+      )!;
       let maybeObj = this.rendererPaddles.get(paddle.getId().ownerId);
       if (maybeObj === undefined) {
-        maybeObj = new THREE.Mesh(this.paddleGeometry, this.enemyPaddleMaterial);
+        maybeObj = new THREE.Mesh(
+          this.paddleGeometry,
+          this.enemyPaddleMaterial
+        );
         maybeObj.castShadow = true;
         this.rendererPaddles.set(paddle.getId().ownerId, maybeObj);
         this.scene.add(maybeObj);
       }
       let pos = interpolatedPositions.get(paddlePos.getId().ownerId)!;
-      maybeObj.scale.x = wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! * Paddle.lengthAsProportionOfWallLength;
+      maybeObj.scale.x =
+        wallPersistentIdToLength.get(paddle.getData().wallPersistentId)! *
+        Paddle.lengthAsProportionOfWallLength;
       maybeObj.scale.x = Math.max(0.001, maybeObj.scale.x); // Don't allow 0 scale
       maybeObj.position.x = pos.x;
       maybeObj.position.y = pos.y;
@@ -249,13 +351,19 @@ class ThreeRenderer implements lk.RenderingSystem {
       maybeObj.translateY(halfPaddleHeight);
       maybeObj.visible = true;
       if (ownPlayerInfo !== undefined) {
-        let paddleIsOurs = paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
+        let paddleIsOurs =
+          paddle.getData().playerIndex === ownPlayerInfo.playerIndex;
         if (paddleIsOurs) {
           maybeObj.material = this.allyPaddleMaterial;
           let targetOrientation = paddleOrientationData.clone();
           // rotating by paddle rotation sets the paddle to the top (as paddles y axis poins outwards)
           // rotate by another 180 degrees to put it at the bottom
-          targetOrientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
+          targetOrientation.multiply(
+            new THREE.Quaternion().setFromAxisAngle(
+              new THREE.Vector3(0, 0, 1),
+              Math.PI
+            )
+          );
           this.currentCameraTargetOrientation = targetOrientation;
         }
       }
@@ -276,7 +384,9 @@ class ThreeRenderer implements lk.RenderingSystem {
         this.rendererBalls.set(ballPosition.getId().ownerId, maybeBall);
         this.scene.add(maybeBall);
       }
-      let ballPosData = interpolatedPositions.get(ballPosition.getId().ownerId)!;
+      let ballPosData = interpolatedPositions.get(
+        ballPosition.getId().ownerId
+      )!;
       maybeBall.position.x = ballPosData.x;
       maybeBall.position.y = ballPosData.y;
       maybeBall.visible = true;
@@ -294,18 +404,31 @@ export class GuiRenderer implements lk.RenderingSystem {
     inputTravelTimeMS: 0,
   };
 
-  private guiView = new dat.GUI({width: 300});
+  private guiView = new dat.GUI({ width: 300 });
 
-  constructor(clientSettings: ClientSettings) {
+  public constructor(clientSettings: ClientSettings) {
     this.guiView.add(this.guiViewModel, 'currentSimTime').listen();
     this.guiView.add(this.guiViewModel, 'inputTravelTimeMS').listen();
-    this.guiView.add(clientSettings.clientIsBot , 'value').name('clientIsBot').listen();
-    this.guiView.add(clientSettings.clientSimulationEnabled, 'value').name('clientSimulationEnabled').listen();
-    this.guiView.add(clientSettings.subFrameInterpolationEnabled, 'value').name('subFrameInterpolationEnabled').listen();
+    this.guiView
+      .add(clientSettings.clientIsBot, 'value')
+      .name('clientIsBot')
+      .listen();
+    this.guiView
+      .add(clientSettings.clientSimulationEnabled, 'value')
+      .name('clientSimulationEnabled')
+      .listen();
+    this.guiView
+      .add(clientSettings.subFrameInterpolationEnabled, 'value')
+      .name('subFrameInterpolationEnabled')
+      .listen();
   }
 
-  public render(_domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
-    this.guiViewModel.currentSimTime = simulation.getCurrentSimulationTimeS() || 0;
+  public render(
+    _domHighResTimestampMS: number,
+    simulation: lk.ClientSimulation
+  ): void {
+    this.guiViewModel.currentSimTime =
+      simulation.getCurrentSimulationTimeS() || 0;
     let inputTravelTimeS = simulation.getInputTravelTimeS() || 0;
     this.guiViewModel.inputTravelTimeMS = inputTravelTimeS * 1000;
   }
@@ -315,12 +438,21 @@ export class RenderingSystemImpl implements lk.RenderingSystem {
   private threeRenderer: ThreeRenderer;
   private guiRenderer: GuiRenderer;
 
-  constructor(private sceneElementContainer: HTMLElement, clientSettings: ClientSettings) {
-    this.threeRenderer = new ThreeRenderer(clientSettings, this.sceneElementContainer);
+  public constructor(
+    private sceneElementContainer: HTMLElement,
+    clientSettings: ClientSettings
+  ) {
+    this.threeRenderer = new ThreeRenderer(
+      clientSettings,
+      this.sceneElementContainer
+    );
     this.guiRenderer = new GuiRenderer(clientSettings);
   }
 
-  public render(domHighResTimestampMS: number, simulation: lk.ClientSimulation) {
+  public render(
+    domHighResTimestampMS: number,
+    simulation: lk.ClientSimulation
+  ): void {
     // Strategy for this renderer is loosely inspired by "local perception filters".
     // For information on these, see:
     // https://0fps.net/2014/02/26/replication-in-networked-games-spacetime-consistency-part-3/

@@ -10,7 +10,10 @@ export interface WallData {
   wallLength: number;
 }
 
-export function wallPointsToWallData(pointA: THREE.Vector2, pointB: THREE.Vector2): WallData {
+export function wallPointsToWallData(
+  pointA: THREE.Vector2,
+  pointB: THREE.Vector2
+): WallData {
   let wallVec = pointB.clone().sub(pointA);
   let wallLength = wallVec.length();
   let wallUnitVec = wallVec.normalize();
@@ -22,7 +25,13 @@ export function wallPointsToWallData(pointA: THREE.Vector2, pointB: THREE.Vector
   };
 }
 
-export function crossProduct2DBetweenWallAndPoint(wallData: WallData, point: THREE.Vector2) {
+export function crossProduct2DBetweenWallAndPoint(
+  wallData: WallData,
+  point: THREE.Vector2
+): number {
   let wallPointToPoint = point.clone().sub(wallData.wallPoint);
-  return (wallPointToPoint.x * wallData.wallUnitVec.y) - (wallPointToPoint.y * wallData.wallUnitVec.x);
+  return (
+    wallPointToPoint.x * wallData.wallUnitVec.y -
+    wallPointToPoint.y * wallData.wallUnitVec.x
+  );
 }

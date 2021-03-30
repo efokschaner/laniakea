@@ -11,22 +11,24 @@ function mod(n: number, m: number) {
 function sequenceNumberIsGreaterThan(lhs: number, rhs: number) {
   let halfRange = SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE / 2;
   let diff = lhs - rhs;
-  return ((diff > 0) && (diff <= halfRange)) || diff < -halfRange;
+  return (diff > 0 && diff <= halfRange) || diff < -halfRange;
 }
 
 export class SequenceNumber implements Serializable {
   public static NUM_BYTES = 2;
-  public static MAX_SEQUENCE_NUMBER_EXCLUSIVE = (2 ** 8) ** SequenceNumber.NUM_BYTES;
-  constructor(public readonly value: number = 0) {
+  public static MAX_SEQUENCE_NUMBER_EXCLUSIVE =
+    (2 ** 8) ** SequenceNumber.NUM_BYTES;
+  // TODO make value readonly if we ever solve "deserializing constructors"
+  public constructor(public value: number = 0) {
     this.value = mod(this.value, SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE);
   }
   public serialize(stream: SerializationStream): void {
-    stream.serializeUint16(this, 'value');
+    this.value = stream.serializeUint16(this.value);
   }
-  public add(num: number) {
+  public add(num: number): SequenceNumber {
     return new SequenceNumber(this.value + num);
   }
-  public isGreaterThan(rhs: SequenceNumber) {
+  public isGreaterThan(rhs: SequenceNumber): boolean {
     return sequenceNumberIsGreaterThan(this.value, rhs.value);
   }
 }
@@ -44,15 +46,21 @@ export class AbsoluteSequenceNumberTranslator {
 
   public getAbsoluteSequenceNumber(num: SequenceNumber): number {
     // Wrapping is detected when the new sequence number is greater than the last in wrapping terms, but smaller than the last in absolute terms.
-    let numIsGreaterThanHighestSeen = num.isGreaterThan(this.highestSequenceNumberSeen);
-    let didWrap = numIsGreaterThanHighestSeen && num.value < this.highestSequenceNumberSeen.value;
+    let numIsGreaterThanHighestSeen = num.isGreaterThan(
+      this.highestSequenceNumberSeen
+    );
+    let didWrap =
+      numIsGreaterThanHighestSeen &&
+      num.value < this.highestSequenceNumberSeen.value;
     if (didWrap) {
       this.epochCounter += 1;
       this.nearEpoch = true;
     }
     // We are clear of the wrapping region we transition from the first half of the sequence range to the second half
-    let clearOfEpoch = (num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint &&
-      this.highestSequenceNumberSeen.value < AbsoluteSequenceNumberTranslator.halfwayPoint);
+    let clearOfEpoch =
+      num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint &&
+      this.highestSequenceNumberSeen.value <
+        AbsoluteSequenceNumberTranslator.halfwayPoint;
     if (clearOfEpoch) {
       this.nearEpoch = false;
     }
@@ -61,10 +69,16 @@ export class AbsoluteSequenceNumberTranslator {
     }
     // If we're near the epoch, the top half of sequnce numbers are treated as negative
     let adjustedValue = num.value;
-    if (this.nearEpoch && num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint) {
-      adjustedValue = adjustedValue - SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
+    if (
+      this.nearEpoch &&
+      num.value >= AbsoluteSequenceNumberTranslator.halfwayPoint
+    ) {
+      adjustedValue =
+        adjustedValue - SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
     }
-    let result = adjustedValue + (this.epochCounter * SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE);
+    let result =
+      adjustedValue +
+      this.epochCounter * SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
     return result;
   }
 }

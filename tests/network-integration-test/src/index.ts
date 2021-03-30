@@ -1,10 +1,12 @@
-// tslint:disable-next-line:no-var-requires
-// const present = require('present');
-
 import { NetworkClient } from '@laniakea/network-client';
 import { PlayerId, SequenceNumber } from '@laniakea/network-peer';
 import { NetworkServer } from '@laniakea/network-server';
-import { ClassRegistry, periodicCallback, Serializable, SerializationStream } from '@laniakea/utils';
+import {
+  ClassRegistry,
+  periodicCallback,
+  Serializable,
+  SerializationStream,
+} from '@laniakea/utils';
 import { w3cwebsocket } from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
 import { createMetricsCollector, MetricsCollector } from './metrics-collection';
@@ -13,15 +15,18 @@ import { createMetricsCollector, MetricsCollector } from './metrics-collection';
 (global as any).RTCPeerConnection = RTCPeerConnection;
 
 function isBeingDebugged() {
-  return typeof global.v8debug === 'object' || /--debug|--inspect/.test(process.execArgv.join(' '));
+  return (
+    typeof global.v8debug === 'object' ||
+    /--debug|--inspect/.test(process.execArgv.join(' '))
+  );
 }
 
 class TestMessage implements Serializable {
   public seq = 0;
   public data = new Uint8Array();
   public serialize(stream: SerializationStream): void {
-    stream.serializeUint32(this, 'seq');
-    stream.serializeUint8Array(this, 'data');
+    this.seq = stream.serializeUint32(this.seq);
+    this.data = stream.serializeUint8Array(this.data);
   }
 }
 
@@ -154,47 +159,64 @@ function replicationStyleTest() {
 /**
  * Sends a steady stream of messages with no expiry and ensures they are all delivered
  */
-function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCollector: MetricsCollector) {
+function reliabilityTest(
+  client: NetworkClient,
+  server: NetworkServer,
+  metricsCollector: MetricsCollector
+) {
   let numAcksFromServer = 0;
   let numAcksFromClient = 0;
   let clientIter = 0;
   let serverIter = 0;
 
   // Ensure we send more messages than MAX_SEQUENCE_NUMBER_EXCLUSIVE in network code
-  let finishedSending = () => clientIter > 2 * SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
+  let finishedSending = () =>
+    clientIter > 2 * SequenceNumber.MAX_SEQUENCE_NUMBER_EXCLUSIVE;
 
-  let clientToServerHandle = periodicCallback(() => {
-    if (!finishedSending()) {
-      let message = new TestMessage();
-      message.seq = clientIter++;
-      message.data = new Uint8Array(0);
-      let outboundMessage = client.sendMessage(message, () => {
-        numAcksFromServer += 1;
-      })!;
-      outboundMessage.ttl = undefined;
-    }
-    client.flushMessagesToNetwork();
-  }, 5, 'clientToServer');
+  let clientToServerHandle = periodicCallback(
+    () => {
+      if (!finishedSending()) {
+        let message = new TestMessage();
+        message.seq = clientIter++;
+        message.data = new Uint8Array(0);
+        let outboundMessage = client.sendMessage(message, () => {
+          numAcksFromServer += 1;
+        })!;
+        outboundMessage.ttl = undefined;
+      }
+      client.flushMessagesToNetwork();
+    },
+    5,
+    'clientToServer'
+  );
 
   // Server generates messages at 1/2 the net fps
   let serverAddMessagesThisFrame = true;
-  let serverToClientHandle = periodicCallback(() => {
-    if (!finishedSending()) {
-      if (serverAddMessagesThisFrame) {
-        for (let i = 0; i < 50; ++i) {
-          let message = new TestMessage();
-          message.seq = serverIter++;
-          message.data = new Uint8Array(Math.floor(Math.random() * 33));
-          let outboundMessage = server.sendMessage(clientPlayerId, message, () => {
-            numAcksFromClient += 1;
-          });
-          outboundMessage.ttl = undefined;
+  let serverToClientHandle = periodicCallback(
+    () => {
+      if (!finishedSending()) {
+        if (serverAddMessagesThisFrame) {
+          for (let i = 0; i < 50; ++i) {
+            let message = new TestMessage();
+            message.seq = serverIter++;
+            message.data = new Uint8Array(Math.floor(Math.random() * 33));
+            let outboundMessage = server.sendMessage(
+              clientPlayerId,
+              message,
+              () => {
+                numAcksFromClient += 1;
+              }
+            );
+            outboundMessage.ttl = undefined;
+          }
         }
+        serverAddMessagesThisFrame = !serverAddMessagesThisFrame;
       }
-      serverAddMessagesThisFrame = !serverAddMessagesThisFrame;
-    }
-    server.flushMessagesToNetwork();
-  }, 5, 'serverToClient');
+      server.flushMessagesToNetwork();
+    },
+    5,
+    'serverToClient'
+  );
 
   let timeoutId = setTimeout(() => {
     console.error('Test timed out');
@@ -204,7 +226,7 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
   }, 1000000);
 
   let intervalId = setInterval(() => {
-    metricsCollector.collectIntegrationTestMeasurements([
+    void metricsCollector.collectIntegrationTestMeasurements([
       {
         peerName: 'client',
         acksReceived: numAcksFromServer,
@@ -216,14 +238,18 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
         messagesSent: serverIter,
       },
     ]);
-    if (finishedSending() && numAcksFromServer === clientIter && numAcksFromClient === serverIter) {
+    if (
+      finishedSending() &&
+      numAcksFromServer === clientIter &&
+      numAcksFromClient === serverIter
+    ) {
       clearTimeout(timeoutId);
       clearInterval(intervalId);
       console.log('All acks received.');
       clientToServerHandle.stop();
       serverToClientHandle.stop();
       client.close();
-      server.close();
+      void server.close();
       // This is rather silly but theres a bug where the server peerconnection
       // prevents node.js shutting down, which I haven't figured out the root cause of
       let shutdownTimeout = setTimeout(() => {
@@ -240,7 +266,9 @@ function reliabilityTest(client: NetworkClient, server: NetworkServer, metricsCo
 
 async function main() {
   let metricsCollector = await createMetricsCollector();
-  let server = new NetworkServer(new ClassRegistry(), () => ({ playerId: clientPlayerId }));
+  let server = new NetworkServer(new ClassRegistry<Serializable>(), () => ({
+    playerId: clientPlayerId,
+  }));
   server.registerMessageType(TestMessage, 'TestMessage');
   server.registerMessageHandler(TestMessage, onMessageReceivedByServer);
   let addressInfo = await server.listen({
@@ -256,7 +284,7 @@ async function main() {
     });
   });
 
-  let client = new NetworkClient(new ClassRegistry());
+  let client = new NetworkClient(new ClassRegistry<Serializable>());
   client.registerMessageType(TestMessage, 'TestMessage');
   client.registerMessageHandler(TestMessage, onMessageReceivedByClient);
   await client.connect(`ws://127.0.0.1:${addressInfo.port}`);
@@ -265,5 +293,5 @@ async function main() {
 }
 
 if (require.main === module) {
-  main();
+  void main();
 }

@@ -28,18 +28,21 @@ function mod(n: number, m: number) {
  */
 class DeterministicPRNG {
   // seed may be any number other than zero or a multiple of PI
-  constructor(public seed: number) {
-  }
+  public constructor(public seed: number) {}
   public getRandomNumberZeroInclusiveToOneExclusive() {
     let x = Math.sin(this.seed++) * 10000;
     return x - Math.floor(x);
   }
   public getRandomInt(maxValExclusive: number) {
-    return Math.floor(this.getRandomNumberZeroInclusiveToOneExclusive() * maxValExclusive);
+    return Math.floor(
+      this.getRandomNumberZeroInclusiveToOneExclusive() * maxValExclusive
+    );
   }
 }
 
-function getOrCreateFinal2Players(state: lk.EntityComponentState): lk.Component<Final2Players> {
+function getOrCreateFinal2Players(
+  state: lk.EntityComponentState
+): lk.Component<Final2Players> {
   let components = Array.from(state.getComponents(Final2Players));
   let component = components[0];
   if (component !== undefined) {
@@ -63,7 +66,7 @@ function calculatePersistentVertexIndices(numPlayers: number): number[] {
   let persistentIndicesWithHoles = new Array<number>();
   for (let i of persistentIndices) {
     persistentIndicesWithHoles.push(i, -i);
-}
+  }
   return persistentIndicesWithHoles;
 }
 
@@ -72,10 +75,7 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   // Create a classic pong board
   if (numPlayers < 3) {
     let boxMax = new THREE.Vector2(0.9, 0.5);
-    let box = new THREE.Box2(
-      boxMax.clone().multiplyScalar(-1),
-      boxMax,
-    );
+    let box = new THREE.Box2(boxMax.clone().multiplyScalar(-1), boxMax);
     return [
       // Order matters here, we start in the top right so its not far
       // from the top vertex that is usually the start off wall 0 in the polygon
@@ -88,7 +88,7 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   // Arrange players around a circle to create a polygon
   let vertices = new Array<THREE.Vector2>(numPlayers);
   for (let i = 0; i < vertices.length; ++i) {
-    let angle = 2 * Math.PI * i / numPlayers;
+    let angle = (2 * Math.PI * i) / numPlayers;
     let vert = new THREE.Vector2(Math.sin(angle), Math.cos(angle));
     vert.multiplyScalar(scaleFactor);
     vertices[i] = vert;
@@ -96,7 +96,10 @@ function calculateShapeForNumPlayers(numPlayers: number) {
   return vertices;
 }
 
-function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: number) {
+function doUpdateLevelGeometry(
+  state: lk.EntityComponentState,
+  simulationTimeS: number
+) {
   let players = Array.from(state.getComponents(PlayerInfo));
   let numPlayersEverAlive = players.length;
   let alivePlayers = players.filter((pi) => pi.getData().alive);
@@ -149,28 +152,27 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // On completion of lerps we delete persistentIndices which are not meant to exist any more and we re-assign visualIndices.
 
   // Represents all the persistent indices that should exist.
-  let alivePersistentIndicesSet = new Set<number>(alivePlayers.map((pi) => pi.getData().playerIndex));
+  let alivePersistentIndicesSet = new Set<number>(
+    alivePlayers.map((pi) => pi.getData().playerIndex)
+  );
 
   interface VertAspect {
     wallVertex: lk.Component<WallVertex>;
     position: lk.Component<Position2>;
   }
-  let fetchVerts: () => VertAspect[] = () => {
-    return Array.from(state.getAspect(WallVertex, Position2)).map((aspect) => {
-      return {
-        wallVertex: aspect[0],
-        position: aspect[1],
-      };
-    });
-  };
+  let fetchVerts: () => VertAspect[] = () =>
+    Array.from(state.getAspect(WallVertex, Position2)).map((aspect) => ({
+      wallVertex: aspect[0],
+      position: aspect[1],
+    }));
 
   let existingVertices = fetchVerts();
 
   if (numPlayersAlive <= 2) {
     let playerPersistentIndexA = final2Data.finalPlayerIndexA;
-    let persistentIndexOfPlayerlessWallA = - playerPersistentIndexA;
+    let persistentIndexOfPlayerlessWallA = -playerPersistentIndexA;
     let playerPersistentIndexB = final2Data.finalPlayerIndexB;
-    let persistentIndexOfPlayerlessWallB = - playerPersistentIndexB;
+    let persistentIndexOfPlayerlessWallB = -playerPersistentIndexB;
 
     // Now we will try to see if there already exists playerless walls that partition our
     // shape as needed, so that we dont recreate the playerless wall with every change of players.
@@ -182,7 +184,11 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
 
     let indexOfPlayerA = persistentIndices.indexOf(playerPersistentIndexA);
     let indexOfPlayerB = persistentIndices.indexOf(playerPersistentIndexB);
-    for (let i = indexOfPlayerA; i !== indexOfPlayerB; i = mod(i + 2, persistentIndices.length)) {
+    for (
+      let i = indexOfPlayerA;
+      i !== indexOfPlayerB;
+      i = mod(i + 2, persistentIndices.length)
+    ) {
       positiveIndicesFromAtoB.add(persistentIndices[i]);
     }
 
@@ -203,10 +209,14 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
 
     // If theres already a playerless wall in here, recycle it
     if (existingPlayerlessVertsFromAtoB.size > 0) {
-      persistentIndexOfPlayerlessWallA = existingPlayerlessVertsFromAtoB.values().next().value;
+      persistentIndexOfPlayerlessWallA = existingPlayerlessVertsFromAtoB
+        .values()
+        .next().value;
     }
     if (existingPlayerlessVertsFromBtoA.size > 0) {
-      persistentIndexOfPlayerlessWallB = existingPlayerlessVertsFromBtoA.values().next().value;
+      persistentIndexOfPlayerlessWallB = existingPlayerlessVertsFromBtoA
+        .values()
+        .next().value;
     }
 
     // Guarantee these 4 walls
@@ -225,23 +235,38 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       }
     }
 
-    let indexOfPlayerlessWallA = alivePersistentIndices.indexOf(persistentIndexOfPlayerlessWallA);
+    let indexOfPlayerlessWallA = alivePersistentIndices.indexOf(
+      persistentIndexOfPlayerlessWallA
+    );
     let shapeOffset = indexOfPlayerlessWallA - 1;
     targetShape = [
       targetShape[mod(0 - shapeOffset, 4)],
       targetShape[mod(1 - shapeOffset, 4)],
       targetShape[mod(2 - shapeOffset, 4)],
-      targetShape[mod(3 - shapeOffset, 4)]];
+      targetShape[mod(3 - shapeOffset, 4)],
+    ];
   }
 
-  let existingPersistentIndices = new Set<number>(existingVertices.map((v) => v.wallVertex.getData().persistentIndex));
-  let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter((i) => !existingPersistentIndices.has(i));
-  let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter((i) => !alivePersistentIndicesSet.has(i));
+  let existingPersistentIndices = new Set<number>(
+    existingVertices.map((v) => v.wallVertex.getData().persistentIndex)
+  );
+  let persistentIndicesToCreate = Array.from(alivePersistentIndicesSet).filter(
+    (i) => !existingPersistentIndices.has(i)
+  );
+  let persistentIndicesToDelete = Array.from(existingPersistentIndices).filter(
+    (i) => !alivePersistentIndicesSet.has(i)
+  );
 
   // Remove scheduled deletion of vertices that are alive but scheduled for deletion.
   for (let existingVertex of existingVertices) {
-    if (alivePersistentIndicesSet.has(existingVertex.wallVertex.getData().persistentIndex)) {
-      let maybeScheduledDeletion = existingVertex.wallVertex.getOwner().getComponent(EntityScheduledDeletion);
+    if (
+      alivePersistentIndicesSet.has(
+        existingVertex.wallVertex.getData().persistentIndex
+      )
+    ) {
+      let maybeScheduledDeletion = existingVertex.wallVertex
+        .getOwner()
+        .getComponent(EntityScheduledDeletion);
       if (maybeScheduledDeletion !== undefined) {
         maybeScheduledDeletion.delete();
       }
@@ -263,8 +288,12 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   existingVertices = fetchVerts();
   let existingVerticesMap = new Map(
     existingVertices.map(
-      (value) => [value.wallVertex.getData().persistentIndex, value] as [number, VertAspect],
-    ),
+      (value) =>
+        [value.wallVertex.getData().persistentIndex, value] as [
+          number,
+          VertAspect
+        ]
+    )
   );
 
   // In lieu of a "generalised" approach for sequencing / scheduling work, we'll just do the lerp and the deletion on the same timeout.
@@ -294,13 +323,19 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   // vertex that exists (the prior in reverse order).
   // We need to iterate a bit more than once because we can't start setting positions until we've encountered
   // one that isn't new.
-  let lastExistingPos = {x: 0, y: 0};
-  let firstPriorlyExistingIndex: number|undefined;
-  for (let i = sortedExistingVertices.length - 1; i !== firstPriorlyExistingIndex; i = mod(i - 1, sortedExistingVertices.length)) {
+  let lastExistingPos = { x: 0, y: 0 };
+  let firstPriorlyExistingIndex: number | undefined;
+  for (
+    let i = sortedExistingVertices.length - 1;
+    i !== firstPriorlyExistingIndex;
+    i = mod(i - 1, sortedExistingVertices.length)
+  ) {
     let vertexData = sortedExistingVertices[i].wallVertex.getData();
     let posData = sortedExistingVertices[i].position.getData();
     vertexData.visualIndex = i;
-    let alreadyExisted = existingPersistentIndices.has(vertexData.persistentIndex);
+    let alreadyExisted = existingPersistentIndices.has(
+      vertexData.persistentIndex
+    );
     if (firstPriorlyExistingIndex === undefined) {
       // existingPersistentIndices.size === 0 handles case where we havent created any at all yet
       // and we'd never set the firstPriorlyExistingIndex otherwise.
@@ -310,7 +345,7 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
     }
     if (alreadyExisted) {
       // This one is not new, the next new one gets its position
-      lastExistingPos = {x: posData.x, y: posData.y};
+      lastExistingPos = { x: posData.x, y: posData.y };
     } else {
       posData.x = lastExistingPos.x;
       posData.y = lastExistingPos.y;
@@ -334,16 +369,20 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
   let bestShape: THREE.Vector2[] = targetShape;
   let lowestSumDistancesSquared = Infinity;
   let origin2D = new THREE.Vector2();
-  for (let i = 0; i < 12; ++ i) {
+  for (let i = 0; i < 12; ++i) {
     let shapeAngleOffset = (i / 12) * 2 * Math.PI;
-    let rotatedShape = targetShape.map((v) => v.clone().rotateAround(origin2D, shapeAngleOffset));
+    let rotatedShape = targetShape.map((v) =>
+      v.clone().rotateAround(origin2D, shapeAngleOffset)
+    );
     let sumDistancesSquared = 0;
     for (let j = 0; j < persistentIndices.length; ++j) {
       let persistentIndex = persistentIndices[j];
       let maybeObj = existingVerticesMap.get(persistentIndex);
       if (maybeObj !== undefined) {
         let currentPos = maybeObj.position.getData();
-        sumDistancesSquared += rotatedShape[interpolationTargetIndex[j]].distanceToSquared(currentPos);
+        sumDistancesSquared += rotatedShape[
+          interpolationTargetIndex[j]
+        ].distanceToSquared(currentPos);
       }
     }
     if (sumDistancesSquared < lowestSumDistancesSquared) {
@@ -362,23 +401,34 @@ function doUpdateLevelGeometry(state: lk.EntityComponentState, simulationTimeS: 
       let lerp = new PolarLerp2D();
       lerp.originalPosition.copy(currentPos);
       // Note the typecast on the next line is just to get around the quirks of threejs' "this" typings limitations.
-      lerp.targetPosition.copy(targetShape[interpolationTargetIndex[i]] as SerializableVector2);
+      lerp.targetPosition.copy(
+        targetShape[interpolationTargetIndex[i]] as SerializableVector2
+      );
       lerp.startTimeS = simulationTimeS + lerpStartDelayS;
 
-      let angleDelta = lerp.targetPosition.angle() - lerp.originalPosition.angle();
+      let angleDelta =
+        lerp.targetPosition.angle() - lerp.originalPosition.angle();
       if (angleDelta > Math.PI) {
         angleDelta = angleDelta - 2 * Math.PI;
-      } else if (angleDelta < - Math.PI) {
+      } else if (angleDelta < -Math.PI) {
         angleDelta = angleDelta + 2 * Math.PI;
       }
       // Scale the duration by the angle we'll move through.
       // We know angleDelta is less than PI due the shortest path logic above.
-      lerp.durationS = THREE.Math.lerp(lerpMinDurationS, lerpMaxDurationS, Math.abs(angleDelta) / Math.PI);
+      lerp.durationS = THREE.MathUtils.lerp(
+        lerpMinDurationS,
+        lerpMaxDurationS,
+        Math.abs(angleDelta) / Math.PI
+      );
       maybeObj.position.getOwner().setComponent(lerp);
     }
   }
 
-  let playerIndexToPaddle = new Map(Array.from(state.getComponents(Paddle)).map((c) => [c.getData().playerIndex, c] as [number, lk.Component<Paddle>]));
+  let playerIndexToPaddle = new Map(
+    Array.from(state.getComponents(Paddle)).map(
+      (c) => [c.getData().playerIndex, c] as [number, lk.Component<Paddle>]
+    )
+  );
   for (let player of players) {
     let playerData = player.getData();
     let maybePaddle = playerIndexToPaddle.get(playerData.playerIndex);
@@ -410,14 +460,21 @@ export class LevelGeometrySystem implements lk.System {
   // This poses an interesting problem regarding the relation of systems and events
   // that I don't have a solid answer for at this time.
   private sortedAlivePlayerIndices = new Array<number>();
-  public Step({state, simulationTimeS}: lk.StepParams): void {
+  public Step({ state, simulationTimeS }: lk.StepParams): void {
     // Updates level geometry whenever number of alive players has changed
     let players = Array.from(state.getComponents(PlayerInfo));
     let alivePlayers = players.filter((pi) => pi.getData().alive);
 
-    let newSortedAlivePlayerIndices = alivePlayers.map((pi) => pi.getData().playerIndex).sort();
-    if (this.sortedAlivePlayerIndices.length !== newSortedAlivePlayerIndices.length
-        || !this.sortedAlivePlayerIndices.every((v, i) => v === newSortedAlivePlayerIndices[i])) {
+    let newSortedAlivePlayerIndices = alivePlayers
+      .map((pi) => pi.getData().playerIndex)
+      .sort();
+    if (
+      this.sortedAlivePlayerIndices.length !==
+        newSortedAlivePlayerIndices.length ||
+      !this.sortedAlivePlayerIndices.every(
+        (v, i) => v === newSortedAlivePlayerIndices[i]
+      )
+    ) {
       this.sortedAlivePlayerIndices = newSortedAlivePlayerIndices;
       doUpdateLevelGeometry(state, simulationTimeS);
     }

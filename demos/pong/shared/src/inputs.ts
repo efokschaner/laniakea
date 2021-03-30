@@ -1,6 +1,8 @@
 import * as lk from '@laniakea/base-engine';
 
-interface NumericEnum { [key: string]: number; }
+interface NumericEnum {
+  [key: string]: number;
+}
 
 function getEnumNames(e: NumericEnum): string[] {
   return Object.keys(e).filter((key) => isNaN(+key));
@@ -15,7 +17,10 @@ export enum ButtonState {
   DOWN,
 }
 
-function serializeSetOfUint8(stream: lk.SerializationStream, set: Set<number>): void {
+function serializeSetOfUint8(
+  stream: lk.SerializationStream,
+  set: Set<number>
+): void {
   if (stream.kind === 'write') {
     stream.writeUint8(set.size);
     for (let value of set.values()) {
@@ -30,11 +35,14 @@ function serializeSetOfUint8(stream: lk.SerializationStream, set: Set<number>): 
   }
 }
 
-export enum GameButtons { LEFT, RIGHT }
+export enum GameButtons {
+  LEFT,
+  RIGHT,
+}
 
 export class GameButtonsInput implements lk.Serializable {
   public buttonStates = new Map<number, ButtonState>();
-  constructor() {
+  public constructor() {
     for (const button of getEnumValues(GameButtons as any)) {
       this.buttonStates.set(button, ButtonState.UP);
     }

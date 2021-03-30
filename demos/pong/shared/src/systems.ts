@@ -16,7 +16,11 @@ import {
 } from './components';
 
 import { ButtonState, GameButtons, GameButtonsInput } from './inputs';
-import { crossProduct2DBetweenWallAndPoint, WallData, wallPointsToWallData } from './wall-utils';
+import {
+  crossProduct2DBetweenWallAndPoint,
+  WallData,
+  wallPointsToWallData,
+} from './wall-utils';
 
 /**
  * modulo which produces positive values for negative numbers.
@@ -30,10 +34,11 @@ function mod(n: number, m: number) {
  *  This lerps 2 vectors in in their polar space, this looks better for our geometrical layouts.
  */
 export class PolarLerp2DProcessor implements lk.System {
-  public Step({simulationTimeS, state}: lk.StepParams): void {
+  public Step({ simulationTimeS, state }: lk.StepParams): void {
     for (let [position, lerp] of state.getAspect(Position2, PolarLerp2D)) {
       let lerpData = lerp.getData();
-      let lerpFactor = (simulationTimeS - lerpData.startTimeS) / lerpData.durationS;
+      let lerpFactor =
+        (simulationTimeS - lerpData.startTimeS) / lerpData.durationS;
       if (lerpFactor < 0) {
         continue;
       }
@@ -43,7 +48,7 @@ export class PolarLerp2DProcessor implements lk.System {
         continue;
       }
       // Just for a bit of fun this is technically not a L(inear int)erp-olation anymore but whatever
-      let smoothLerpFactor = THREE.Math.smoothstep(lerpFactor, 0, 1);
+      let smoothLerpFactor = THREE.MathUtils.smoothstep(lerpFactor, 0, 1);
 
       let originalAngle = lerpData.originalPosition.angle();
       let targetAngle = lerpData.targetPosition.angle();
@@ -51,20 +56,27 @@ export class PolarLerp2DProcessor implements lk.System {
       // Now make sure we don't take the "long" way round the circle
       if (angleDelta > Math.PI) {
         angleDelta = angleDelta - 2 * Math.PI;
-      } else if (angleDelta < - Math.PI) {
+      } else if (angleDelta < -Math.PI) {
         angleDelta = angleDelta + 2 * Math.PI;
       }
       let interpolatedAngle = originalAngle + smoothLerpFactor * angleDelta;
       let originalMagnitude = lerpData.originalPosition.length();
       let targetMagnitude = lerpData.targetPosition.length();
-      let interpolatedMagnitude = originalMagnitude + smoothLerpFactor * (targetMagnitude - originalMagnitude);
-      position.getData().set(interpolatedMagnitude * Math.cos(interpolatedAngle), interpolatedMagnitude * Math.sin(interpolatedAngle));
+      let interpolatedMagnitude =
+        originalMagnitude +
+        smoothLerpFactor * (targetMagnitude - originalMagnitude);
+      position
+        .getData()
+        .set(
+          interpolatedMagnitude * Math.cos(interpolatedAngle),
+          interpolatedMagnitude * Math.sin(interpolatedAngle)
+        );
     }
   }
 }
 
 export class EntityScheduledDeletionProcessor implements lk.System {
-  public Step({simulationTimeS, state}: lk.StepParams): void {
+  public Step({ simulationTimeS, state }: lk.StepParams): void {
     for (let schedule of state.getComponents(EntityScheduledDeletion)!) {
       let scheduleData = schedule.getData();
       if (scheduleData.deletionTimeS <= simulationTimeS) {
@@ -75,16 +87,22 @@ export class EntityScheduledDeletionProcessor implements lk.System {
 }
 
 export class BallMovementSystem implements lk.System {
-
   // I'm not sure if allowing systems to know "isServer" would be considered "good practice",
   // but this approach doesn't impact the architecture so lets see how it works out here.
-  constructor(private isServer: boolean) {
-  }
+  public constructor(private isServer: boolean) {}
 
-  public Step({timeDeltaS, state, previousFrameState}: lk.StepParams): void {
+  public Step({ timeDeltaS, state, previousFrameState }: lk.StepParams): void {
     // For calculating collisions we want all wall vertices that existed on previous frame and this frame.
-    let vertsToConsider = new Array<{prev: lk.Component<Position2>, next: lk.Component<Position2>, visualIndex: number, persistentIndex: number}>();
-    for (let [prevVert, prevPos] of previousFrameState.getAspect(WallVertex, Position2)) {
+    let vertsToConsider = new Array<{
+      prev: lk.Component<Position2>;
+      next: lk.Component<Position2>;
+      visualIndex: number;
+      persistentIndex: number;
+    }>();
+    for (let [prevVert, prevPos] of previousFrameState.getAspect(
+      WallVertex,
+      Position2
+    )) {
       let maybeNextPos = state.getComponent(Position2, prevPos.getId().ownerId);
       if (maybeNextPos !== undefined) {
         vertsToConsider.push({
@@ -95,16 +113,28 @@ export class BallMovementSystem implements lk.System {
         });
       }
     }
-    let vertsToConsiderSorted = vertsToConsider.sort((a, b) => a.visualIndex - b.visualIndex);
-    let walls = new Array<{prev: WallData, next: WallData, persistentIndex: number}>();
+    let vertsToConsiderSorted = vertsToConsider.sort(
+      (a, b) => a.visualIndex - b.visualIndex
+    );
+    let walls = new Array<{
+      prev: WallData;
+      next: WallData;
+      persistentIndex: number;
+    }>();
     for (let i = 0; i < vertsToConsiderSorted.length; ++i) {
       let startIndex = i;
       let endIndex = mod(i + 1, vertsToConsiderSorted.length);
       let startVerts = vertsToConsiderSorted[startIndex];
       let endVerts = vertsToConsiderSorted[endIndex];
       walls.push({
-        prev: wallPointsToWallData(startVerts.prev.getData(), endVerts.prev.getData()),
-        next: wallPointsToWallData(startVerts.next.getData(), endVerts.next.getData()),
+        prev: wallPointsToWallData(
+          startVerts.prev.getData(),
+          endVerts.prev.getData()
+        ),
+        next: wallPointsToWallData(
+          startVerts.next.getData(),
+          endVerts.next.getData()
+        ),
         persistentIndex: startVerts.persistentIndex,
       });
     }
@@ -113,9 +143,9 @@ export class BallMovementSystem implements lk.System {
     // This causes errors in our collision detection.
     // We filter any walls with length zero.
     // We also force the direction of all walls to be clockwise around the origin.
-    walls = walls.filter((w) => {
-      return w.next.wallLength !== 0 && w.prev.wallLength !== 0;
-    });
+    walls = walls.filter(
+      (w) => w.next.wallLength !== 0 && w.prev.wallLength !== 0
+    );
     for (let wall of walls) {
       // if dot product of wallpoint with wall unit vec is positive, the wall is anticlockwise and we'll flip it.
       if (wall.prev.wallPoint.dot(wall.prev.wallUnitVec) > 0) {
@@ -133,17 +163,21 @@ export class BallMovementSystem implements lk.System {
     }
 
     let persistentIndexToPaddle = new Map(
-      Array.from(
-        state.getComponents(Paddle),
-      ).map(
-        (p) => [p.getData().wallPersistentId, p],
-      ),
+      Array.from(state.getComponents(Paddle)).map((p) => [
+        p.getData().wallPersistentId,
+        p,
+      ])
     );
 
-    for (let [ballPosition, ballMovement] of state.getAspect(Position2, BallMovement)) {
+    for (let [ballPosition, ballMovement] of state.getAspect(
+      Position2,
+      BallMovement
+    )) {
       let ballMovementData = ballMovement.getData();
       let prevPos = ballPosition.getData().clone();
-      let nextPos = ballPosition.getData().addScaledVector(ballMovementData.velocity, timeDeltaS);
+      let nextPos = ballPosition
+        .getData()
+        .addScaledVector(ballMovementData.velocity, timeDeltaS);
       // Calculate collisions by checking sign change in outer product with wall on previous frame and next
       for (let wall of walls) {
         let prevProduct = crossProduct2DBetweenWallAndPoint(wall.prev, prevPos);
@@ -159,36 +193,60 @@ export class BallMovementSystem implements lk.System {
           // If there's no paddle theres no player to kill
           if (maybePaddle !== undefined) {
             let paddleData = maybePaddle.getData();
-            let positionOfBallInWallspace = nextPos.clone().sub(wall.next.wallPoint).dot(wall.next.wallUnitVec) / wall.next.wallLength;
-            let distanceBetweenPaddleAndBallInWallspace = Math.abs(paddleData.positionInWallSpace - positionOfBallInWallspace);
+            let positionOfBallInWallspace =
+              nextPos
+                .clone()
+                .sub(wall.next.wallPoint)
+                .dot(wall.next.wallUnitVec) / wall.next.wallLength;
+            let distanceBetweenPaddleAndBallInWallspace = Math.abs(
+              paddleData.positionInWallSpace - positionOfBallInWallspace
+            );
             // Paddle radius is half its length, plus a fudge factor to make the game a little more visually forgiving.
-            let paddleRadiusInWallSpace = 0.55 * Paddle.lengthAsProportionOfWallLength;
-            if (distanceBetweenPaddleAndBallInWallspace > paddleRadiusInWallSpace) {
+            let paddleRadiusInWallSpace =
+              0.55 * Paddle.lengthAsProportionOfWallLength;
+            if (
+              distanceBetweenPaddleAndBallInWallspace > paddleRadiusInWallSpace
+            ) {
               // Paddle did not intercept ball
               shouldReflect = false;
               // On server only, kill player and delete ball
               // Currently nothing we've done here is actually unsafe on the client. It seems prudent for if we add death stuff though.
               if (this.isServer) {
-                let playerInfo = Array.from(state.getComponents(PlayerInfo)).find((pi) => pi.getData().playerIndex === paddleData.playerIndex)!;
+                let playerInfo = Array.from(
+                  state.getComponents(PlayerInfo)
+                ).find(
+                  (pi) => pi.getData().playerIndex === paddleData.playerIndex
+                )!;
                 playerInfo.getData().alive = false;
                 ballMovement.getOwner().delete();
               }
             }
           }
           if (shouldReflect) {
-            let wallNormInwards = new THREE.Vector2(wall.next.wallUnitVec.y, -wall.next.wallUnitVec.x);
+            let wallNormInwards = new THREE.Vector2(
+              wall.next.wallUnitVec.y,
+              -wall.next.wallUnitVec.x
+            );
             // reflection using the following formula r=d−2(d⋅n)n
             // where d is the vector to reflect, r is the reflected result, and n is the unit normal
-            let minusTwoDdotN = - 2 * ballMovementData.velocity.dot(wallNormInwards);
-            ballMovementData.velocity.addScaledVector(wallNormInwards, minusTwoDdotN);
+            let minusTwoDdotN =
+              -2 * ballMovementData.velocity.dot(wallNormInwards);
+            ballMovementData.velocity.addScaledVector(
+              wallNormInwards,
+              minusTwoDdotN
+            );
 
             // Position reflection is done by projecting the ball to the wall and adding twice that vec to pos.
             let wallData = wall.next;
             let wallRay = new THREE.Ray(
               new THREE.Vector3(wallData.wallPoint.x, wallData.wallPoint.y),
-              new THREE.Vector3(wallData.wallUnitVec.x, wallData.wallUnitVec.y));
+              new THREE.Vector3(wallData.wallUnitVec.x, wallData.wallUnitVec.y)
+            );
             let ballPos3D = new THREE.Vector3(nextPos.x, nextPos.y);
-            let wallPointClosestToBall = wallRay.closestPointToPoint(ballPos3D, new THREE.Vector3());
+            let wallPointClosestToBall = wallRay.closestPointToPoint(
+              ballPos3D,
+              new THREE.Vector3()
+            );
             let ballToWall = new THREE.Vector2();
             ballToWall.copy(wallPointClosestToBall.sub(ballPos3D) as any);
             nextPos.addScaledVector(ballToWall, 2);
@@ -200,20 +258,21 @@ export class BallMovementSystem implements lk.System {
 }
 
 export class InputHandlerSystem implements lk.System {
-  public Step({inputs, state}: lk.StepParams): void {
+  public Step({ inputs, state }: lk.StepParams): void {
     let playerIdToPlayerInfoMap = new Map(
-      Array.from(
-        state.getAspect(PlayerInfo, HumanPlayerId),
-      ).map(
-        ([info, playerId]) => [playerId.getData().playerId, info.getData()] as [lk.PlayerId, PlayerInfo],
-      ),
+      Array.from(state.getAspect(PlayerInfo, HumanPlayerId)).map(
+        ([info, playerId]) =>
+          [playerId.getData().playerId, info.getData()] as [
+            lk.PlayerId,
+            PlayerInfo
+          ]
+      )
     );
     let playerIndexToPaddleMap = new Map(
-      Array.from(
-        state.getComponents(Paddle),
-      ).map(
-        (paddle) => [paddle.getData().playerIndex, paddle.getData()] as [number, Paddle],
-      ),
+      Array.from(state.getComponents(Paddle)).map(
+        (paddle) =>
+          [paddle.getData().playerIndex, paddle.getData()] as [number, Paddle]
+      )
     );
     for (let [playerId, input] of inputs) {
       let maybePlayerInfo = playerIdToPlayerInfoMap.get(playerId);
@@ -228,9 +287,15 @@ export class InputHandlerSystem implements lk.System {
       if (maybeButtonsInput === undefined) {
         continue;
       }
-      if (maybeButtonsInput.buttonStates.get(GameButtons.LEFT) === ButtonState.DOWN) {
+      if (
+        maybeButtonsInput.buttonStates.get(GameButtons.LEFT) ===
+        ButtonState.DOWN
+      ) {
         maybePaddle.moveIntent = MoveIntent.POSITIVE;
-      } else if (maybeButtonsInput.buttonStates.get(GameButtons.RIGHT) === ButtonState.DOWN) {
+      } else if (
+        maybeButtonsInput.buttonStates.get(GameButtons.RIGHT) ===
+        ButtonState.DOWN
+      ) {
         maybePaddle.moveIntent = MoveIntent.NEGATIVE;
       } else {
         maybePaddle.moveIntent = MoveIntent.NONE;
@@ -240,18 +305,26 @@ export class InputHandlerSystem implements lk.System {
 }
 
 export class PaddleMovementSystem implements lk.System {
-  public Step({state, timeDeltaS}: lk.StepParams): void {
+  public Step({ state, timeDeltaS }: lk.StepParams): void {
     for (let paddle of state.getComponents(Paddle)) {
       let paddleData = paddle.getData();
       let maxMoveSpeed = 1.0;
       switch (paddleData.moveIntent) {
         case MoveIntent.NONE:
           if (paddleData.velocityInWallSpace > 0) {
-            paddleData.velocityInWallSpace -= Paddle.maxAcceleration * timeDeltaS;
-            paddleData.velocityInWallSpace = Math.max(paddleData.velocityInWallSpace, 0);
+            paddleData.velocityInWallSpace -=
+              Paddle.maxAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace = Math.max(
+              paddleData.velocityInWallSpace,
+              0
+            );
           } else if (paddleData.velocityInWallSpace < 0) {
-            paddleData.velocityInWallSpace += Paddle.maxAcceleration * timeDeltaS;
-            paddleData.velocityInWallSpace = Math.min(paddleData.velocityInWallSpace, 0);
+            paddleData.velocityInWallSpace +=
+              Paddle.maxAcceleration * timeDeltaS;
+            paddleData.velocityInWallSpace = Math.min(
+              paddleData.velocityInWallSpace,
+              0
+            );
           }
           break;
         case MoveIntent.NEGATIVE:
@@ -261,21 +334,35 @@ export class PaddleMovementSystem implements lk.System {
           paddleData.velocityInWallSpace += Paddle.maxAcceleration * timeDeltaS;
           break;
       }
-      paddleData.velocityInWallSpace = THREE.Math.clamp(paddleData.velocityInWallSpace, -maxMoveSpeed, maxMoveSpeed);
-      paddleData.positionInWallSpace = THREE.Math.clamp(
-        paddleData.positionInWallSpace + paddleData.velocityInWallSpace * timeDeltaS,
+      paddleData.velocityInWallSpace = THREE.MathUtils.clamp(
+        paddleData.velocityInWallSpace,
+        -maxMoveSpeed,
+        maxMoveSpeed
+      );
+      paddleData.positionInWallSpace = THREE.MathUtils.clamp(
+        paddleData.positionInWallSpace +
+          paddleData.velocityInWallSpace * timeDeltaS,
         0.5 * Paddle.lengthAsProportionOfWallLength,
-        1 - (0.5 * Paddle.lengthAsProportionOfWallLength));
+        1 - 0.5 * Paddle.lengthAsProportionOfWallLength
+      );
     }
   }
 }
 
 export class PaddlePositionSyncSystem implements lk.System {
-  public Step({state}: lk.StepParams): void {
-    let vertsSortedByVisualIndex = Array.from(state.getAspect(WallVertex, Position2)).sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
-    for (let [pos, paddle, orientation] of state.getAspect(Position2, Paddle, Orientation)) {
+  public Step({ state }: lk.StepParams): void {
+    let vertsSortedByVisualIndex = Array.from(
+      state.getAspect(WallVertex, Position2)
+    ).sort((a, b) => a[0].getData().visualIndex - b[0].getData().visualIndex);
+    for (let [pos, paddle, orientation] of state.getAspect(
+      Position2,
+      Paddle,
+      Orientation
+    )) {
       let persistentIdToFind = paddle.getData().wallPersistentId;
-      let index = vertsSortedByVisualIndex.findIndex(([vert, _]) => vert.getData().persistentIndex === persistentIdToFind);
+      let index = vertsSortedByVisualIndex.findIndex(
+        ([vert, _]) => vert.getData().persistentIndex === persistentIdToFind
+      );
       if (index === -1) {
         console.warn('Expected to find vertex for paddle');
         continue;
@@ -284,9 +371,18 @@ export class PaddlePositionSyncSystem implements lk.System {
       let wallStartVertPos = vertsSortedByVisualIndex[index][1].getData();
       let wallEndVertPos = vertsSortedByVisualIndex[nextIndex][1].getData();
       let posData = pos.getData();
-      posData.lerpVectors(wallStartVertPos.clone(), wallEndVertPos.clone(), paddle.getData().positionInWallSpace);
-      let wallDirection = wallEndVertPos.clone().sub(wallStartVertPos).normalize();
-      orientation.getData().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
+      posData.lerpVectors(
+        wallStartVertPos.clone(),
+        wallEndVertPos.clone(),
+        paddle.getData().positionInWallSpace
+      );
+      let wallDirection = wallEndVertPos
+        .clone()
+        .sub(wallStartVertPos)
+        .normalize();
+      orientation
+        .getData()
+        .setFromAxisAngle(new THREE.Vector3(0, 0, 1), wallDirection.angle());
     }
   }
 }

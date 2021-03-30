@@ -1,12 +1,12 @@
 apiVersion: 1
 
 datasources:
-- name: InfluxDB
-  type: influxdb
-  access: proxy
-  orgId: 1
-  database: network_integration_test_db
-  url: http://influxdb:8086
-  jsonData:
-    timeInterval: "1ms"
-  isDefault: true
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    orgId: 1
+    database: network_integration_test_db
+    url: http://influxdb:8086
+    jsonData:
+      timeInterval: '1ms'
+    isDefault: true

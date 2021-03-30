@@ -11,14 +11,15 @@
       "cwd": "${workspaceRoot}/demos/pong/server",
       "preLaunchTask": null,
       "runtimeExecutable": null,
-      "runtimeArgs": [
-        "--nolazy"
-      ],
+      "runtimeArgs": ["--nolazy"],
       "env": {
         "NODE_ENV": "development"
       },
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/demos/**/dist/**/*.js"]
+      "outFiles": [
+        "${workspaceRoot}/packages/**/dist/**/*.js",
+        "${workspaceRoot}/demos/**/dist/**/*.js"
+      ]
     },
     {
       "name": "Attach",
@@ -28,7 +29,10 @@
       "address": "localhost",
       "restart": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/demos/**/dist/**/*.js"],
+      "outFiles": [
+        "${workspaceRoot}/packages/**/dist/**/*.js",
+        "${workspaceRoot}/demos/**/dist/**/*.js"
+      ],
       "localRoot": "${workspaceRoot}",
       "remoteRoot": null
     },
@@ -42,14 +46,15 @@
       "cwd": "${workspaceRoot}/tests/network-integration-test",
       "preLaunchTask": null,
       "runtimeExecutable": null,
-      "runtimeArgs": [
-        "--nolazy"
-      ],
+      "runtimeArgs": ["--nolazy"],
       "env": {
         "NODE_ENV": "development"
       },
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/**/dist/**/*.js", "${workspaceRoot}/tests/**/dist/**/*.js"]
-    },
+      "outFiles": [
+        "${workspaceRoot}/packages/**/dist/**/*.js",
+        "${workspaceRoot}/tests/**/dist/**/*.js"
+      ]
+    }
   ]
 }

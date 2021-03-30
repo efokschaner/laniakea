@@ -6,17 +6,18 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests implemented\""
   },
   "author": "efokschaner",
   "license": "MIT",
   "dependencies": {
     "@laniakea/base-engine": "^0.0.1",
     "box-intersect": "^1.0.1",
-    "three": "^0.106.0"
+    "three": "^0.126.1"
   },
   "devDependencies": {
+    "@types/three": "^0.126.1",
     "@types/webvr-api": "^0.0.35",
-    "typescript": "^3.4.5"
+    "typescript": "^4.2.3"
   }
 }

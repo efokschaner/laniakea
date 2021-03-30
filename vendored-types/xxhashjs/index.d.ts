@@ -49,7 +49,7 @@ declare module 'xxhashjs' {
      * @param {Number|UINT32} seed as a number or an unsigned 32 bits integer
      * @return ThisExpression
      */
-    init(seed: number|UINT32): this;
+    init(seed: number | UINT32): this;
 
     /**
      * Add data to be computed for the XXH hash
@@ -57,7 +57,7 @@ declare module 'xxhashjs' {
      * @param {String|ArrayBuffer|Uint8Array} input as a string or nodejs Buffer or ArrayBuffer
      * @return ThisExpression
      */
-    update(input: string|ArrayBuffer|Uint8Array): this;
+    update(input: string | ArrayBuffer | Uint8Array): this;
 
     /**
      * Finalize the XXH computation. The XXH instance is ready for reuse for the given seed
@@ -77,7 +77,7 @@ declare module 'xxhashjs' {
      * @param seed as a number or an unsigned 64 bits integer
      * @return ThisExpression
      */
-    init(seed: number|UINT64): this;
+    init(seed: number | UINT64): this;
 
     /**
      * Add data to be computed for the XXH hash
@@ -85,7 +85,7 @@ declare module 'xxhashjs' {
      * @param input as a string or nodejs Buffer or ArrayBuffer
      * @return ThisExpression
      */
-    update(input: string|ArrayBuffer|Uint8Array): this;
+    update(input: string | ArrayBuffer | Uint8Array): this;
 
     /**
      * Finalize the XXH computation. The XXH instance is ready for reuse for the given seed
@@ -99,35 +99,35 @@ declare module 'xxhashjs' {
     /**
      * Calculate the 32-bit xxhash of the given data, using the given seed
      */
-    (data: string|ArrayBuffer|Uint8Array, seed: number|UINT32): UINT32;
+    (data: string | ArrayBuffer | Uint8Array, seed: number | UINT32): UINT32;
 
     /**
      * Construct an XXH instance with the given seed
      * @param seed as a number or an unsigned 32 bits integer
      */
-    new(seed: number|UINT32): XXH32Instance;
+    new (seed: number | UINT32): XXH32Instance;
   }
 
   interface XXH64 {
     /**
      * Calculate the 64-bit xxhash of the given data, using the given seed
      */
-    (data: string|ArrayBuffer|Uint8Array, seed: number|UINT64): UINT64;
+    (data: string | ArrayBuffer | Uint8Array, seed: number | UINT64): UINT64;
 
     /**
      * Construct an XXH instance with the given seed
      * @param seed as a number or an unsigned 64 bits integer
      */
-    new(seed: number|UINT64): XXH64Instance;
+    new (seed: number | UINT64): XXH64Instance;
   }
 
   /**
    * 32-bit xxhash
    */
-  export var h32: XXH32;
+  export let h32: XXH32;
 
   /**
    * 64-bit xxhash
    */
-  export var h64: XXH64;
+  export let h64: XXH64;
 }

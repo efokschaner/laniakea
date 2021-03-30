@@ -1,6 +1,14 @@
-
-import { ClassRegistry, Serializable, SerializationStream } from '@laniakea/utils';
-import { ComponentId, ComponentTypeId, EntityId, EntityIdGenerator } from './ids';
+import {
+  ClassRegistry,
+  Serializable,
+  SerializationStream,
+} from '@laniakea/utils';
+import {
+  ComponentId,
+  ComponentTypeId,
+  EntityId,
+  EntityIdGenerator,
+} from './ids';
 
 /**
  * Represents a component whose specific type is not statically known.
@@ -11,10 +19,10 @@ import { ComponentId, ComponentTypeId, EntityId, EntityIdGenerator } from './ids
  * non-networkable / non-persistable state
  */
 export class GenericComponent {
-  constructor(
+  public constructor(
     public readonly id: ComponentId,
-    public data: Serializable) {
-  }
+    public data: Serializable
+  ) {}
   public isDeleted = false;
 }
 
@@ -40,9 +48,10 @@ export class DeletedTag implements Serializable {
  * This is the purely id-based kernel of state management / indexing
  */
 export class EntityComponentDb {
-  constructor(
+  public constructor(
     private componentTypes: ComponentTypeId[],
-    private classRegistry: ClassRegistry) {
+    private classRegistry: ClassRegistry<Serializable>
+  ) {
     for (let componentTypeId of this.componentTypes) {
       this.componentTypeIdToComponents.set(componentTypeId, new Map());
     }
@@ -73,7 +82,10 @@ export class EntityComponentDb {
     for (let component of this.getAllComponentsOfEntity(entityId)) {
       component.isDeleted = true;
     }
-    let deletedTagComponentId = new ComponentId(this.deletedTagTypeInfo.shortTypeId, entityId);
+    let deletedTagComponentId = new ComponentId(
+      this.deletedTagTypeInfo.shortTypeId,
+      entityId
+    );
     this.setComponent(deletedTagComponentId, new DeletedTag());
   }
 
@@ -84,53 +96,72 @@ export class EntityComponentDb {
    */
   public releaseEntity(entityId: EntityId): void {
     let componentsOfEntityId = this.entityIdToComponents.get(entityId)!;
-    for (let [componentTypeId ] of componentsOfEntityId) {
+    for (let [componentTypeId] of componentsOfEntityId) {
       this.componentTypeIdToComponents.get(componentTypeId)!.delete(entityId);
     }
     this.entityIdToComponents.delete(entityId);
   }
 
   public hasComponent(componentId: ComponentId): boolean {
-    let componentsOfTypeId = this.componentTypeIdToComponents.get(componentId.typeId)!;
+    let componentsOfTypeId = this.componentTypeIdToComponents.get(
+      componentId.typeId
+    )!;
     return componentsOfTypeId.has(componentId.ownerId);
   }
 
-  public getComponent(componentId: ComponentId): GenericComponent|undefined {
-    let componentsOfTypeId = this.componentTypeIdToComponents.get(componentId.typeId)!;
+  public getComponent(componentId: ComponentId): GenericComponent | undefined {
+    let componentsOfTypeId = this.componentTypeIdToComponents.get(
+      componentId.typeId
+    )!;
     return componentsOfTypeId.get(componentId.ownerId);
   }
 
-  public setComponent(componentId: ComponentId, data: Serializable): GenericComponent {
+  public setComponent(
+    componentId: ComponentId,
+    data: Serializable
+  ): GenericComponent {
     let newComponent = new GenericComponent(componentId, data);
-    let componentsOfEntityId = this.entityIdToComponents.get(componentId.ownerId);
+    let componentsOfEntityId = this.entityIdToComponents.get(
+      componentId.ownerId
+    );
     if (componentsOfEntityId === undefined) {
       componentsOfEntityId = new Map();
       this.entityIdToComponents.set(componentId.ownerId, componentsOfEntityId);
     }
     componentsOfEntityId.set(componentId.typeId, newComponent);
-    let componentsOfTypeId = this.componentTypeIdToComponents.get(componentId.typeId)!;
+    let componentsOfTypeId = this.componentTypeIdToComponents.get(
+      componentId.typeId
+    )!;
     componentsOfTypeId.set(componentId.ownerId, newComponent);
     return newComponent;
   }
 
   public *getAllComponents(): Iterable<GenericComponent> {
     for (let componentsOfType of this.componentTypeIdToComponents.values()) {
-        yield* componentsOfType.values();
+      yield* componentsOfType.values();
     }
   }
 
-  public *getAllComponentsOfType(componentTypeId: ComponentTypeId): Iterable<GenericComponent> {
-    let componentsOfType = this.componentTypeIdToComponents.get(componentTypeId)!;
+  public *getAllComponentsOfType(
+    componentTypeId: ComponentTypeId
+  ): Iterable<GenericComponent> {
+    let componentsOfType = this.componentTypeIdToComponents.get(
+      componentTypeId
+    )!;
     yield* componentsOfType.values();
   }
 
-  public *getAllComponentsOfEntity(ownerId: EntityId): Iterable<GenericComponent> {
+  public *getAllComponentsOfEntity(
+    ownerId: EntityId
+  ): Iterable<GenericComponent> {
     let componentsOfEntity = this.entityIdToComponents.get(ownerId)!;
     yield* componentsOfEntity.values();
   }
 
   public getNumComponentsOfType(componentTypeId: ComponentTypeId): number {
-    let componentsOfType = this.componentTypeIdToComponents.get(componentTypeId)!;
+    let componentsOfType = this.componentTypeIdToComponents.get(
+      componentTypeId
+    )!;
     return componentsOfType.size;
   }
 
@@ -149,17 +180,23 @@ export class EntityComponentDb {
    * @param componentId The entity to release
    */
   public releaseComponent(componentId: ComponentId): void {
-    let componentsOfEntityId = this.entityIdToComponents.get(componentId.ownerId);
+    let componentsOfEntityId = this.entityIdToComponents.get(
+      componentId.ownerId
+    );
     if (componentsOfEntityId !== undefined) {
       componentsOfEntityId.delete(componentId.typeId);
     }
-    let componentsOfTypeId = this.componentTypeIdToComponents.get(componentId.typeId)!;
+    let componentsOfTypeId = this.componentTypeIdToComponents.get(
+      componentId.typeId
+    )!;
     componentsOfTypeId.delete(componentId.ownerId);
   }
 
   public releaseDeletedState(): void {
-    let deletedTagComponents = this.componentTypeIdToComponents.get(this.deletedTagTypeInfo.shortTypeId)!;
-    for (let [ownerId ] of deletedTagComponents!) {
+    let deletedTagComponents = this.componentTypeIdToComponents.get(
+      this.deletedTagTypeInfo.shortTypeId
+    )!;
+    for (let [ownerId] of deletedTagComponents) {
       // Releasing the entity releases its deleted tag too
       this.releaseEntity(ownerId);
     }
@@ -175,7 +212,8 @@ export class EntityComponentDb {
     if (stream.isWriting) {
       let numComponentTypes = this.componentTypeIdToComponents.size;
       stream.writeUint8(numComponentTypes);
-      for (let [typeId, componentsByOwner] of this.componentTypeIdToComponents) {
+      for (let [typeId, componentsByOwner] of this
+        .componentTypeIdToComponents) {
         stream.writeUint16(typeId);
         let numComponents = componentsByOwner.size;
         stream.writeUint16(numComponents);
@@ -191,22 +229,35 @@ export class EntityComponentDb {
       let numComponentTypes = stream.readUint8();
       for (let i = 0; i < numComponentTypes; ++i) {
         let componentTypeId = stream.readUint16() as ComponentTypeId;
-        let componentTypeInfo = this.classRegistry.getTypeInfoByShortTypeId(componentTypeId)!;
+        let componentTypeInfo = this.classRegistry.getTypeInfoByShortTypeId(
+          componentTypeId
+        )!;
         let numComponents = stream.readUint16();
         for (let j = 0; j < numComponents; ++j) {
           let ownerId = stream.readUint32() as EntityId;
-          let componentData = componentTypeInfo.construct() as Serializable;
+          let componentData = componentTypeInfo.construct();
           componentData.serialize(stream);
-          let newComponent = this.setComponent(new ComponentId(componentTypeId, ownerId), componentData);
+          let newComponent = this.setComponent(
+            new ComponentId(componentTypeId, ownerId),
+            componentData
+          );
           newComponent.isDeleted = stream.readBoolean();
         }
       }
     }
   }
 
-  private deletedTagTypeInfo = this.classRegistry.getTypeInfoByConstructor(DeletedTag)!;
+  private deletedTagTypeInfo = this.classRegistry.getTypeInfoByConstructor(
+    DeletedTag
+  )!;
   private entityIdGenerator = new EntityIdGenerator();
-  private componentTypeIdToComponents: Map<ComponentTypeId, Map<EntityId, GenericComponent>> = new Map();
+  private componentTypeIdToComponents = new Map<
+    ComponentTypeId,
+    Map<EntityId, GenericComponent>
+  >();
   // redundant state for fast Entity-to-Components lookup
-  private entityIdToComponents: Map<EntityId, Map<ComponentTypeId, GenericComponent>> = new Map();
+  private entityIdToComponents = new Map<
+    EntityId,
+    Map<ComponentTypeId, GenericComponent>
+  >();
 }

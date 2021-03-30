@@ -22,43 +22,52 @@ export let MAX_SHORT_TYPE_ID_EXCLUSIVE = 2 ** 16;
  */
 export type TypeName = string;
 
-export type GenericConstructor = new(...args: any[]) => {};
+export type Constructor<T> = new (...args: any[]) => T;
 
-export class TypeInfo {
-  constructor(
+export class TypeInfo<T> {
+  public constructor(
     public typeId: TypeId,
     public shortTypeId: ShortTypeId,
     public typeName: TypeName,
-    public konstructor: GenericConstructor) {
-  }
+    public konstructor: Constructor<T>
+  ) {}
 
-  public construct(...args: any[]): {} {
+  public construct(...args: any[]): T {
     return new this.konstructor(...args);
   }
 }
 
-export class ClassRegistry {
+export class ClassRegistry<T> {
   public static getTypeIdFromTypeName(typeName: TypeName): TypeId {
     return XXH.h32(typeName, XXHASH_SEED).toNumber() as TypeId;
   }
 
-  public getTypeInfoByTypeId(typeId: TypeId): TypeInfo | undefined {
+  public getTypeInfoByTypeId(typeId: TypeId): TypeInfo<T> | undefined {
     return this.typeIdToTypeInfo.get(typeId);
   }
 
-  public getTypeInfoByShortTypeId(shortTypeId: ShortTypeId): TypeInfo | undefined {
+  public getTypeInfoByShortTypeId(
+    shortTypeId: ShortTypeId
+  ): TypeInfo<T> | undefined {
     return this.shortTypeIdToTypeInfo[shortTypeId];
   }
 
-  public getTypeInfoByTypeName(typeName: TypeName): TypeInfo | undefined {
-    return this.typeIdToTypeInfo.get(ClassRegistry.getTypeIdFromTypeName(typeName));
+  public getTypeInfoByTypeName(typeName: TypeName): TypeInfo<T> | undefined {
+    return this.typeIdToTypeInfo.get(
+      ClassRegistry.getTypeIdFromTypeName(typeName)
+    );
   }
 
-  public getTypeInfoByConstructor(konstructor: GenericConstructor): TypeInfo | undefined {
+  public getTypeInfoByConstructor(
+    konstructor: Constructor<T>
+  ): TypeInfo<T> | undefined {
     return this.constructorToTypeInfo.get(konstructor);
   }
 
-  public registerClass(konstructor: GenericConstructor, typeName: TypeName): TypeInfo {
+  public registerClass(
+    konstructor: Constructor<T>,
+    typeName: TypeName
+  ): TypeInfo<T> {
     let shortTypeId = this.shortTypeIdToTypeInfo.length as ShortTypeId;
     if (shortTypeId >= MAX_SHORT_TYPE_ID_EXCLUSIVE) {
       throw new Error('shortTypeId would exceed max size (2^16 - 1)');
@@ -70,14 +79,19 @@ export class ClassRegistry {
    * Dump the entire type mapping to allow us to send it to others
    */
   public getTypeIdToShortTypeIdMapping(): Array<[TypeId, ShortTypeId]> {
-    return Array.from(this.typeIdToTypeInfo.entries()).map(([t, info]) => [t, info.shortTypeId]);
+    return Array.from(this.typeIdToTypeInfo.entries()).map(([t, info]) => [
+      t,
+      info.shortTypeId,
+    ]);
   }
 
   /**
    * Receive the dumped mapping and overwrite our mapping with it.
    */
-  public setTypeIdToShortTypeIdMapping(mapping: Array<[TypeId, ShortTypeId]>) {
-    this.shortTypeIdToTypeInfo = new Array<TypeInfo>();
+  public setTypeIdToShortTypeIdMapping(
+    mapping: Array<[TypeId, ShortTypeId]>
+  ): void {
+    this.shortTypeIdToTypeInfo = new Array<TypeInfo<T>>();
     for (let [typeId, shortTypeId] of mapping) {
       let typeInfo = this.typeIdToTypeInfo.get(typeId)!;
       typeInfo.shortTypeId = shortTypeId;
@@ -85,28 +99,31 @@ export class ClassRegistry {
     }
   }
 
-  private registerClassWithShortId(konstructor: GenericConstructor, typeName: TypeName, shortTypeId: ShortTypeId): TypeInfo {
+  private registerClassWithShortId(
+    konstructor: Constructor<T>,
+    typeName: TypeName,
+    shortTypeId: ShortTypeId
+  ): TypeInfo<T> {
     let typeId = ClassRegistry.getTypeIdFromTypeName(typeName);
     if (this.typeIdToTypeInfo.has(typeId)) {
-      throw new Error(`Key collision: ${typeName} collides with: ${this.typeIdToTypeInfo.get(typeId)}`);
+      throw new Error(
+        `Key collision: ${typeName} collides with: ${
+          this.typeIdToTypeInfo.get(typeId)!.typeName
+        }`
+      );
     }
-    let typeInfo = new TypeInfo(
-      typeId,
-      shortTypeId,
-      typeName,
-      konstructor,
-    );
+    let typeInfo = new TypeInfo<T>(typeId, shortTypeId, typeName, konstructor);
     this.typeIdToTypeInfo.set(typeId, typeInfo);
     this.shortTypeIdToTypeInfo[shortTypeId] = typeInfo;
     this.constructorToTypeInfo.set(konstructor, typeInfo);
     return typeInfo;
   }
 
-  private typeIdToTypeInfo = new Map<TypeId, TypeInfo>();
+  private typeIdToTypeInfo = new Map<TypeId, TypeInfo<T>>();
   // Initialize with 1 empty slot to reserve 0 as an invalid shortTypeId to make mistakes stand out.
   // private startingId = 1;
   // TODO remove this temporary code for flushing out bugs:
   private startingId = Math.floor(Math.random() * 256);
-  private shortTypeIdToTypeInfo = new Array<TypeInfo>(this.startingId);
-  private constructorToTypeInfo = new Map<GenericConstructor, TypeInfo>();
+  private shortTypeIdToTypeInfo = new Array<TypeInfo<T>>(this.startingId);
+  private constructorToTypeInfo = new Map<Constructor<T>, TypeInfo<T>>();
 }

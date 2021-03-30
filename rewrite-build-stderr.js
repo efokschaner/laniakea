@@ -8,12 +8,20 @@ process.stdin.pipe(require('split')()).on('data', function (line) {
   let packageBuildRegexResult = packageBuildRegex.exec(line);
   if (packageBuildRegexResult) {
     let demoPackageRegex = /lk-demo-(\S+)-(\S+)$/;
-    let demoPackageRegexResult = demoPackageRegex.exec(packageBuildRegexResult[1]);
+    let demoPackageRegexResult = demoPackageRegex.exec(
+      packageBuildRegexResult[1]
+    );
     if (demoPackageRegexResult) {
-      curPackagePath = path.join('demos', demoPackageRegexResult[1], demoPackageRegexResult[2]);
+      curPackagePath = path.join(
+        'demos',
+        demoPackageRegexResult[1],
+        demoPackageRegexResult[2]
+      );
     } else {
       let testPackageRegex = /\S+-test$/;
-      let testPackageRegexResult = testPackageRegex.exec(packageBuildRegexResult[1]);
+      let testPackageRegexResult = testPackageRegex.exec(
+        packageBuildRegexResult[1]
+      );
       if (testPackageRegexResult) {
         curPackagePath = path.join('tests', packageBuildRegexResult[1]);
       } else {

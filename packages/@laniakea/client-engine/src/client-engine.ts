@@ -45,27 +45,35 @@ export class ClientEngine implements Engine {
   };
   public options: ClientEngineOptions;
 
-  constructor(options: Partial<ClientEngineOptions>) {
+  public constructor(options: Partial<ClientEngineOptions>) {
     this.options = Object.assign({}, ClientEngine.defaultOptions, options);
     this.networkClient = new NetworkClient(this.classRegistry);
-    this.serverTimeEstimator = new ServerTimeEstimator(this.networkClient, this.options.globalSimulationRateMultiplier);
+    this.serverTimeEstimator = new ServerTimeEstimator(
+      this.networkClient,
+      this.options.globalSimulationRateMultiplier
+    );
     this.clientSimulation = new ClientSimulation(
       this.options.secondsOfSimulationFramesToRetain,
       this.options.simFPS,
       this.serverTimeEstimator,
-      this.simulationEngine);
-    registerMessageTypes(this.networkClient.registerMessageType.bind(this.networkClient));
+      this.simulationEngine
+    );
+    registerMessageTypes(
+      this.networkClient.registerMessageType.bind(this.networkClient)
+    );
     this.networkClient.registerMessageHandler(
       S2C_FrameInputsUsedMessage,
-      this.clientSimulation.onFrameInputsUsedMessage.bind(this.clientSimulation),
+      this.clientSimulation.onFrameInputsUsedMessage.bind(this.clientSimulation)
     );
     this.networkClient.registerMessageHandler(
       S2C_FrameComponentStateMessage,
-      this.clientSimulation.onFramecomponentStateMessage.bind(this.clientSimulation),
+      this.clientSimulation.onFramecomponentStateMessage.bind(
+        this.clientSimulation
+      )
     );
     this.networkClient.registerMessageHandler(
       S2C_FrameDeletionsMessage,
-      this.clientSimulation.onFrameDeletionsMessage.bind(this.clientSimulation),
+      this.clientSimulation.onFrameDeletionsMessage.bind(this.clientSimulation)
     );
     this.networkClient.onConnected.attach((playerId) => {
       this.playerId = playerId;
@@ -74,12 +82,21 @@ export class ClientEngine implements Engine {
     });
   }
 
-  public registerContinuousInputType<T extends Serializable>(inputType: new() => T, inputTypeName: TypeName): void {
+  public registerContinuousInputType<T extends Serializable>(
+    inputType: new () => T,
+    inputTypeName: TypeName
+  ): void {
     this.simulationEngine.registerContinuousInputType(inputType, inputTypeName);
   }
 
-  public registerComponentType<T extends Serializable>(componentType: new() => T, componentTypeName: TypeName): void {
-    this.simulationEngine.registerComponentType(componentType, componentTypeName);
+  public registerComponentType<T extends Serializable>(
+    componentType: new () => T,
+    componentTypeName: TypeName
+  ): void {
+    this.simulationEngine.registerComponentType(
+      componentType,
+      componentTypeName
+    );
     // TODO. If we want to support adding a component type after we have started to create simulation frames,
     // we'll need to rebuild all the frames here
     // For now we'll just assume all components are registered prior to connecting to the server.
@@ -93,7 +110,9 @@ export class ClientEngine implements Engine {
     this.simulationEngine.removeSystem(system);
   }
 
-  public getCurrentContinuousInput<T extends Serializable>(inputType: new() => T): T|undefined {
+  public getCurrentContinuousInput<T extends Serializable>(
+    inputType: new () => T
+  ): T | undefined {
     if (this.currentInputFrame === undefined) {
       return undefined;
     }
@@ -111,19 +130,33 @@ export class ClientEngine implements Engine {
 
   public onConnectedToServer = new SyncEvent<PlayerId>();
 
-  public setRenderingSystem(s: RenderingSystem) {
+  public setRenderingSystem(s: RenderingSystem): void {
     this.renderingSystem = s;
   }
 
-  public start() {
+  public start(): void {
     this.currentInputFrame = this.simulationEngine.createInputFrame();
-    this.updateServerTimeEstimatorHandle = periodicCallback(this.serverTimeEstimator.update.bind(this.serverTimeEstimator), 50, 'updateServerTimeEstimator');
-    this.animationFrameReqeuestHandle = requestAnimationFrame(this.renderLoop.bind(this));
-    this.updateInputHandle = periodicCallback(this.updateInput.bind(this), 1000 / 60, 'updateInputHandler');
-    this.fallbackClientSimulationHandle = periodicCallback(this.fallbackClientSimulation.bind(this), 1000, 'fallbackClientSimulation');
+    this.updateServerTimeEstimatorHandle = periodicCallback(
+      this.serverTimeEstimator.update.bind(this.serverTimeEstimator),
+      50,
+      'updateServerTimeEstimator'
+    );
+    this.animationFrameReqeuestHandle = requestAnimationFrame(
+      this.renderLoop.bind(this)
+    );
+    this.updateInputHandle = periodicCallback(
+      this.updateInput.bind(this),
+      1000 / 60,
+      'updateInputHandler'
+    );
+    this.fallbackClientSimulationHandle = periodicCallback(
+      this.fallbackClientSimulation.bind(this),
+      1000,
+      'fallbackClientSimulation'
+    );
   }
 
-  public stop() {
+  public stop(): void {
     this.fallbackClientSimulationHandle!.stop();
     this.updateInputHandle!.stop();
     cancelAnimationFrame(this.animationFrameReqeuestHandle!);
@@ -131,7 +164,7 @@ export class ClientEngine implements Engine {
   }
 
   public playerId?: PlayerId = undefined;
-  private classRegistry = new ClassRegistry();
+  private classRegistry = new ClassRegistry<Serializable>();
 
   private readonly simulationEngine = new SimulationEngine(this.classRegistry);
   private networkClient: NetworkClient;
@@ -160,20 +193,27 @@ export class ClientEngine implements Engine {
     let targetSimulationTimeS: number | undefined;
     let packet = new C2S_InputFrameMessage();
     packet.sequenceNumber = this.getNextOutboundSequenceNumber();
-    packet.inputFrame = new Uint8Array(measureAndSerialize(this.currentInputFrame));
+    packet.inputFrame = new Uint8Array(
+      measureAndSerialize(this.currentInputFrame)
+    );
     if (serverSimTimeS !== undefined && inputTravelTime !== undefined) {
       targetSimulationTimeS = serverSimTimeS + inputTravelTime;
       packet.targetSimulationTimeS = targetSimulationTimeS;
     }
     this.networkClient.sendMessage(packet);
     if (targetSimulationTimeS !== undefined) {
-      this.clientSimulation.notifyInputBeingSent(this.currentInputFrame, targetSimulationTimeS);
+      this.clientSimulation.notifyInputBeingSent(
+        this.currentInputFrame,
+        targetSimulationTimeS
+      );
     }
     this.networkClient.flushMessagesToNetwork();
   }
 
   private renderLoop(domHighResTimestampMS: number) {
-    this.animationFrameReqeuestHandle = requestAnimationFrame(this.renderLoop.bind(this));
+    this.animationFrameReqeuestHandle = requestAnimationFrame(
+      this.renderLoop.bind(this)
+    );
     if (this.renderingSystem) {
       this.renderingSystem.render(domHighResTimestampMS, this.clientSimulation);
     }

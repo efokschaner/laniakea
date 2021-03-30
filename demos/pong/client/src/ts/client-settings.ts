@@ -2,12 +2,16 @@ import { SyncEvent } from 'ts-events';
 
 let storagePrefix = 'pong-demo-client-settings:';
 
-function readValueFromStorage<T>(storage: Storage, key: string, defaultVal: T): T {
+function readValueFromStorage<T>(
+  storage: Storage,
+  key: string,
+  defaultVal: T
+): T {
   let maybeItem = storage.getItem(storagePrefix + key);
   if (maybeItem == null) {
     return defaultVal;
   }
-  return JSON.parse(maybeItem);
+  return JSON.parse(maybeItem) as T;
 }
 
 function writeValueToStorage(storage: Storage, key: string, item: any) {
@@ -18,7 +22,11 @@ function writeValueToStorage(storage: Storage, key: string, item: any) {
  * Generic, Observable, and Persisted setting
  */
 export class ClientSetting<T> extends SyncEvent<T> {
-  constructor(private _storage: Storage, private _name: string, defaultValue: T) {
+  public constructor(
+    private _storage: Storage,
+    private _name: string,
+    defaultValue: T
+  ) {
     super();
     this._value = readValueFromStorage(this._storage, this._name, defaultValue);
   }
@@ -40,11 +48,21 @@ export class ClientSetting<T> extends SyncEvent<T> {
 }
 
 export class ClientSettings {
-  constructor(private _storage: Storage) {
-  }
+  public constructor(private _storage: Storage) {}
 
-  public readonly clientIsBot = new ClientSetting<boolean>(this._storage, 'clientIsBot', false);
-  public readonly clientSimulationEnabled = new ClientSetting<boolean>(this._storage, 'clientSimulationEnabled', true);
-  public readonly subFrameInterpolationEnabled = new ClientSetting<boolean>(this._storage, 'subFrameInterpolationEnabled', true);
-
+  public readonly clientIsBot = new ClientSetting<boolean>(
+    this._storage,
+    'clientIsBot',
+    false
+  );
+  public readonly clientSimulationEnabled = new ClientSetting<boolean>(
+    this._storage,
+    'clientSimulationEnabled',
+    true
+  );
+  public readonly subFrameInterpolationEnabled = new ClientSetting<boolean>(
+    this._storage,
+    'subFrameInterpolationEnabled',
+    true
+  );
 }

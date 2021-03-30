@@ -18,8 +18,7 @@
       },
       "problemMatcher": [
         {
-          "base": "$tsc",
-          "fileLocation": "absolute"
+          "base": "$tsc"
         },
         {
           "owner": "webpack",
@@ -27,7 +26,7 @@
           "pattern": [
             {
               "regexp": "(ERROR|WARNING) in (.+)$",
-              "severity" : 1,
+              "severity": 1,
               "file": 2
             },
             {

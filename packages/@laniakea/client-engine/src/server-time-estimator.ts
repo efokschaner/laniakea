@@ -1,5 +1,4 @@
-// tslint:disable-next-line:no-var-requires
-const present = require('present');
+import present = require('present');
 
 import {
   C2S_TimeSyncRequestMessage,
@@ -17,19 +16,28 @@ interface TimeSyncSample {
  * Any smoothing, such as that needed to avoid time going backwards etc. should be applied at a higher level.
  */
 export class ServerTimeEstimator {
-  constructor(private networkClient: NetworkClient, private globalSimulationRateMultiplier: number) {
-    networkClient.registerMessageHandler(S2C_TimeSyncResponseMessage, (response) => this.onTimeSyncResponse(response));
+  public constructor(
+    private networkClient: NetworkClient,
+    private globalSimulationRateMultiplier: number
+  ) {
+    networkClient.registerMessageHandler(
+      S2C_TimeSyncResponseMessage,
+      (response) => this.onTimeSyncResponse(response)
+    );
   }
 
   /**
    * Should be called periodically to allow new time sync requests
    */
-  public update() {
+  public update(): void {
     if (!this.networkClient.isConnected) {
       return;
     }
     let curTimeS = this.getPresentTimeS();
-    if (this.nextRequestTime === undefined || curTimeS >= this.nextRequestTime) {
+    if (
+      this.nextRequestTime === undefined ||
+      curTimeS >= this.nextRequestTime
+    ) {
       let req = new C2S_TimeSyncRequestMessage();
       req.clientTimeS = curTimeS;
       let outboundMessage = this.networkClient.sendMessage(req);
@@ -50,7 +58,7 @@ export class ServerTimeEstimator {
    * between server simulation and client time. This may also matter if the client
    * and server's clock speeds are just different.
    */
-  public getServerSimulationTimeS(): number|undefined {
+  public getServerSimulationTimeS(): number | undefined {
     if (this.estimatedTimeDeltaS === undefined) {
       return undefined;
     }
@@ -60,12 +68,12 @@ export class ServerTimeEstimator {
   /**
    * Returns undefined until we have at least a single sample.
    */
-  public getPacketRoundTripTimeS(): number|undefined {
+  public getPacketRoundTripTimeS(): number | undefined {
     return this.estimatedRttS;
   }
 
   private getPresentTimeS() {
-    return this.globalSimulationRateMultiplier * present() / 1000;
+    return (this.globalSimulationRateMultiplier * present()) / 1000;
   }
 
   private onTimeSyncResponse(response: S2C_TimeSyncResponseMessage) {
@@ -75,10 +83,13 @@ export class ServerTimeEstimator {
     // This is perhaps better anyway as we care about "application" layer latency too.
     let responseReceivedTimeS = this.getPresentTimeS();
     this.timeSyncSamples[this.nextCyclicSampleIndex] = {
-      calculatedDeltaS: response.serverTimeS - (response.clientTimeS + responseReceivedTimeS) / 2,
+      calculatedDeltaS:
+        response.serverTimeS -
+        (response.clientTimeS + responseReceivedTimeS) / 2,
       calculatedRttS: responseReceivedTimeS - response.clientTimeS,
     };
-    this.nextCyclicSampleIndex = (this.nextCyclicSampleIndex + 1) % this.cyclicSampleMaxLength;
+    this.nextCyclicSampleIndex =
+      (this.nextCyclicSampleIndex + 1) % this.cyclicSampleMaxLength;
     this.updateEstimatedTimes();
   }
 
@@ -92,15 +103,19 @@ export class ServerTimeEstimator {
     let rtts = this.timeSyncSamples.map((x) => x.calculatedRttS);
     let sum = (a: number, b: number) => a + b;
     let meanRtt = rtts.reduce(sum, 0) / this.timeSyncSamples.length;
-    let varianceRtt = rtts.map((x) => Math.pow(x - meanRtt, 2)).reduce(sum, 0) / (rtts.length - 1);
+    let varianceRtt =
+      rtts.map((x) => Math.pow(x - meanRtt, 2)).reduce(sum, 0) /
+      (rtts.length - 1);
     let stdDevRtt = Math.sqrt(varianceRtt);
-    let samplesThatAreNotOutliers = this.timeSyncSamples.filter((value) => Math.abs(value.calculatedRttS - meanRtt) <= stdDevRtt);
-    let meanRttOfNonOutliers = samplesThatAreNotOutliers
-      .map((x) => x.calculatedRttS)
-      .reduce(sum, 0) / samplesThatAreNotOutliers.length;
-    let meanTimeDeltaOfNonOutliers = samplesThatAreNotOutliers
-      .map((x) => x.calculatedDeltaS)
-      .reduce(sum, 0) / samplesThatAreNotOutliers.length;
+    let samplesThatAreNotOutliers = this.timeSyncSamples.filter(
+      (value) => Math.abs(value.calculatedRttS - meanRtt) <= stdDevRtt
+    );
+    let meanRttOfNonOutliers =
+      samplesThatAreNotOutliers.map((x) => x.calculatedRttS).reduce(sum, 0) /
+      samplesThatAreNotOutliers.length;
+    let meanTimeDeltaOfNonOutliers =
+      samplesThatAreNotOutliers.map((x) => x.calculatedDeltaS).reduce(sum, 0) /
+      samplesThatAreNotOutliers.length;
     this.estimatedRttS = meanRttOfNonOutliers;
     this.estimatedTimeDeltaS = meanTimeDeltaOfNonOutliers;
   }

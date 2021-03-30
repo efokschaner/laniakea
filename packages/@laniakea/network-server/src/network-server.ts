@@ -1,3 +1,5 @@
+import * as http from 'http';
+import { AddressInfo } from 'net';
 import {
   LikeRTCDataChannelOrWebSocket,
   MessageRouter,
@@ -9,16 +11,16 @@ import {
   S2C_BuiltinHandshakeMessage,
 } from '@laniakea/network-peer';
 import { ClassRegistry, Serializable } from '@laniakea/utils';
-import * as http from 'http';
-import { AddressInfo } from 'net';
 import { SyncEvent } from 'ts-events';
-import { request as WebSocketRequest, server as WebSocketServer } from 'websocket';
+import {
+  request as WebSocketRequest,
+  server as WebSocketServer,
+} from 'websocket';
 import { RTCPeerConnection } from 'wrtc';
 
-// tslint:disable-next-line:no-var-requires
-const getBasicAuthCreds = require('basic-auth');
+import getBasicAuthCreds = require('basic-auth');
 
-function logError(message: any, ...optionalParams: any[]) {
+function logError(message: unknown, ...optionalParams: unknown[]) {
   return console.error.apply(console, [message, ...optionalParams]);
 }
 
@@ -26,21 +28,22 @@ export interface AuthSuccessResult {
   playerId: PlayerId;
 }
 
-function isAuthSuccessResult(x: any): x is AuthSuccessResult {
-  return x && x.playerId !== undefined;
-}
-
 export interface AuthFailureResult {
   httpStatus: number;
   reason: string;
   extraHeaders: Map<string, string>;
-}
-
-function isAuthFailureResult(x: any): x is AuthFailureResult {
-  return x && x.playerId === undefined;
+  playerId?: never;
 }
 
 export type AuthResult = AuthSuccessResult | AuthFailureResult;
+
+function isAuthSuccessResult(x: AuthResult): x is AuthSuccessResult {
+  return x.playerId !== undefined;
+}
+
+function isAuthFailureResult(x: AuthResult): x is AuthFailureResult {
+  return x.playerId === undefined;
+}
 
 /**
  * An AuthCallback should authenticate the player making the incoming
@@ -52,7 +55,9 @@ export type AuthCallback = (req: http.IncomingMessage) => AuthResult;
 /**
  * For demo purposes only, do not use in production
  */
-export function INSECURE_AuthCallback(httpRequest: http.IncomingMessage): AuthResult {
+export function INSECURE_AuthCallback(
+  httpRequest: http.IncomingMessage
+): AuthResult {
   let creds = getBasicAuthCreds(httpRequest);
   // Browsers will first try without auth and then actually send creds once they see the 401
   if (!creds) {
@@ -79,14 +84,20 @@ export interface ListenOptions {
  * Handles authentication + establishment of the webRTC conn via WebSockets
  */
 class RTCServer {
-  public readonly onConnection = new SyncEvent<{playerId: PlayerId, networkPeer: NetworkPeer}>();
+  public readonly onConnection = new SyncEvent<{
+    playerId: PlayerId;
+    networkPeer: NetworkPeer;
+  }>();
   private connections = new Map<PlayerId, NetworkPeer>();
   private httpServer: http.Server;
   private wsServer: WebSocketServer;
-  constructor(
+  public constructor(
     private authenticatePlayer: AuthCallback,
     // The purpose of this callback is to ensure that message handlers are attached to the opening channel asap before incoming messages arrive
-    private constructNetworkPeerFromChannel: (playerId: PlayerId, l: LikeRTCDataChannelOrWebSocket) => NetworkPeer,
+    private constructNetworkPeerFromChannel: (
+      playerId: PlayerId,
+      l: LikeRTCDataChannelOrWebSocket
+    ) => NetworkPeer
   ) {
     this.httpServer = http.createServer((_request, response) => {
       response.writeHead(404);
@@ -98,7 +109,10 @@ class RTCServer {
     });
     this.wsServer.on('request', this._handleWebsocketUpgradeRequest.bind(this));
   }
-  public listen({signalingWebsocketServerPort, webrtcPeerConnectionPortRange}: ListenOptions): Promise<AddressInfo> {
+  public listen({
+    signalingWebsocketServerPort,
+    webrtcPeerConnectionPortRange,
+  }: ListenOptions): Promise<AddressInfo> {
     this.webrtcPeerConnectionPortRange = webrtcPeerConnectionPortRange;
     return new Promise((resolve, reject) => {
       this.httpServer.listen(signalingWebsocketServerPort, () => {
@@ -112,7 +126,7 @@ class RTCServer {
     });
   }
   public close() {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.wsServer.on('close', (_connection, _closeReason, _description) => {
         if (this.wsServer.connections.length === 0) {
           resolve();
@@ -143,7 +157,7 @@ class RTCServer {
       this.connections.delete(playerId);
     });
     this.connections.set(playerId, networkPeer);
-    this.onConnection.post({playerId, networkPeer});
+    this.onConnection.post({ playerId, networkPeer });
   }
   private _handleWebsocketUpgradeRequest(request: WebSocketRequest) {
     if (!this._originIsAllowed(request.origin)) {
@@ -154,7 +168,7 @@ class RTCServer {
     console.log('Connection from origin ' + request.origin + ' allowed.');
     let authResult = this.authenticatePlayer(request.httpRequest);
     if (isAuthFailureResult(authResult)) {
-      let headerObj: any = {};
+      let headerObj: Record<string, string> = {};
       if (authResult.extraHeaders) {
         authResult.extraHeaders.forEach((headerValue, headerName) => {
           headerObj[headerName] = headerValue;
@@ -168,52 +182,74 @@ class RTCServer {
       return;
     }
     let successfulAuthResult: AuthSuccessResult = authResult;
-    console.log('Player with id ' + successfulAuthResult.playerId + ' authed successfully.');
+    console.log(
+      `Player with id ${successfulAuthResult.playerId} authed successfully.`
+    );
     let wsConnection = request.accept(undefined, request.origin);
-    wsConnection.sendUTF(JSON.stringify({playerIdAssignment: successfulAuthResult.playerId}));
+    wsConnection.sendUTF(
+      JSON.stringify({ playerIdAssignment: successfulAuthResult.playerId })
+    );
     // These are non-standard options that are supported by the node webrtc lib we're using
-    let customPeerConfig =  {
+    let customPeerConfig = {
       portRange: this.webrtcPeerConnectionPortRange,
     };
-    let peerConnection = new RTCPeerConnection(customPeerConfig as RTCConfiguration);
+    let peerConnection = new RTCPeerConnection(
+      customPeerConfig as RTCConfiguration
+    );
     wsConnection.on('message', (message) => {
       if (message.type === 'utf8') {
-        let messageObj = JSON.parse(message.utf8Data!);
+        let messageObj = JSON.parse(message.utf8Data!) as Record<
+          string,
+          unknown
+        >;
         if (messageObj.desc) {
-          let desc = messageObj.desc;
+          let desc = messageObj.desc as RTCSessionDescriptionInit;
           // if we get an offer, we need to reply with an answer
           if (desc.type === 'offer') {
-            peerConnection.setRemoteDescription(desc).then(() => {
-              return peerConnection.createAnswer();
-            })
-            .then((answer) => {
-              return peerConnection.setLocalDescription(answer);
-            })
-            .then(() => {
-              wsConnection.sendUTF(JSON.stringify({ desc: peerConnection.localDescription }));
-            })
-            .catch(logError);
+            peerConnection
+              .setRemoteDescription(desc)
+              .then(() => peerConnection.createAnswer())
+              .then((answer) => peerConnection.setLocalDescription(answer))
+              .then(() => {
+                wsConnection.sendUTF(
+                  JSON.stringify({ desc: peerConnection.localDescription })
+                );
+              })
+              .catch(logError);
           } else {
             peerConnection.setRemoteDescription(desc).catch(logError);
           }
         } else if (messageObj.candidate) {
-          peerConnection.addIceCandidate(messageObj.candidate).catch(logError);
+          peerConnection
+            .addIceCandidate(messageObj.candidate as RTCIceCandidateInit)
+            .catch(logError);
         }
       } else if (message.type === 'binary') {
         logError('Ignoring Binary Message: ', message.binaryData!);
       }
     });
     wsConnection.on('close', (reasonCode, description) => {
-      console.log(`WebSocket client ${wsConnection.remoteAddress} disconnected. ${reasonCode} : ${description}`);
+      console.log(
+        `WebSocket client ${wsConnection.remoteAddress} disconnected. ${reasonCode} : ${description}`
+      );
     });
     // send any ice candidates to the other peer
     peerConnection.onicecandidate = (evt) => {
       wsConnection.sendUTF(JSON.stringify({ candidate: evt.candidate }));
     };
-    let dataChannel = peerConnection.createDataChannel('laniakea-unreliable', {negotiated: true, id: 0});
+    let dataChannel = peerConnection.createDataChannel('laniakea-unreliable', {
+      negotiated: true,
+      id: 0,
+    });
     dataChannel.binaryType = 'arraybuffer';
-    let peerConnectionAndDataChannel = new RTCPeerConnectionAndDataChannel(peerConnection, dataChannel);
-    let networkPeer = this.constructNetworkPeerFromChannel(successfulAuthResult.playerId, peerConnectionAndDataChannel);
+    let peerConnectionAndDataChannel = new RTCPeerConnectionAndDataChannel(
+      peerConnection,
+      dataChannel
+    );
+    let networkPeer = this.constructNetworkPeerFromChannel(
+      successfulAuthResult.playerId,
+      peerConnectionAndDataChannel
+    );
     dataChannel.onopen = () => {
       wsConnection.close();
       this._handleNewConnection(successfulAuthResult.playerId, networkPeer);
@@ -223,17 +259,24 @@ class RTCServer {
 }
 
 export class NetworkServer {
-  constructor(private classRegistry: ClassRegistry, authenticatePlayer: AuthCallback) {
+  public constructor(
+    private classRegistry: ClassRegistry<Serializable>,
+    authenticatePlayer: AuthCallback
+  ) {
     registerBuiltinMessages(this.classRegistry);
     this.rtcServer = new RTCServer(authenticatePlayer, (playerId, channel) => {
       let messageRouter = new MessageRouter();
       for (let ctorAndHandler of this.registeredMessageHandlers) {
-        let handlerWithPlayerIdParamBound = (message: Serializable) => ctorAndHandler[1](playerId, message);
-        messageRouter.registerHandler(ctorAndHandler[0], handlerWithPlayerIdParamBound);
+        let handlerWithPlayerIdParamBound = (message: Serializable) =>
+          ctorAndHandler[1](playerId, message);
+        messageRouter.registerHandler(
+          ctorAndHandler[0],
+          handlerWithPlayerIdParamBound
+        );
       }
       return new NetworkPeer(channel, this.classRegistry, messageRouter);
     });
-    this.rtcServer.onConnection.attach(({playerId, networkPeer}) => {
+    this.rtcServer.onConnection.attach(({ playerId, networkPeer }) => {
       networkPeer.onClose.attach(() => {
         this.handShakingConnections.delete(playerId);
         let wasConnected = this.connections.delete(playerId);
@@ -247,7 +290,7 @@ export class NetworkServer {
       networkPeer.sendMessage(handshakeMessage, () => {
         this.handShakingConnections.delete(playerId);
         this.connections.set(playerId, networkPeer);
-        this.onConnection.post({playerId, networkPeer});
+        this.onConnection.post({ playerId, networkPeer });
       });
       networkPeer.flushMessagesToNetwork();
     });
@@ -256,7 +299,7 @@ export class NetworkServer {
   public listen(options: ListenOptions): Promise<AddressInfo> {
     return this.rtcServer.listen(options);
   }
-  public close() {
+  public close(): Promise<void> {
     this.handShakingConnections.forEach((networkPeer) => networkPeer.close());
     this.handShakingConnections.clear();
     this.connections.forEach((networkPeer) => networkPeer.close());
@@ -264,55 +307,74 @@ export class NetworkServer {
     return this.rtcServer.close();
   }
 
-  public readonly onConnection = new SyncEvent<{playerId: PlayerId, networkPeer: NetworkPeer}>();
+  public readonly onConnection = new SyncEvent<{
+    playerId: PlayerId;
+    networkPeer: NetworkPeer;
+  }>();
   public readonly onDisconnect = new SyncEvent<PlayerId>();
 
   /*
    * All PacketTypes you will send or receive must be registered for serialisation / deserialisation
    */
   public registerMessageType<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
-    uniqueMessageTypeName: string,
+    ctor: new (...args: any[]) => T,
+    uniqueMessageTypeName: string
   ): void {
     this.classRegistry.registerClass(ctor, uniqueMessageTypeName);
   }
 
   public registerMessageHandler<T extends Serializable>(
-    ctor: new(...args: any[]) => T,
-    handler: (playerId: PlayerId, t: T) => void,
+    ctor: new (...args: any[]) => T,
+    handler: (playerId: PlayerId, t: T) => void
   ): void {
     this.registeredMessageHandlers.push([
       ctor,
-      handler as (playerId: PlayerId, packet: Serializable) => void]);
+      handler as (playerId: PlayerId, packet: Serializable) => void,
+    ]);
   }
 
-  public sendMessage(playerId: PlayerId, message: Serializable, onAck?: () => void): OutboundMessage {
+  public sendMessage(
+    playerId: PlayerId,
+    message: Serializable,
+    onAck?: () => void
+  ): OutboundMessage {
     let maybeConn = this.connections.get(playerId);
     if (maybeConn !== undefined) {
       return maybeConn.sendMessage(message, onAck);
     }
-    return new OutboundMessage(0, undefined as any as Serializable, undefined);
+    return new OutboundMessage(
+      0,
+      (undefined as any) as Serializable,
+      undefined
+    );
   }
   /**
    * Sends messages across the network
    * @param playerId optional id of player to only flush their messages
    */
-  public flushMessagesToNetwork(playerId?: PlayerId) {
+  public flushMessagesToNetwork(playerId?: PlayerId): void {
     if (playerId !== undefined) {
       let maybeConnection = this.connections.get(playerId);
       if (maybeConnection !== undefined) {
         maybeConnection.flushMessagesToNetwork();
       }
     } else {
-      this.connections.forEach((peer) => { peer.flushMessagesToNetwork(); });
-      this.handShakingConnections.forEach((peer) => { peer.flushMessagesToNetwork(); });
+      this.connections.forEach((peer) => {
+        peer.flushMessagesToNetwork();
+      });
+      this.handShakingConnections.forEach((peer) => {
+        peer.flushMessagesToNetwork();
+      });
     }
   }
 
   private rtcServer: RTCServer;
   private handShakingConnections = new Map<PlayerId, NetworkPeer>();
   private connections = new Map<PlayerId, NetworkPeer>();
-  private registeredMessageHandlers: Array<[
-    new(...args: any[]) => Serializable,
-    (playerId: PlayerId, packet: Serializable) => void]> = [];
+  private registeredMessageHandlers: Array<
+    [
+      new (...args: any[]) => Serializable,
+      (playerId: PlayerId, packet: Serializable) => void
+    ]
+  > = [];
 }

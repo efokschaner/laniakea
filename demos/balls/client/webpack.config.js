@@ -1,42 +1,17 @@
-var path = require('path');
+let path = require('path');
 
-var webpack = require('webpack');
-
-var postcssPresetEnv = require('postcss-preset-env');
-var nested = require('postcss-nested');
-var doiuse = require('doiuse');
-var wordwrap = require('wordwrap');
-
-var colors = require('colors');
-
-var postCSSPlugins = [
-  nested,
-  postcssPresetEnv({ stage: 2 }),
-  doiuse({
-    browsers: ['> 1%'],
-    ignore: ['kerning-pairs-ligatures'],
-    onFeatureUsage: function (info) {
-      var source = info.usage.source;
-      // file is whole require path, joined with !'s.. we want the last part
-      var sourceFile = path.relative('.', source.input.file.split('!').pop())
-      var sourceLine = sourceFile + ':' + source.start.line;
-      // take out location info in message itself
-      var message = info.message.split(': ').slice(1).join(': ')
-      console.log('[doiuse]'.red + ' ' + sourceLine + ': ' + info.featureData.title + '\n');
-      console.log(wordwrap(4, process.stdout.columns - 1)(message) + '\n');
-    }
-  }),
-];
+let postcssPresetEnv = require('postcss-preset-env');
+let nested = require('postcss-nested');
 
 module.exports = {
   devtool: 'source-map',
   entry: {
-    app: ['./src/ts/app.ts']
+    app: ['./src/ts/app.ts'],
   },
   output: {
-    path: require('path').resolve('dist'),
+    path: path.resolve('dist'),
     publicPath: '/',
-    filename: 'bundle.js'
+    filename: 'bundle.js',
   },
   module: {
     rules: [
@@ -47,28 +22,30 @@ module.exports = {
           {
             loader: 'css-loader',
             options: {
-              importLoaders: 1
-            }
+              importLoaders: 1,
+            },
           },
           {
             loader: 'postcss-loader',
             options: {
-              plugins: function () {
-                return postCSSPlugins;
-              }
-            }
-          }
-        ]
+              postcssOptions: {
+                plugins: [nested, postcssPresetEnv({ stage: 2 })],
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader'
-      }
-    ]
+        use: 'ts-loader',
+      },
+    ],
   },
-  plugins: [
-  ],
+  plugins: [],
   resolve: {
-    extensions: ['.js', '.ts']
-  }
+    extensions: ['.js', '.ts'],
+    fallback: {
+      buffer: require.resolve('buffer'),
+    },
+  },
 };

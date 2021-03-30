@@ -1,6 +1,10 @@
 #### Intentionally added for laniakea
 # js output dir
 dist
+dist-test
+
+# .0x profiling output
+*.0x/
 
 #### Stock stuff that is good to ignore
 # Logs
@@ -89,6 +93,3 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
-# .0x profiling output
-*.0x/
