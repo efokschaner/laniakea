@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": false,
     "declaration": true,
+    "declarationMap": true,
     "incremental": true,
     "module": "commonjs",
     "moduleResolution": "node",

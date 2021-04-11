@@ -2,6 +2,6 @@
   "gitRevision": "master",
   "name": "Laniakea",
   "out": "docs",
-  "plugin": ["typedoc-plugin-lerna-packages", "typedoc-plugin-nojekyll"],
-  "tsconfig": "tsconfig.common.json"
+  "packages": ["packages/@laniakea/*"],
+  "plugin": ["typedoc-plugin-nojekyll"]
 }

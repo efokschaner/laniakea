@@ -8359,11 +8359,6 @@ typedoc-default-themes@^0.12.9:
   resolved "https://registry.yarnpkg.com/typedoc-default-themes/-/typedoc-default-themes-0.12.9.tgz#97dfecb74faca36f8aff81d3be984b095d2bbbd8"
   integrity sha512-Jd5fYTiqzinZdoIY382W7tQXTwAzWRdg8KbHfaxmb78m1/3jL9riXtk23oBOKwhi8GFVykCOdPzEJKY87/D0LQ==
 
-typedoc-plugin-lerna-packages@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/typedoc-plugin-lerna-packages/-/typedoc-plugin-lerna-packages-0.3.1.tgz#3e65068e6c6ef987fc4c4553416af3fb22c8a5e6"
-  integrity sha512-azeP5DVv4Me+C32RoGbMAzXo7JeYmeEstMAx4mdtVGHLtrXjitlaf0pS562vogofwyIcyVnjL6BlZWvbPQ3hmw==
-
 typedoc-plugin-nojekyll@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/typedoc-plugin-nojekyll/-/typedoc-plugin-nojekyll-1.0.1.tgz#d6879d4118bbf10efe3feb3b766b69a09c80b3ef"
