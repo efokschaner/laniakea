@@ -4,16 +4,17 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>MessageRouter | Laniakea</title>
-	<meta name="description" content="">
+	<meta name="description" content="Documentation for Laniakea">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
 	<div class="tsd-page-toolbar">
 		<div class="container">
 			<div class="table-wrap">
-				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
 					<div class="field">
 						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
 						<input id="tsd-search-field" type="text" />
@@ -40,8 +41,6 @@
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
 							<input type="checkbox" id="tsd-filter-externals" checked />
 							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -53,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../modules.html">Laniakea</a>
 				</li>
 				<li>
 					<a href="../modules/_laniakea_network_peer.html">@laniakea/network-peer</a>
@@ -88,6 +87,12 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_laniakea_network_peer.messagerouter.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
 						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
@@ -104,15 +109,32 @@
 					</div>
 				</section>
 			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Message<wbr>Router<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_network_peer.messagerouter.html" class="tsd-signature-type" data-tsd-kind="Class">MessageRouter</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_network_peer.messagerouter.html" class="tsd-signature-type" data-tsd-kind="Class">MessageRouter</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="callbacks" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> callbacks</h3>
-					<div class="tsd-signature tsd-kind-icon">callbacks<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Function</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map()</span></div>
+					<div class="tsd-signature tsd-kind-icon">callbacks<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Function</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-symbol">(</span>m<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-peer/src/message-router.ts#L27">network-peer/src/message-router.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-peer/src/message-router.ts#L30">network-peer/src/message-router.ts:30</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -123,7 +145,7 @@
 					<a name="registerhandler" class="tsd-anchor"></a>
 					<h3>register<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">register<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span>t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -141,15 +163,31 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctor: <span class="tsd-signature-type">object</span></h5>
+									<h5>ctor: <span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span></h5>
 									<ul class="tsd-parameters">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-constructor">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>args: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
+												</li>
+											</ul>
+										</li>
 									</ul>
 								</li>
 								<li>
-									<h5>handler: <span class="tsd-signature-type">function</span></h5>
+									<h5>handler: <span class="tsd-signature-symbol">(</span>t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></h5>
 									<ul class="tsd-parameters">
-										<li class="tsd-parameter-siganture">
-											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-type-literal">
 												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
@@ -181,7 +219,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-peer/src/message-router.ts#L16">network-peer/src/message-router.ts:16</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-peer/src/message-router.ts#L17">network-peer/src/message-router.ts:17</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -199,8 +237,8 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="../modules.html">Modules</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/_laniakea_base_engine.html">@laniakea/base-<wbr>engine</a>
@@ -231,12 +269,6 @@
 						<a href="_laniakea_network_peer.absolutesequencenumbertranslator.html" class="tsd-kind-icon">Absolute<wbr>Sequence<wbr>Number<wbr>Translator</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_network_peer.ackingpeer.html" class="tsd-kind-icon">Acking<wbr>Peer</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_peer.incomingmessagechannel.html" class="tsd-kind-icon">Incoming<wbr>Message<wbr>Channel</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.messagepeer.html" class="tsd-kind-icon">Message<wbr>Peer</a>
 					</li>
 				</ul>
@@ -244,6 +276,9 @@
 					<li class="current tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.messagerouter.html" class="tsd-kind-icon">Message<wbr>Router</a>
 						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_laniakea_network_peer.messagerouter.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_laniakea_network_peer.messagerouter.html#callbacks" class="tsd-kind-icon">callbacks</a>
 							</li>
@@ -263,23 +298,11 @@
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.outboundmessage.html" class="tsd-kind-icon">Outbound<wbr>Message</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_peer.outboundmessagechannel.html" class="tsd-kind-icon">Outbound<wbr>Message<wbr>Channel</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_peer.packet.html" class="tsd-kind-icon">Packet</a>
-					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.rtcpeerconnectionanddatachannel.html" class="tsd-kind-icon">RTCPeer<wbr>Connection<wbr>And<wbr>Data<wbr>Channel</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_peer.receivedpacketdata.html" class="tsd-kind-icon">Received<wbr>Packet<wbr>Data</a>
-					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.s2c_builtinhandshakemessage.html" class="tsd-kind-icon">S2<wbr>C_<wbr><wbr>Builtin<wbr>Handshake<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_peer.sentpacketdata.html" class="tsd-kind-icon">Sent<wbr>Packet<wbr>Data</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="_laniakea_network_peer.sequencenumber.html" class="tsd-kind-icon">Sequence<wbr>Number</a>
@@ -293,38 +316,8 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
 						<a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-kind-icon">Player<wbr>Id</a>
 					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#ack_bitfield_bytes" class="tsd-kind-icon">ACK_<wbr>BITFIELD_<wbr>BYTES</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#ackingpacketprotocolpayloadmtu" class="tsd-kind-icon">acking<wbr>Packet<wbr>Protocol<wbr>PayloadMTU</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#present" class="tsd-kind-icon">present</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#present-1" class="tsd-kind-icon">present</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#receivewindowwarninglastlogtime" class="tsd-kind-icon">receive<wbr>Window<wbr>Warning<wbr>Last<wbr>Log<wbr>Time</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#webrtcdatachannelpayloadmtu" class="tsd-kind-icon">web<wbr>Rtc<wbr>Data<wbr>Channel<wbr>PayloadMTU</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#calculatepayloadmtu" class="tsd-kind-icon">calculate<wbr>PayloadMTU</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#logwarningaboutreceivewindow" class="tsd-kind-icon">log<wbr>Warning<wbr>About<wbr>Receive<wbr>Window</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#mod" class="tsd-kind-icon">mod</a>
-					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_laniakea_network_peer.html#registerbuiltinmessages" class="tsd-kind-icon">register<wbr>Builtin<wbr>Messages</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_peer.html#sequencenumberisgreaterthan" class="tsd-kind-icon">sequence<wbr>Number<wbr>IsGreater<wbr>Than</a>
 					</li>
 				</ul>
 			</nav>
@@ -336,57 +329,22 @@
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
 			<ul class="tsd-legend">
-				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
-				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
 				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
 				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
-				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
-				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
 				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
 				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
-				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
-				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
-				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
 				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
 				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
-				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>
@@ -396,6 +354,5 @@
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>
-<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
 </body>
 </html>

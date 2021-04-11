@@ -4,16 +4,17 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>EntityComponentDb | Laniakea</title>
-	<meta name="description" content="">
+	<meta name="description" content="Documentation for Laniakea">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
 	<div class="tsd-page-toolbar">
 		<div class="container">
 			<div class="table-wrap">
-				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
 					<div class="field">
 						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
 						<input id="tsd-search-field" type="text" />
@@ -40,8 +41,6 @@
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
 							<input type="checkbox" id="tsd-filter-externals" checked />
 							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -53,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../modules.html">Laniakea</a>
 				</li>
 				<li>
 					<a href="../modules/_laniakea_base_engine.html">@laniakea/base-engine</a>
@@ -97,9 +96,7 @@
 						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#componenttypeidtocomponents" class="tsd-kind-icon">component<wbr>Type<wbr>IdTo<wbr>Components</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#componenttypes" class="tsd-kind-icon">component<wbr>Types</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#deletedtagtypeinfo" class="tsd-kind-icon">deleted<wbr>Tag<wbr>Type<wbr>Info</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#entityidgenerator" class="tsd-kind-icon">entity<wbr>IdGenerator</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_base_engine.entitycomponentdb.html#entityidtocomponents" class="tsd-kind-icon">entity<wbr>IdTo<wbr>Components</a></li>
@@ -135,25 +132,25 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Entity<wbr>Component<wbr>Db<span class="tsd-signature-symbol">(</span>componentTypes<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">[]</span>, classRegistry<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ClassRegistry</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.entitycomponentdb.html" class="tsd-signature-type">EntityComponentDb</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Entity<wbr>Component<wbr>Db<span class="tsd-signature-symbol">(</span>componentTypes<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">[]</span>, classRegistry<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.classregistry.html" class="tsd-signature-type" data-tsd-kind="Class">ClassRegistry</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_laniakea_base_engine.serializable.html" class="tsd-signature-type" data-tsd-kind="Interface">Serializable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.entitycomponentdb.html" class="tsd-signature-type" data-tsd-kind="Class">EntityComponentDb</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L42">base-engine/src/entity-component-db.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L50">base-engine/src/entity-component-db.ts:50</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentTypes: <a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5>componentTypes: <a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 								<li>
-									<h5>classRegistry: <span class="tsd-signature-type">ClassRegistry</span></h5>
+									<h5>classRegistry: <a href="_laniakea_base_engine.classregistry.html" class="tsd-signature-type" data-tsd-kind="Class">ClassRegistry</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_laniakea_base_engine.serializable.html" class="tsd-signature-type" data-tsd-kind="Interface">Serializable</a><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_laniakea_base_engine.entitycomponentdb.html" class="tsd-signature-type">EntityComponentDb</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_base_engine.entitycomponentdb.html" class="tsd-signature-type" data-tsd-kind="Class">EntityComponentDb</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -161,62 +158,42 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="classregistry" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> class<wbr>Registry</h3>
-					<div class="tsd-signature tsd-kind-icon">class<wbr>Registry<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ClassRegistry</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L45">base-engine/src/entity-component-db.ts:45</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="componenttypeidtocomponents" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> component<wbr>Type<wbr>IdTo<wbr>Components</h3>
-					<div class="tsd-signature tsd-kind-icon">component<wbr>Type<wbr>IdTo<wbr>Components<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">, </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map()</span></div>
+					<div class="tsd-signature tsd-kind-icon">component<wbr>Type<wbr>IdTo<wbr>Components<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">, </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L209">base-engine/src/entity-component-db.ts:209</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="componenttypes" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> component<wbr>Types</h3>
-					<div class="tsd-signature tsd-kind-icon">component<wbr>Types<span class="tsd-signature-symbol">:</span> <a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">[]</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L44">base-engine/src/entity-component-db.ts:44</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L254">base-engine/src/entity-component-db.ts:254</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="deletedtagtypeinfo" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> deleted<wbr>Tag<wbr>Type<wbr>Info</h3>
-					<div class="tsd-signature tsd-kind-icon">deleted<wbr>Tag<wbr>Type<wbr>Info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TypeInfo</span><span class="tsd-signature-symbol"> =&nbsp;this.classRegistry.getTypeInfoByConstructor(DeletedTag)!</span></div>
+					<div class="tsd-signature tsd-kind-icon">deleted<wbr>Tag<wbr>Type<wbr>Info<span class="tsd-signature-symbol">:</span> <a href="_laniakea_base_engine.typeinfo.html" class="tsd-signature-type" data-tsd-kind="Class">TypeInfo</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_laniakea_base_engine.serializable.html" class="tsd-signature-type" data-tsd-kind="Interface">Serializable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L207">base-engine/src/entity-component-db.ts:207</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L250">base-engine/src/entity-component-db.ts:250</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="entityidgenerator" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> entity<wbr>IdGenerator</h3>
-					<div class="tsd-signature tsd-kind-icon">entity<wbr>IdGenerator<span class="tsd-signature-symbol">:</span> <a href="_laniakea_base_engine.entityidgenerator.html" class="tsd-signature-type">EntityIdGenerator</a><span class="tsd-signature-symbol"> =&nbsp;new EntityIdGenerator()</span></div>
+					<div class="tsd-signature tsd-kind-icon">entity<wbr>IdGenerator<span class="tsd-signature-symbol">:</span> <a href="_laniakea_base_engine.entityidgenerator.html" class="tsd-signature-type" data-tsd-kind="Class">EntityIdGenerator</a><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L208">base-engine/src/entity-component-db.ts:208</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L253">base-engine/src/entity-component-db.ts:253</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="entityidtocomponents" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> entity<wbr>IdTo<wbr>Components</h3>
-					<div class="tsd-signature tsd-kind-icon">entity<wbr>IdTo<wbr>Components<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">, </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map()</span></div>
+					<div class="tsd-signature tsd-kind-icon">entity<wbr>IdTo<wbr>Components<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">, </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L211">base-engine/src/entity-component-db.ts:211</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L259">base-engine/src/entity-component-db.ts:259</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -227,16 +204,16 @@
 					<a name="createentity" class="tsd-anchor"></a>
 					<h3>create<wbr>Entity</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Entity<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Entity<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L51">base-engine/src/entity-component-db.ts:51</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L60">base-engine/src/entity-component-db.ts:60</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -244,13 +221,13 @@
 					<a name="deletecomponent" class="tsd-anchor"></a>
 					<h3>delete<wbr>Component</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L140">base-engine/src/entity-component-db.ts:140</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L171">base-engine/src/entity-component-db.ts:171</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -261,7 +238,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a></h5>
+									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -272,13 +249,13 @@
 					<a name="deleteentity" class="tsd-anchor"></a>
 					<h3>delete<wbr>Entity</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L68">base-engine/src/entity-component-db.ts:68</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L77">base-engine/src/entity-component-db.ts:77</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -289,7 +266,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></h5>
+									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -300,16 +277,16 @@
 					<a name="getallcomponents" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Components</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L116">base-engine/src/entity-component-db.ts:116</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L139">base-engine/src/entity-component-db.ts:139</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -317,22 +294,22 @@
 					<a name="getallcomponentsofentity" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Components<wbr>OfEntity</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<wbr>OfEntity<span class="tsd-signature-symbol">(</span>ownerId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<wbr>OfEntity<span class="tsd-signature-symbol">(</span>ownerId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L127">base-engine/src/entity-component-db.ts:127</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L154">base-engine/src/entity-component-db.ts:154</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ownerId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></h5>
+									<h5>ownerId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -340,22 +317,22 @@
 					<a name="getallcomponentsoftype" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Components<wbr>OfType</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<wbr>OfType<span class="tsd-signature-symbol">(</span>componentTypeId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Components<wbr>OfType<span class="tsd-signature-symbol">(</span>componentTypeId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L122">base-engine/src/entity-component-db.ts:122</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L145">base-engine/src/entity-component-db.ts:145</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentTypeId: <a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a></h5>
+									<h5>componentTypeId: <a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -363,16 +340,16 @@
 					<a name="getallentities" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Entities</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Entities<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Entities<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L61">base-engine/src/entity-component-db.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L70">base-engine/src/entity-component-db.ts:70</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Iterable</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -380,25 +357,22 @@
 					<a name="getcomponent" class="tsd-anchor"></a>
 					<h3>get<wbr>Component</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L98">base-engine/src/entity-component-db.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L112">base-engine/src/entity-component-db.ts:112</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a></h5>
+									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a>
-								<span class="tsd-signature-symbol"> | </span>
-								<span class="tsd-signature-type">undefined</span>
-							</h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -406,19 +380,19 @@
 					<a name="getnumcomponentsoftype" class="tsd-anchor"></a>
 					<h3>get<wbr>Num<wbr>Components<wbr>OfType</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Num<wbr>Components<wbr>OfType<span class="tsd-signature-symbol">(</span>componentTypeId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Num<wbr>Components<wbr>OfType<span class="tsd-signature-symbol">(</span>componentTypeId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L132">base-engine/src/entity-component-db.ts:132</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L161">base-engine/src/entity-component-db.ts:161</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentTypeId: <a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-signature-type">ComponentTypeId</a></h5>
+									<h5>componentTypeId: <a href="../modules/_laniakea_base_engine.html#shorttypeid" class="tsd-signature-type" data-tsd-kind="Type alias">ShortTypeId</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -429,19 +403,19 @@
 					<a name="hascomponent" class="tsd-anchor"></a>
 					<h3>has<wbr>Component</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">has<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">has<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L93">base-engine/src/entity-component-db.ts:93</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L105">base-engine/src/entity-component-db.ts:105</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a></h5>
+									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -452,19 +426,19 @@
 					<a name="hasentity" class="tsd-anchor"></a>
 					<h3>has<wbr>Entity</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">has<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">has<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L57">base-engine/src/entity-component-db.ts:57</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L66">base-engine/src/entity-component-db.ts:66</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></h5>
+									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -475,13 +449,13 @@
 					<a name="releasecomponent" class="tsd-anchor"></a>
 					<h3>release<wbr>Component</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">release<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">release<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L151">base-engine/src/entity-component-db.ts:151</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L182">base-engine/src/entity-component-db.ts:182</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -492,7 +466,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a></h5>
+									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>The entity to release</p>
 									</div>
@@ -512,7 +486,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L160">base-engine/src/entity-component-db.ts:160</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L195">base-engine/src/entity-component-db.ts:195</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -523,13 +497,13 @@
 					<a name="releaseentity" class="tsd-anchor"></a>
 					<h3>release<wbr>Entity</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">release<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">release<wbr>Entity<span class="tsd-signature-symbol">(</span>entityId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L85">base-engine/src/entity-component-db.ts:85</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L97">base-engine/src/entity-component-db.ts:97</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -541,7 +515,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type">EntityId</a></h5>
+									<h5>entityId: <a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-signature-type" data-tsd-kind="Type alias">EntityId</a></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>The entity to release</p>
 									</div>
@@ -555,19 +529,19 @@
 					<a name="serialize" class="tsd-anchor"></a>
 					<h3>serialize</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">serialize<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_utils.html#serializationstream" class="tsd-signature-type">SerializationStream</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">serialize<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_base_engine.html#serializationstream" class="tsd-signature-type" data-tsd-kind="Type alias">SerializationStream</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L173">base-engine/src/entity-component-db.ts:173</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L210">base-engine/src/entity-component-db.ts:210</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>stream: <a href="../modules/_laniakea_utils.html#serializationstream" class="tsd-signature-type">SerializationStream</a></h5>
+									<h5>stream: <a href="../modules/_laniakea_base_engine.html#serializationstream" class="tsd-signature-type" data-tsd-kind="Type alias">SerializationStream</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -578,25 +552,25 @@
 					<a name="setcomponent" class="tsd-anchor"></a>
 					<h3>set<wbr>Component</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">set<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a></li>
+						<li class="tsd-signature tsd-kind-icon">set<wbr>Component<span class="tsd-signature-symbol">(</span>componentId<span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a>, data<span class="tsd-signature-symbol">: </span><a href="../interfaces/_laniakea_base_engine.serializable.html" class="tsd-signature-type" data-tsd-kind="Interface">Serializable</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L103">base-engine/src/entity-component-db.ts:103</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/base-engine/src/entity-component-db.ts#L119">base-engine/src/entity-component-db.ts:119</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type">ComponentId</a></h5>
+									<h5>componentId: <a href="_laniakea_base_engine.componentid.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentId</a></h5>
 								</li>
 								<li>
-									<h5>data: <span class="tsd-signature-type">Serializable</span></h5>
+									<h5>data: <a href="../interfaces/_laniakea_base_engine.serializable.html" class="tsd-signature-type" data-tsd-kind="Interface">Serializable</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type">GenericComponent</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_base_engine.genericcomponent.html" class="tsd-signature-type" data-tsd-kind="Class">GenericComponent</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -605,8 +579,8 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
 						<a href="../modules/_laniakea_base_engine.html">@laniakea/base-<wbr>engine</a>
@@ -633,24 +607,6 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.c2s_inputframemessage.html" class="tsd-kind-icon">C2<wbr>S_<wbr><wbr>Input<wbr>Frame<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.c2s_timesyncrequestmessage.html" class="tsd-kind-icon">C2<wbr>S_<wbr><wbr>Time<wbr>Sync<wbr>Request<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="_laniakea_base_engine.component.html" class="tsd-kind-icon">Component</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.componentid.html" class="tsd-kind-icon">Component<wbr>Id</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.deletedtag.html" class="tsd-kind-icon">Deleted<wbr>Tag</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.entity.html" class="tsd-kind-icon">Entity</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-module">
@@ -660,13 +616,7 @@
 								<a href="_laniakea_base_engine.entitycomponentdb.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_laniakea_base_engine.entitycomponentdb.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_laniakea_base_engine.entitycomponentdb.html#componenttypeidtocomponents" class="tsd-kind-icon">component<wbr>Type<wbr>IdTo<wbr>Components</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_laniakea_base_engine.entitycomponentdb.html#componenttypes" class="tsd-kind-icon">component<wbr>Types</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_laniakea_base_engine.entitycomponentdb.html#deletedtagtypeinfo" class="tsd-kind-icon">deleted<wbr>Tag<wbr>Type<wbr>Info</a>
@@ -729,75 +679,6 @@
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.entitycomponentstatedeletionhidingfacade.html" class="tsd-kind-icon">Entity<wbr>Component<wbr>State<wbr>Deletion<wbr>Hiding<wbr>Facade</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.entitycomponentstateimpl.html" class="tsd-kind-icon">Entity<wbr>Component<wbr>State<wbr>Impl</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.entityidgenerator.html" class="tsd-kind-icon">Entity<wbr>IdGenerator</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.genericcomponent.html" class="tsd-kind-icon">Generic<wbr>Component</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.inputframe.html" class="tsd-kind-icon">Input<wbr>Frame</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.s2c_framecomponentstatemessage.html" class="tsd-kind-icon">S2<wbr>C_<wbr><wbr>Frame<wbr>Component<wbr>State<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.s2c_framedeletionsmessage.html" class="tsd-kind-icon">S2<wbr>C_<wbr><wbr>Frame<wbr>Deletions<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.s2c_frameinputsusedmessage.html" class="tsd-kind-icon">S2<wbr>C_<wbr><wbr>Frame<wbr>Inputs<wbr>Used<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.s2c_timesyncresponsemessage.html" class="tsd-kind-icon">S2<wbr>C_<wbr><wbr>Time<wbr>Sync<wbr>Response<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.simulationengine.html" class="tsd-kind-icon">Simulation<wbr>Engine</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_laniakea_base_engine.simulationframedata.html" class="tsd-kind-icon">Simulation<wbr>Frame<wbr>Data</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="../interfaces/_laniakea_base_engine.componentandserializeddata.html" class="tsd-kind-icon">Component<wbr>And<wbr>Serialized<wbr>Data</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="../interfaces/_laniakea_base_engine.engine.html" class="tsd-kind-icon">Engine</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="../interfaces/_laniakea_base_engine.entitycomponentstate.html" class="tsd-kind-icon">Entity<wbr>Component<wbr>State</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="../interfaces/_laniakea_base_engine.stepparams.html" class="tsd-kind-icon">Step<wbr>Params</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="../interfaces/_laniakea_base_engine.system.html" class="tsd-kind-icon">System</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#componenttypeid" class="tsd-kind-icon">Component<wbr>Type<wbr>Id</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#entityid" class="tsd-kind-icon">Entity<wbr>Id</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#numericcomponentid" class="tsd-kind-icon">Numeric<wbr>Component<wbr>Id</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#entity_id_num_bits" class="tsd-kind-icon">ENTITY_<wbr>ID_<wbr>NUM_<wbr>BITS</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#max_valid_entity_id_inclusive" class="tsd-kind-icon">MAX_<wbr>VALID_<wbr>ENTITY_<wbr>ID_<wbr>INCLUSIVE</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_laniakea_base_engine.html#registermessagetypes" class="tsd-kind-icon">register<wbr>Message<wbr>Types</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_base_engine.html#serializeuint32array" class="tsd-kind-icon">serialize<wbr>Uint32<wbr>Array</a>
-					</li>
 				</ul>
 			</nav>
 		</div>
@@ -808,57 +689,22 @@
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
 			<ul class="tsd-legend">
-				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
-				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
 				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
 				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
-				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
-				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
 				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
 				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
-				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
-				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
-				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
 				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
 				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
-				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>
@@ -868,6 +714,5 @@
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>
-<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
 </body>
 </html>

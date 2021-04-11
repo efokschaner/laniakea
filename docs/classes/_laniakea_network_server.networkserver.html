@@ -4,16 +4,17 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>NetworkServer | Laniakea</title>
-	<meta name="description" content="">
+	<meta name="description" content="Documentation for Laniakea">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
 	<div class="tsd-page-toolbar">
 		<div class="container">
 			<div class="table-wrap">
-				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
 					<div class="field">
 						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
 						<input id="tsd-search-field" type="text" />
@@ -40,8 +41,6 @@
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
 							<input type="checkbox" id="tsd-filter-externals" checked />
 							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -53,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../modules.html">Laniakea</a>
 				</li>
 				<li>
 					<a href="../modules/_laniakea_network_server.html">@laniakea/network-server</a>
@@ -90,7 +89,6 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_network_server.networkserver.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_network_server.networkserver.html#connections" class="tsd-kind-icon">connections</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_laniakea_network_server.networkserver.html#handshakingconnections" class="tsd-kind-icon">hand<wbr>Shaking<wbr>Connections</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_laniakea_network_server.networkserver.html#onconnection" class="tsd-kind-icon">on<wbr>Connection</a></li>
@@ -119,25 +117,25 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Network<wbr>Server<span class="tsd-signature-symbol">(</span>classRegistry<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ClassRegistry</span>, authenticatePlayer<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_server.html#authcallback" class="tsd-signature-type">AuthCallback</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_network_server.networkserver.html" class="tsd-signature-type">NetworkServer</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Network<wbr>Server<span class="tsd-signature-symbol">(</span>classRegistry<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ClassRegistry</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Serializable</span><span class="tsd-signature-symbol">&gt;</span>, authenticatePlayer<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_server.html#authcallback" class="tsd-signature-type" data-tsd-kind="Type alias">AuthCallback</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_laniakea_network_server.networkserver.html" class="tsd-signature-type" data-tsd-kind="Class">NetworkServer</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L225">network-server/src/network-server.ts:225</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L261">network-server/src/network-server.ts:261</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>classRegistry: <span class="tsd-signature-type">ClassRegistry</span></h5>
+									<h5>classRegistry: <span class="tsd-signature-type">ClassRegistry</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Serializable</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5>authenticatePlayer: <a href="../modules/_laniakea_network_server.html#authcallback" class="tsd-signature-type">AuthCallback</a></h5>
+									<h5>authenticatePlayer: <a href="../modules/_laniakea_network_server.html#authcallback" class="tsd-signature-type" data-tsd-kind="Type alias">AuthCallback</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_laniakea_network_server.networkserver.html" class="tsd-signature-type">NetworkServer</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_laniakea_network_server.networkserver.html" class="tsd-signature-type" data-tsd-kind="Class">NetworkServer</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -145,19 +143,39 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="classregistry" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> class<wbr>Registry</h3>
-					<div class="tsd-signature tsd-kind-icon">class<wbr>Registry<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ClassRegistry</span></div>
+					<a name="connections" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> connections</h3>
+					<div class="tsd-signature tsd-kind-icon">connections<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">PlayerId</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">NetworkPeer</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L226">network-server/src/network-server.ts:226</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L373">network-server/src/network-server.ts:373</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="connections" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> connections</h3>
-					<div class="tsd-signature tsd-kind-icon">connections<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">NetworkPeer</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;PlayerId, NetworkPeer&gt;()</span></div>
+					<a name="handshakingconnections" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> hand<wbr>Shaking<wbr>Connections</h3>
+					<div class="tsd-signature tsd-kind-icon">hand<wbr>Shaking<wbr>Connections<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">PlayerId</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">NetworkPeer</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L372">network-server/src/network-server.ts:372</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="onconnection" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> on<wbr>Connection</h3>
+					<div class="tsd-signature tsd-kind-icon">on<wbr>Connection<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SyncEvent</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>networkPeer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NetworkPeer</span><span class="tsd-signature-symbol">; </span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L310">network-server/src/network-server.ts:310</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="ondisconnect" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> on<wbr>Disconnect</h3>
+					<div class="tsd-signature tsd-kind-icon">on<wbr>Disconnect<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SyncEvent</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">PlayerId</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
 							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L314">network-server/src/network-server.ts:314</a></li>
@@ -165,52 +183,22 @@
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="handshakingconnections" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> hand<wbr>Shaking<wbr>Connections</h3>
-					<div class="tsd-signature tsd-kind-icon">hand<wbr>Shaking<wbr>Connections<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">NetworkPeer</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;PlayerId, NetworkPeer&gt;()</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L313">network-server/src/network-server.ts:313</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="onconnection" class="tsd-anchor"></a>
-					<h3>on<wbr>Connection</h3>
-					<div class="tsd-signature tsd-kind-icon">on<wbr>Connection<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SyncEvent</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new SyncEvent&lt;{playerId: PlayerId, networkPeer: NetworkPeer}&gt;()</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L267">network-server/src/network-server.ts:267</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="ondisconnect" class="tsd-anchor"></a>
-					<h3>on<wbr>Disconnect</h3>
-					<div class="tsd-signature tsd-kind-icon">on<wbr>Disconnect<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SyncEvent</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new SyncEvent&lt;PlayerId&gt;()</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L268">network-server/src/network-server.ts:268</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="registeredmessagehandlers" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> registered<wbr>Message<wbr>Handlers</h3>
-					<div class="tsd-signature tsd-kind-icon">registered<wbr>Message<wbr>Handlers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">registered<wbr>Message<wbr>Handlers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">Serializable</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span>, packet<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L315">network-server/src/network-server.ts:315</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L374">network-server/src/network-server.ts:374</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="rtcserver" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> rtc<wbr>Server</h3>
-					<div class="tsd-signature tsd-kind-icon">rtc<wbr>Server<span class="tsd-signature-symbol">:</span> <a href="_laniakea_network_server.rtcserver.html" class="tsd-signature-type">RTCServer</a></div>
+					<div class="tsd-signature tsd-kind-icon">rtc<wbr>Server<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">RTCServer</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L312">network-server/src/network-server.ts:312</a></li>
+							<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L371">network-server/src/network-server.ts:371</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -221,16 +209,16 @@
 					<a name="close" class="tsd-anchor"></a>
 					<h3>close</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">close<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">close<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L259">network-server/src/network-server.ts:259</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L302">network-server/src/network-server.ts:302</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -238,13 +226,13 @@
 					<a name="flushmessagestonetwork" class="tsd-anchor"></a>
 					<h3>flush<wbr>Messages<wbr>ToNetwork</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">flush<wbr>Messages<wbr>ToNetwork<span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">?: </span><a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">flush<wbr>Messages<wbr>ToNetwork<span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">PlayerId</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L300">network-server/src/network-server.ts:300</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L355">network-server/src/network-server.ts:355</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -255,7 +243,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> playerId: <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> playerId: <span class="tsd-signature-type">PlayerId</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>optional id of player to only flush their messages</p>
 									</div>
@@ -269,19 +257,19 @@
 					<a name="listen" class="tsd-anchor"></a>
 					<h3>listen</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">listen<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/_laniakea_network_server.listenoptions.html" class="tsd-signature-type">ListenOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">AddressInfo</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">listen<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/_laniakea_network_server.listenoptions.html" class="tsd-signature-type" data-tsd-kind="Interface">ListenOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">AddressInfo</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L256">network-server/src/network-server.ts:256</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L299">network-server/src/network-server.ts:299</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>options: <a href="../interfaces/_laniakea_network_server.listenoptions.html" class="tsd-signature-type">ListenOptions</a></h5>
+									<h5>options: <a href="../interfaces/_laniakea_network_server.listenoptions.html" class="tsd-signature-type" data-tsd-kind="Interface">ListenOptions</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">AddressInfo</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -292,13 +280,13 @@
 					<a name="registermessagehandler" class="tsd-anchor"></a>
 					<h3>register<wbr>Message<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">register<wbr>Message<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Message<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span>, t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L280">network-server/src/network-server.ts:280</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L326">network-server/src/network-server.ts:326</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -310,23 +298,39 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctor: <span class="tsd-signature-type">object</span></h5>
+									<h5>ctor: <span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span></h5>
 									<ul class="tsd-parameters">
-									</ul>
-								</li>
-								<li>
-									<h5>handler: <span class="tsd-signature-type">function</span></h5>
-									<ul class="tsd-parameters">
-										<li class="tsd-parameter-siganture">
-											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
-												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a>, t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-constructor">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
 												<li class="tsd-description">
 													<h4 class="tsd-parameters-title">Parameters</h4>
 													<ul class="tsd-parameters">
 														<li>
-															<h5>playerId: <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a></h5>
+															<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>args: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5>handler: <span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span>, t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-type-literal">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span>, t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>playerId: <span class="tsd-signature-type">PlayerId</span></h5>
 														</li>
 														<li>
 															<h5>t: <span class="tsd-signature-type">T</span></h5>
@@ -347,13 +351,13 @@
 					<a name="registermessagetype" class="tsd-anchor"></a>
 					<h3>register<wbr>Message<wbr>Type</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">register<wbr>Message<wbr>Type&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span>, uniqueMessageTypeName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Message<wbr>Type&lt;T&gt;<span class="tsd-signature-symbol">(</span>ctor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span>, uniqueMessageTypeName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L273">network-server/src/network-server.ts:273</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L319">network-server/src/network-server.ts:319</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -365,8 +369,24 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctor: <span class="tsd-signature-type">object</span></h5>
+									<h5>ctor: <span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">T</span></h5>
 									<ul class="tsd-parameters">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-constructor">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">new </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>args: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
+												</li>
+											</ul>
+										</li>
 									</ul>
 								</li>
 								<li>
@@ -381,28 +401,28 @@
 					<a name="sendmessage" class="tsd-anchor"></a>
 					<h3>send<wbr>Message</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">send<wbr>Message<span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span>, onAck<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">OutboundMessage</span></li>
+						<li class="tsd-signature tsd-kind-icon">send<wbr>Message<span class="tsd-signature-symbol">(</span>playerId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlayerId</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Serializable</span>, onAck<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">OutboundMessage</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L289">network-server/src/network-server.ts:289</a></li>
+									<li>Defined in <a href="https://github.com/efokschaner/laniakea/blob/master/packages/@laniakea/network-server/src/network-server.ts#L336">network-server/src/network-server.ts:336</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>playerId: <a href="../modules/_laniakea_network_peer.html#playerid" class="tsd-signature-type">PlayerId</a></h5>
+									<h5>playerId: <span class="tsd-signature-type">PlayerId</span></h5>
 								</li>
 								<li>
 									<h5>message: <span class="tsd-signature-type">Serializable</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> onAck: <span class="tsd-signature-type">function</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> onAck: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></h5>
 									<ul class="tsd-parameters">
-										<li class="tsd-parameter-siganture">
-											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-type-literal">
 												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
@@ -423,8 +443,8 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="../modules.html">Modules</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/_laniakea_base_engine.html">@laniakea/base-<wbr>engine</a>
@@ -458,9 +478,6 @@
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
 								<a href="_laniakea_network_server.networkserver.html#constructor" class="tsd-kind-icon">constructor</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_laniakea_network_server.networkserver.html#classregistry" class="tsd-kind-icon">class<wbr>Registry</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_laniakea_network_server.networkserver.html#connections" class="tsd-kind-icon">connections</a>
@@ -502,9 +519,6 @@
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
-						<a href="_laniakea_network_server.rtcserver.html" class="tsd-kind-icon">RTCServer</a>
-					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="../interfaces/_laniakea_network_server.authfailureresult.html" class="tsd-kind-icon">Auth<wbr>Failure<wbr>Result</a>
 					</li>
@@ -523,20 +537,8 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
 						<a href="../modules/_laniakea_network_server.html#authresult" class="tsd-kind-icon">Auth<wbr>Result</a>
 					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_server.html#getbasicauthcreds" class="tsd-kind-icon">get<wbr>Basic<wbr>Auth<wbr>Creds</a>
-					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_laniakea_network_server.html#insecure_authcallback" class="tsd-kind-icon">INSECURE_<wbr><wbr>Auth<wbr>Callback</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_server.html#isauthfailureresult" class="tsd-kind-icon">is<wbr>Auth<wbr>Failure<wbr>Result</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_server.html#isauthsuccessresult" class="tsd-kind-icon">is<wbr>Auth<wbr>Success<wbr>Result</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_laniakea_network_server.html#logerror" class="tsd-kind-icon">log<wbr>Error</a>
 					</li>
 				</ul>
 			</nav>
@@ -548,57 +550,23 @@
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
 			<ul class="tsd-legend">
-				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
-				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
-				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
-				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
-				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
-				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
-				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
-				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
-				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
-				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
-				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
-			</ul>
-			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
 				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
 				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
 				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
-				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>
@@ -608,6 +576,5 @@
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>
-<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
 </body>
 </html>
