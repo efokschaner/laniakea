@@ -13,7 +13,7 @@
   "dependencies": {
     "@laniakea/base-engine": "^0.0.1",
     "box-intersect": "^1.0.1",
-    "three": "^0.126.1"
+    "three": "^0.137.0"
   },
   "devDependencies": {
     "@types/three": "^0.126.1",
