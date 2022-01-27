@@ -31,7 +31,7 @@
     "postcss-preset-env": "^6.3.0",
     "present": "^1.0.0",
     "style-loader": "^2.0.0",
-    "three": "^0.126.1",
+    "three": "^0.137.0",
     "ts-events": "^3.2.0",
     "webpack": "^5.27.1",
     "webpack-cli": "^4.5.0",
